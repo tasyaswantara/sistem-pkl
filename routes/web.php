@@ -20,33 +20,31 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::group(['middleware' => ['role:admin']], function () { 
-    Route::get('/admin', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');  
-
+Route::group(['middleware' => ['role:admin']], function () {
+    // Route::get('/admin', function () {
+    //     return view('admin.dashboard');
+    // })->name('admin.dashboard');  
+    Route::get('/admin', [UserController::class, 'index'])
+        ->middleware(['auth', 'role:admin'])
+        ->name('admin.dashboard');
     Route::get('/forms', function () {
         return view('admin.forms');
-    })->name('admin.forms'); 
+    })->name('admin.forms');
     Route::get('/tables', function () {
         return view('admin.tables');
-    })->name('admin.tables'); 
+    })->name('admin.tables');
     Route::get('/ui-elements', function () {
         return view('admin.ui-elements');
     })->name('admin.ui-elements');
- 
- });
+});
 
- Route::group(['middleware' => ['permission:publish articles']], function () {
+Route::group(['middleware' => ['permission:publish articles']], function () {});
 
- });
-
- // Group routes that need admin role and authentication
+// Group routes that need admin role and authentication
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
 });
 
-require __DIR__.'/auth.php';
-
+require __DIR__ . '/auth.php';

@@ -2,45 +2,14 @@
 
     @php
     $roleFilter = request('role', 'Semua Pengguna');
-    $search = strtolower(request('search', ''));
-
-    $users = [
-    [
-    'id'=>1,'nama'=>'Budi Santoso','email'=>'budi@student.sch.id',
-    'role'=>'Siswa','nis'=>'12345678','jurusan'=>'Teknik Informatika','statusPkl'=>'Sedang PKL'
-    ],
-    [
-    'id'=>2,'nama'=>'Siti Nurhaliza','email'=>'siti@student.sch.id',
-    'role'=>'Siswa','nis'=>'12345679','jurusan'=>'RPL','statusPkl'=>'Belum PKL'
-    ],
-    [
-    'id'=>3,'nama'=>'Dr. Ahmad Hidayat','email'=>'ahmad@teacher.sch.id',
-    'role'=>'Guru Pembimbing','nip'=>'198501012010','jurusan'=>'Teknik Informatika'
-    ],
-    [
-    'id'=>4,'nama'=>'Rina Wijaya','email'=>'rina@industry.com',
-    'role'=>'Perwakilan Industri','namaIndustri'=>'PT Maju Jaya','kapasitas'=>10,'alamat'=>'Jakarta'
-    ],
-    [
-    'id'=>5,'nama'=>'Humas PKL','email'=>'humas@school.sch.id','role'=>'Admin'
-    ],
-    ];
-
-    $filteredUsers = array_filter($users, function($u) use ($roleFilter, $search) {
-    $matchRole = $roleFilter === 'Semua Pengguna' || $u['role'] === $roleFilter;
-    $matchSearch = $search === '' ||
-    str_contains(strtolower($u['nama']), $search) ||
-    str_contains(strtolower($u['email']), $search) ||
-    collect($u)->contains(fn($v)=> is_string($v) && str_contains(strtolower($v), $search));
-    return $matchRole && $matchSearch;
-    });
+    $search = request('search');
 
     function roleBadge($role){
     return match($role){
-    'Siswa'=>'bg-blue-100 text-blue-700',
-    'Guru Pembimbing'=>'bg-purple-100 text-purple-700',
-    'Perwakilan Industri'=>'bg-orange-100 text-orange-700',
-    'Admin'=>'bg-emerald-100 text-emerald-700',
+    'siswa'=>'bg-blue-100 text-blue-700',
+    'guru pembimbing'=>'bg-purple-100 text-purple-700',
+    'perwakilan industri'=>'bg-orange-100 text-orange-700',
+    'admin'=>'bg-emerald-100 text-emerald-700',
     default=>'bg-gray-100 text-gray-700'
     };
     }
@@ -66,8 +35,8 @@
         <div class="flex items-center gap-3">
             <select name="role"
                 onchange="this.form.submit()"
-                class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
-                @foreach (['Semua Pengguna','Siswa','Guru Pembimbing','Perwakilan Industri','Admin'] as $r)
+                class="px-4 py-2 w-[200px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                @foreach (['Semua Pengguna','Admin','Siswa','Guru Pembimbing','Perwakilan Industri'] as $r)
                 <option value="{{ $r }}" {{ request('role')==$r?'selected':'' }}>
                     {{ $r }}
                 </option>
@@ -76,7 +45,7 @@
 
             <input name="search"
                 value="{{ request('search') }}"
-                placeholder="Cari nama, email, NIS/NIP"
+                placeholder="Cari nama atau email"
                 class="w-[360px] px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm" />
 
             <button class="hidden">Cari</button>
@@ -88,7 +57,6 @@
         </button>
     </form>
 
-
     {{-- Table --}}
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <table class="w-full">
@@ -96,7 +64,6 @@
                 <tr class="text-xs font-semibold uppercase text-gray-600">
                     <th class="px-6 py-3 text-left">No</th>
                     <th class="px-6 py-3 text-left">Nama</th>
-
                     @if($roleFilter==='Siswa')
                     <th class="px-6 py-3 text-left">NIS</th>
                     <th class="px-6 py-3 text-left">Jurusan</th>
@@ -115,42 +82,46 @@
                     <th class="px-6 py-3 text-left">Email</th>
                     <th class="px-6 py-3 text-left">Role</th>
                     @endif
-
                     <th class="px-6 py-3 text-left">Aksi</th>
                 </tr>
             </thead>
 
-
             <tbody class="divide-y divide-gray-200">
-                @forelse($filteredUsers as $i=>$u)
+                @forelse($users as $i => $u)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-sm">{{ $i+1 }}</td>
-                    <td class="px-6 py-4 text-sm font-medium">{{ $u['nama'] }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $i + 1 }}</td>
+                    <td class="px-6 py-4 text-sm font-medium">{{ $u->name }}</td>
 
-                    @if($roleFilter==='Siswa')
-                    <td class="px-6 py-4 text-sm">{{ $u['nis'] }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $u['jurusan'] }}</td>
+                    @if($roleFilter === 'Siswa')
+                    <td class="px-6 py-4 text-sm">{{ $u->siswa->nis ?? '-' }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $u->siswa->jurusan ?? '-' }}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded-full text-xs {{ statusBadge($u['statusPkl']) }}">
-                            {{ $u['statusPkl'] }}
+                        <span class="px-2 py-1 rounded-full text-xs {{ statusBadge($u->siswa->status_pkl ?? '-') }}">
+                            {{ $u->siswa->status_pkl ?? '-' }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-sm">{{ $u['email'] }}</td>
-                    @elseif($roleFilter==='Guru Pembimbing')
-                    <td class="px-6 py-4 text-sm">{{ $u['nip'] }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $u['jurusan'] }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $u['email'] }}</td>
-                    @elseif($roleFilter==='Perwakilan Industri')
-                    <td class="px-6 py-4 text-sm">{{ $u['namaIndustri'] }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $u['kapasitas'] }} siswa</td>
-                    <td class="px-6 py-4 text-sm">{{ $u['alamat'] }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $u['email'] }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+
+                    @elseif($roleFilter === 'Guru Pembimbing')
+                    <td colspan="3" class="px-6 py-4 text-sm text-gray-500">
+                        Data guru belum tersedia
+                    </td>
+                    <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+
+                    @elseif($roleFilter === 'Perwakilan Industri')
+                    <td colspan="3" class="px-6 py-4 text-sm text-gray-500">
+                        Data industri belum tersedia
+                    </td>
+                    <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+
                     @else
-                    <td class="px-6 py-4 text-sm">{{ $u['email'] }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded-full text-xs {{ roleBadge($u['role']) }}">
-                            {{ $u['role'] }}
+                        @foreach($u->roles as $role)
+                        <span class="px-2 py-1 rounded-full text-xs {{ roleBadge($role->name) }}">
+                            {{ $role->name }}
                         </span>
+                        @endforeach
                     </td>
                     @endif
 
@@ -166,13 +137,13 @@
                     </td>
                 </tr>
                 @endforelse
-            </tbody>
 
+            </tbody>
         </table>
     </div>
 
     <div class="mt-4 text-sm text-gray-500">
-        Menampilkan {{ count($filteredUsers) }} dari {{ count($users) }} pengguna
+        Menampilkan {{ $users->count() }} pengguna
     </div>
 
 </x-admin-layout>

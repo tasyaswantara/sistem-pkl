@@ -35,7 +35,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(AdminUserSeeder::class);
         $this->call(PermissionsSeeder::class);
+        $this->call(SiswaSeeder::class);
     }
-
-
 }
