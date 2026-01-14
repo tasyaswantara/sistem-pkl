@@ -6,24 +6,30 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('siswa', function (Blueprint $table) {
             $table->id();
 
-            // Relasi ke users (akun login)
+            // Relasi ke akun login
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->cascadeOnDelete()
                 ->unique();
 
-            // Data akademik siswa
+            // Identitas siswa
             $table->string('nis')->unique();
-            $table->string('jurusan');
+
+            // Relasi ke jurusan
+            $table->foreignId('jurusan_id')
+                ->constrained('jurusan')
+                ->cascadeOnDelete();
+
             $table->string('kelas');
+
+            // Nilai akademik (untuk seleksi / SAW)
+            $table->integer('nilai_akademik');
+            $table->integer('perangkat');
 
             // Status PKL
             $table->enum('status_pkl', ['belum', 'berjalan', 'selesai'])
@@ -35,9 +41,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('siswa');

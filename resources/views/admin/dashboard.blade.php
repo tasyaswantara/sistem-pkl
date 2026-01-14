@@ -19,6 +19,9 @@
     'Sedang PKL'=>'bg-green-50 text-green-700',
     'Belum PKL'=>'bg-yellow-50 text-yellow-700',
     'Selesai PKL'=>'bg-blue-50 text-blue-700',
+    'Sedang PKL'=>'bg-green-50 text-green-700',
+    'belum'=>'bg-yellow-50 text-yellow-700',
+    'Selesai PKL'=>'bg-blue-50 text-blue-700',
     default=>'bg-gray-50 text-gray-700'
     };
     }
@@ -74,7 +77,6 @@
                     <th class="px-6 py-3 text-left">Jurusan</th>
                     <th class="px-6 py-3 text-left">Email</th>
                     @elseif($roleFilter==='Perwakilan Industri')
-                    <th class="px-6 py-3 text-left">Industri</th>
                     <th class="px-6 py-3 text-left">Kapasitas</th>
                     <th class="px-6 py-3 text-left">Alamat</th>
                     <th class="px-6 py-3 text-left">Email</th>
@@ -94,7 +96,7 @@
 
                     @if($roleFilter === 'Siswa')
                     <td class="px-6 py-4 text-sm">{{ $u->siswa->nis ?? '-' }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $u->siswa->jurusan ?? '-' }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $u->siswa->jurusan->nama ?? '-' }}</td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 rounded-full text-xs {{ statusBadge($u->siswa->status_pkl ?? '-') }}">
                             {{ $u->siswa->status_pkl ?? '-' }}
@@ -103,15 +105,13 @@
                     <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
 
                     @elseif($roleFilter === 'Guru Pembimbing')
-                    <td colspan="3" class="px-6 py-4 text-sm text-gray-500">
-                        Data guru belum tersedia
-                    </td>
+                    <td class="px-6 py-4 text-sm">{{ $u->gurupembimbing->nip ?? '-' }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $u->gurupembimbing->jurusan->nama }}</td>
                     <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
 
                     @elseif($roleFilter === 'Perwakilan Industri')
-                    <td colspan="3" class="px-6 py-4 text-sm text-gray-500">
-                        Data industri belum tersedia
-                    </td>
+                    <td class="px-6 py-4 text-sm">{{ $u->industri->kapasitas ?? '-' }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $u->industri->alamat ?? '-' }}</td>
                     <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
 
                     @else

@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Siswa;
+use App\Models\GuruPembimbing;
+use App\Models\Industri;
 
 class User extends Authenticatable
 {
@@ -49,5 +51,13 @@ class User extends Authenticatable
     public function siswa()
     {
         return $this->hasOne(Siswa::class);
+    }
+    public function guruPembimbing()
+    {
+        return $this->hasOne(GuruPembimbing::class);
+    }
+    public function industri()
+    {
+        return $this->hasOne(Industri::class);
     }
 }
