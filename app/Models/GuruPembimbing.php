@@ -11,7 +11,7 @@ class GuruPembimbing extends Model
     protected $fillable = [
         'user_id',
         'nip',
-        'jurusan',
+        'jurusan_id',
     ];
 
     public function user()

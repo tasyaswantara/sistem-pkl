@@ -22,4 +22,8 @@
 ::-webkit-scrollbar-thumb:hover{
   background: #718096;
 }
+.input-text {
+  @apply w-full px-4 py-2 border rounded-lg text-sm focus:ring-emerald-500;
+}
+
 

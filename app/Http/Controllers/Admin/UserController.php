@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use App\Models\Jurusan;
+
 
 class UserController extends Controller
 {
@@ -43,31 +45,104 @@ class UserController extends Controller
     public function create()
     {
         $roles = Role::all();
-        return view('admin.users.create', compact('roles'));
+        $jurusan = Jurusan::all();
+        return view('admin.users.create', compact('roles', 'jurusan'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
-        ]);
+            'email' => 'required|email|unique:users',
+            'password' => 'required|confirmed|min:8',
+            'role' => 'required',
+        ];
 
+        switch ($request->role) {
+            case 'siswa':
+                $rules = array_merge($rules, [
+                    'nis' => 'required|string|unique:siswa,nis',
+                    'jurusan_id' => 'required|exists:jurusan,id',
+                    'kelas' => 'required|string|max:50',
+                    'nilai_akademik' => 'required|integer|min:0',
+                    'perangkat' => 'required|integer|min:1|max:5',
+                    'status_pkl' => 'required|in:belum,berjalan,selesai',
+                    'tahun_ajaran' => 'required|string|max:20',
+                ]);
+                break;
+
+            case 'guru pembimbing':
+                $rules = array_merge($rules, [
+                    'nip' => 'required|string|unique:guru_pembimbing,nip',
+                    'jurusan_id' => 'required|exists:jurusan,id',
+                ]);
+                break;
+
+            case 'perwakilan industri':
+                $rules = array_merge($rules, [
+                    'nama_industri' => 'required|string|max:255',
+                    'kapasitas' => 'required|integer|min:1',
+                    'alamat' => 'required|string',
+                    'reputasi' => 'required|integer|min:0',
+                    'jurusan_id' => 'required|exists:jurusan,id',
+                ]);
+                break;
+        }
+
+        $request->validate($rules);
+
+        // 1. CREATE USER
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
         ]);
 
-        if ($request->has('roles')) {
-            $user->assignRole($request->roles);
+        // 2. ASSIGN ROLE (SPATIE)
+        $user->assignRole($request->role);
+
+        // 3. SIMPAN DATA BERDASARKAN ROLE
+        switch ($request->role) {
+
+            case 'siswa':
+                $user->siswa()->create([
+                    'nis' => $request->nis,
+                    'jurusan_id' => $request->jurusan_id,
+                    'kelas' => $request->kelas,
+                    'nilai_akademik' => $request->nilai_akademik,
+                    'perangkat' => $request->perangkat,
+                    'status_pkl' => $request->status_pkl,
+                    'tahun_ajaran' => $request->tahun_ajaran,
+                ]);
+                break;
+
+            case 'guru pembimbing':
+                $user->gurupembimbing()->create([
+                    'nip' => $request->nip,
+                    'jurusan_id' => $request->jurusan_id,
+                ]);
+                break;
+
+            case 'perwakilan industri':
+                $user->industri()->create([
+                    'nama_industri' => $request->nama_industri,
+                    'kapasitas' => $request->kapasitas,
+                    'alamat' => $request->alamat,
+                    'reputasi' => $request->reputasi,
+                    'jurusan_id' => $request->jurusan_id,
+                ]);
+                break;
+
+            case 'admin':
+                // tidak ada tabel turunan
+                break;
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
+        return redirect()
+            ->route('admin.data-pengguna')
+            ->with('success', 'User berhasil ditambahkan');
     }
+
 
     public function show(User $user)
     {
