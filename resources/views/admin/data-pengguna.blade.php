@@ -150,7 +150,25 @@
                             </button>
 
                             {{-- Delete --}}
-                            <button
+                            <form method="POST" action="{{ route('admin.users.destroy', $u->id) }}"
+                                onsubmit="return confirm('Yakin hapus pengguna ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button
+                                    class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-red-50 transition"
+                                    title="Hapus">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="w-4 h-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M6 7h12M9 7v10m6-10v10M4 7h16l-1 12a2 2 0 01-2 2H7a2 2 0 01-2-2L4 7zM9 4h6a1 1 0 011 1v2H8V5a1 1 0 011-1z" />
+                                    </svg>
+                                </button>
+                            </form>
+                            <!-- <button
                                 class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-red-50 transition"
                                 title="Hapus">
                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -162,7 +180,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M6 7h12M9 7v10m6-10v10M4 7h16l-1 12a2 2 0 01-2 2H7a2 2 0 01-2-2L4 7zM9 4h6a1 1 0 011 1v2H8V5a1 1 0 011-1z" />
                                 </svg>
-                            </button>
+                            </button> -->
 
                         </div>
                     </td>
