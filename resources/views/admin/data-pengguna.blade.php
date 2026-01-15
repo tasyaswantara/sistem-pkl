@@ -166,7 +166,7 @@
                             <div class="flex items-center gap-2">
 
                                 {{-- Edit --}}
-                                <button
+                                <a href="{{ route('admin.users.edit', $u->id) }}"
                                     class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-blue-50 transition"
                                     title="Edit">
                                     <svg xmlns="http://www.w3.org/2000/svg"
@@ -178,7 +178,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.213l-4.5 1.125 1.125-4.5L16.862 3.487z" />
                                     </svg>
-                                </button>
+                                </a>
 
                                 {{-- Delete --}}
                                 <form method="POST" action="{{ route('admin.users.destroy', $u->id) }}"

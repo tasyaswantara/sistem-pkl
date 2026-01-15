@@ -180,7 +180,7 @@
                     Simpan Pengguna
                 </button>
                 <a href="{{ route('admin.data-pengguna') }}"
-                    class="px-6 py-2 border rounded-lg">
+                    class="px-6 py-2 bg-white border rounded-lg">
                     Batal
                 </a>
             </div>

@@ -1,65 +1,204 @@
 <x-admin-layout>
-    <x-slot name="header">
-        <h1 class="text-2xl font-bold">Edit User</h1>
-    </x-slot>
+    @php
+    $siswa = $user->siswa;
+    $guru = $user->gurupembimbing;
+    $industri = $user->industri;
+    $perangkatValue = old('perangkat', $siswa->perangkat ?? 1);
+    $perangkatItems = [];
+    if ((int) $perangkatValue >= 5) {
+    $perangkatItems = ['laptop', 'kamera', 'hp'];
+    } elseif ((int) $perangkatValue === 3) {
+    $perangkatItems = ['laptop', 'kamera'];
+    } elseif ((int) $perangkatValue === 2) {
+    $perangkatItems = ['laptop'];
+    }
+    @endphp
 
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-        <form action="{{ route('admin.users.update', $user) }}" method="POST">
+    <div x-data="{
+            role: '{{ old('role', $roleName) }}',
+            showPassword: false,
+            kelas: '{{ old('kelas', $siswa->kelas ?? '') }}',
+            perangkatItems: {{ json_encode($perangkatItems) }},
+            perangkatScore: {{ (int) $perangkatValue }}
+        }"
+        x-effect="perangkatScore = perangkatItems.length === 0 ? 1 : (perangkatItems.length === 3 ? 5 : 1 + perangkatItems.length)">
+
+        {{-- Header --}}
+        <div class="mb-8">
+            <a href="{{ route('admin.data-pengguna') }}"
+                class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
+                ← Kembali ke Data Pengguna
+            </a>
+
+            <h1 class="text-2xl font-semibold text-gray-900 mb-1">Edit Pengguna</h1>
+            <p class="text-gray-500 text-sm">
+                Perbarui data pengguna pada Sistem PKL
+            </p>
+        </div>
+
+        {{-- Error --}}
+        @if ($errors->any())
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <ul class="list-disc list-inside text-sm text-red-700">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
+        <form method="POST" action="{{ route('admin.users.update', $user->id) }}">
             @csrf
             @method('PUT')
 
-            <div class="mb-4">
-                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Name</label>
-                <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" 
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" 
-                    required>
-                @error('name')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
+            {{-- DATA UMUM --}}
+            <div class="bg-white border rounded-lg p-6 mb-6">
+                <h3 class="font-semibold mb-4">Data Umum</h3>
 
-            <div class="mb-4">
-                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
-                <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" 
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" 
-                    required>
-                @error('email')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="name" value="{{ old('name', $user->name) }}" required
+                        placeholder="Nama Lengkap"
+                        class="input-text">
 
-            <div class="mb-4">
-                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Password</label>
-                <input type="password" id="password" name="password" 
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50">
-                <span class="text-sm text-gray-500">Leave blank to keep current password</span>
-                @error('password')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
+                    <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                        placeholder="Email"
+                        class="input-text">
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Roles</label>
-                @foreach($roles as $role)
-                    <div class="flex items-center mb-2">
-                        <input type="checkbox" id="role_{{ $role->id }}" name="roles[]" value="{{ $role->id }}" 
-                            {{ in_array($role->id, old('roles', $user->roles->pluck('id')->toArray())) ? 'checked' : '' }}
-                            class="mr-2">
-                        <label for="role_{{ $role->id }}" class="text-sm text-gray-900 dark:text-gray-100">{{ $role->name }}</label>
+                    <div class="relative">
+                        <input :type="showPassword ? 'text' : 'password'"
+                            name="password"
+                            placeholder="Password (kosongkan jika tidak diubah)"
+                            class="input-text pr-10">
+                        <button type="button"
+                            @click="showPassword=!showPassword"
+                            class="absolute right-3 top-2.5 text-gray-400">
+                            👁
+                        </button>
                     </div>
-                @endforeach
-                @error('roles')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
+
+                    <input type="password" name="password_confirmation"
+                        placeholder="Konfirmasi Password"
+                        class="input-text">
+                </div>
             </div>
 
-            <div class="flex items-center justify-between">
-                <a href="{{ route('admin.users.index') }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                    Back to Users List
-                </a>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white text-xs uppercase tracking-widest shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Update User
+            {{-- ROLE --}}
+            <div class="bg-white border rounded-lg p-6 mb-6">
+                <label class="block text-sm font-medium mb-2">Role</label>
+                <select name="role" x-model="role" class="input-text w-1/2" disabled>
+                    <option value="siswa">Siswa</option>
+                    <option value="guru pembimbing">Guru Pembimbing</option>
+                    <option value="perwakilan industri">Perwakilan Industri</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <input type="hidden" name="role" :value="role">
+            </div>
+
+            {{-- SISWA --}}
+            <div x-show="role === 'siswa'"
+                class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <h3 class="font-semibold mb-4">Data Siswa</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="nis" value="{{ old('nis', $siswa->nis ?? '') }}" placeholder="NIS" class="input-text">
+                    <select name="jurusan_id" class="input-text"
+                        :disabled="role !== 'siswa'"
+                        x-init="if (!kelas && $el.selectedOptions.length) { const name = $el.selectedOptions[0].dataset.name; kelas = name ? 'XII ' + name : ''; }"
+                        @change="const name = $event.target.selectedOptions[0].dataset.name; kelas = name ? 'XII ' + name : '';">
+                        <option value="">-- Pilih Jurusan --</option>
+                        @foreach($jurusan as $j)
+                        <option value="{{ $j->id }}" data-name="{{ $j->nama }}"
+                            {{ old('jurusan_id', $siswa->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
+                            {{ $j->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <input name="kelas" x-model="kelas" placeholder="Kelas (otomatis)" class="input-text" readonly>
+                    <input name="nilai_akademik" type="number" value="{{ old('nilai_akademik', $siswa->nilai_akademik ?? '') }}"
+                        placeholder="Nilai Akademik" class="input-text">
+                    <div class="bg-white border rounded-lg p-3 md:col-span-2">
+                        <p class="text-sm font-medium text-gray-700 mb-2">Perangkat (skala 1-5)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="checkbox" class="form-checkbox" value="laptop" x-model="perangkatItems">
+                                Laptop
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="checkbox" class="form-checkbox" value="kamera" x-model="perangkatItems">
+                                Kamera
+                            </label>
+                            <label class="inline-flex items-center gap-2">
+                                <input type="checkbox" class="form-checkbox" value="hp" x-model="perangkatItems">
+                                HP
+                            </label>
+                        </div>
+                        <input type="hidden" name="perangkat" x-model="perangkatScore">
+                        <p class="text-xs text-gray-500 mt-2">
+                            Skor tersimpan: <span class="font-semibold" x-text="perangkatScore"></span>
+                        </p>
+                    </div>
+                    <select name="status_pkl" class="input-text">
+                        <option value="">-- Status PKL --</option>
+                        <option value="belum" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'belum' ? 'selected' : '' }}>Belum</option>
+                        <option value="berjalan" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
+                        <option value="selesai" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                    </select>
+                    <input name="tahun_ajaran" value="{{ old('tahun_ajaran', $siswa->tahun_ajaran ?? '') }}"
+                        placeholder="Tahun Ajaran" class="input-text">
+                </div>
+            </div>
+
+            {{-- GURU --}}
+            <div x-show="role === 'guru pembimbing'"
+                class="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
+                <h3 class="font-semibold mb-4">Data Guru Pembimbing</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="nip" value="{{ old('nip', $guru->nip ?? '') }}" placeholder="NIP" class="input-text">
+                    <select name="jurusan_id" class="input-text"
+                        :disabled="role !== 'guru pembimbing'">
+                        <option value="">-- Jurusan --</option>
+                        @foreach($jurusan as $j)
+                        <option value="{{ $j->id }}" {{ old('jurusan_id', $guru->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
+                            {{ $j->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            {{-- INDUSTRI --}}
+            <div x-show="role === 'perwakilan industri'"
+                class="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-6">
+                <h3 class="font-semibold mb-4">Data Industri</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="nama_industri" value="{{ old('nama_industri', $industri->nama_industri ?? '') }}"
+                        placeholder="Nama Perusahaan" class="input-text">
+                    <input name="kapasitas" type="number" value="{{ old('kapasitas', $industri->kapasitas ?? '') }}"
+                        placeholder="Kapasitas" class="input-text">
+                    <input name="reputasi" type="number" value="{{ old('reputasi', $industri->reputasi ?? '') }}"
+                        placeholder="Reputasi" class="input-text">
+                    <select name="jurusan_id" class="input-text"
+                        :disabled="role !== 'perwakilan industri'">
+                        <option value="">-- Pilih Jurusan --</option>
+                        @foreach($jurusan as $j)
+                        <option value="{{ $j->id }}" {{ old('jurusan_id', $industri->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
+                            {{ $j->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <textarea name="alamat" placeholder="Alamat"
+                        class="input-text md:col-span-2">{{ old('alamat', $industri->alamat ?? '') }}</textarea>
+                </div>
+            </div>
+
+            {{-- ACTION --}}
+            <div class="flex gap-3">
+                <button class="px-6 py-2 bg-emerald-600 text-white rounded-lg">
+                    Simpan Perubahan
                 </button>
+                <a href="{{ route('admin.data-pengguna') }}"
+                    class="px-6 py-2 border bg-white rounded-lg">
+                    Batal
+                </a>
             </div>
         </form>
     </div>

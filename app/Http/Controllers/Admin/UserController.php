@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use App\Models\Jurusan;
+use Illuminate\Validation\Rule;
 
 
 class UserController extends Controller
@@ -154,19 +155,63 @@ class UserController extends Controller
     {
         $roles = Role::all();
         $assignedRoles = $user->roles->pluck('id')->toArray();
-        return view('admin.users.edit', compact('user', 'roles', 'assignedRoles'));
+        $jurusan = Jurusan::all();
+        $roleName = $user->roles->first()->name ?? 'admin';
+        return view('admin.users.edit', compact('user', 'roles', 'assignedRoles', 'jurusan', 'roleName'));
     }
 
     public function update(Request $request, User $user)
     {
-        // Validate incoming request
-        $request->validate([
+        $role = $request->role ?? ($user->roles->first()->name ?? 'admin');
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id', // Validate role IDs
-        ]);
+            'role' => 'required',
+        ];
+
+        switch ($role) {
+            case 'siswa':
+                $siswaId = optional($user->siswa)->id;
+                $rules = array_merge($rules, [
+                    'nis' => [
+                        'required',
+                        'string',
+                        Rule::unique('siswa', 'nis')->ignore($siswaId),
+                    ],
+                    'jurusan_id' => 'required|exists:jurusan,id',
+                    'kelas' => 'required|string|max:50',
+                    'nilai_akademik' => 'required|integer|min:0',
+                    'perangkat' => 'required|integer|min:1|max:5',
+                    'status_pkl' => 'required|in:belum,berjalan,selesai',
+                    'tahun_ajaran' => 'required|string|max:20',
+                ]);
+                break;
+
+            case 'guru pembimbing':
+                $guruId = optional($user->gurupembimbing)->id;
+                $rules = array_merge($rules, [
+                    'nip' => [
+                        'required',
+                        'string',
+                        Rule::unique('guru_pembimbing', 'nip')->ignore($guruId),
+                    ],
+                    'jurusan_id' => 'required|exists:jurusan,id',
+                ]);
+                break;
+
+            case 'perwakilan industri':
+                $rules = array_merge($rules, [
+                    'nama_industri' => 'required|string|max:255',
+                    'kapasitas' => 'required|integer|min:1',
+                    'alamat' => 'required|string',
+                    'reputasi' => 'required|integer|min:0',
+                    'jurusan_id' => 'required|exists:jurusan,id',
+                ]);
+                break;
+        }
+
+        $request->validate($rules);
 
         // Update user details
         $user->update([
@@ -175,14 +220,53 @@ class UserController extends Controller
             'password' => $request->password ? bcrypt($request->password) : $user->password,
         ]);
 
-        // Map role IDs to role names
-        $roleIds = $request->roles;
-        $validRoleNames = Role::whereIn('id', $roleIds)->pluck('name')->toArray();
+        if ($role) {
+            $user->syncRoles([$role]);
+        }
 
-        // Sync roles by name
-        $user->syncRoles($validRoleNames);
+        switch ($role) {
+            case 'siswa':
+                $user->siswa()->updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'nis' => $request->nis,
+                        'jurusan_id' => $request->jurusan_id,
+                        'kelas' => $request->kelas,
+                        'nilai_akademik' => $request->nilai_akademik,
+                        'perangkat' => $request->perangkat,
+                        'status_pkl' => $request->status_pkl,
+                        'tahun_ajaran' => $request->tahun_ajaran,
+                    ]
+                );
+                break;
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
+            case 'guru pembimbing':
+                $user->gurupembimbing()->updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'nip' => $request->nip,
+                        'jurusan_id' => $request->jurusan_id,
+                    ]
+                );
+                break;
+
+            case 'perwakilan industri':
+                $user->industri()->updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'nama_industri' => $request->nama_industri,
+                        'kapasitas' => $request->kapasitas,
+                        'alamat' => $request->alamat,
+                        'reputasi' => $request->reputasi,
+                        'jurusan_id' => $request->jurusan_id,
+                    ]
+                );
+                break;
+        }
+
+        return redirect()
+            ->route('admin.data-pengguna')
+            ->with('success', 'User berhasil diperbarui');
     }
 
 
