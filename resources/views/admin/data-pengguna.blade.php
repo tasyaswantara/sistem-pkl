@@ -1,3 +1,5 @@
+@section('title', 'Data Pengguna')
+
 <x-admin-layout>
 
     @php

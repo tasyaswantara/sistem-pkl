@@ -8,7 +8,13 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="referrer" content="always">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>
+        @hasSection('title')
+        @yield('title') | Sistem PKL
+        @else
+        Sistem PKL
+        @endif
+    </title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
