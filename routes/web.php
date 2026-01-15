@@ -24,9 +24,16 @@ Route::group(['middleware' => ['role:admin']], function () {
     // Route::get('/admin', function () {
     //     return view('admin.dashboard');
     // })->name('admin.dashboard');  
-    Route::get('/admin', [UserController::class, 'index'])
+
+    //ROUTE ADMIN DATA PENGGUNA
+    Route::get('/data-pengguna', [UserController::class, 'index'])
         ->middleware(['auth', 'role:admin'])
-        ->name('admin.dashboard');
+        ->name('admin.data-pengguna');
+    Route::view('/penempatan', 'admin.forms')->name('admin.penempatan');
+    Route::view('/elogbook', 'admin.tables')->name('admin.elogbook');
+    Route::view('/perizinan', 'admin.ui-elements')->name('admin.perizinan');
+    Route::view('/penilaian', 'admin.ui-elements')->name('admin.penilaian');
+
     Route::get('/forms', function () {
         return view('admin.forms');
     })->name('admin.forms');

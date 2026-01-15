@@ -29,7 +29,7 @@ class UserController extends Controller
             })
             ->get();
 
-        return view('admin.dashboard', compact('users', 'roleFilter'));
+        return view('admin.data-pengguna', compact('users', 'roleFilter'));
     }
 
 
