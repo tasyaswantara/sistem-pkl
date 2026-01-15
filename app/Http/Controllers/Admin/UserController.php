@@ -12,25 +12,32 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $roleFilter = $request->get('role', 'Semua Pengguna');
-        $search = strtolower($request->get('search', ''));
+        $role = $request->role;
+        $search = $request->search;
 
-        $users = User::with(['roles', 'siswa'])
-            ->when($roleFilter !== 'Semua Pengguna', function ($query) use ($roleFilter) {
-                $query->whereHas('roles', function ($q) use ($roleFilter) {
-                    $q->where('name', $roleFilter);
+        $users = User::with([
+            'roles',
+            'siswa.jurusan',
+            'gurupembimbing.jurusan',
+            'industri'
+        ])
+            ->when($role && $role !== 'Semua Pengguna', function ($q) use ($role) {
+                $q->whereHas('roles', function ($r) use ($role) {
+                    $r->where('name', strtolower($role));
                 });
             })
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                        ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"]);
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($qq) use ($search) {
+                    $qq->where('name', 'like', "%$search%")
+                        ->orWhere('email', 'like', "%$search%");
                 });
             })
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('admin.data-pengguna', compact('users', 'roleFilter'));
+        return view('admin.data-pengguna', compact('users'));
     }
+
 
 
     public function create()
