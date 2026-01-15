@@ -29,7 +29,7 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/data-pengguna', [UserController::class, 'index'])
         ->middleware(['auth', 'role:admin'])
         ->name('admin.data-pengguna');
-    Route::view('/penempatan', 'admin.forms')->name('admin.penempatan');
+    Route::view('/penempatan', 'admin.penempatan.index')->name('admin.penempatan');
     Route::view('/elogbook', 'admin.tables')->name('admin.elogbook');
     Route::view('/perizinan', 'admin.ui-elements')->name('admin.perizinan');
     Route::view('/penilaian', 'admin.ui-elements')->name('admin.penilaian');

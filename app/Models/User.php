@@ -60,4 +60,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Industri::class);
     }
+
+    public function sawRuns()
+    {
+        return $this->hasMany(SawRun::class, 'created_by');
+    }
+
+    public function perizinanDibuat()
+    {
+        return $this->hasMany(Perizinan::class, 'created_by');
+    }
 }

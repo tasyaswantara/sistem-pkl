@@ -14,4 +14,14 @@ class Jurusan extends Model
     {
         return $this->hasMany(Siswa::class);
     }
+
+    public function bobotKriteria()
+    {
+        return $this->hasMany(BobotKriteria::class);
+    }
+
+    public function sawRuns()
+    {
+        return $this->hasMany(SawRun::class);
+    }
 }

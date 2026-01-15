@@ -22,4 +22,14 @@ class GuruPembimbing extends Model
     {
         return $this->belongsTo(Jurusan::class);
     }
+
+    public function penempatanPkl()
+    {
+        return $this->hasMany(PenempatanPKL::class, 'guru_pembimbing_id');
+    }
+
+    public function logbookKomentar()
+    {
+        return $this->hasMany(LogbookKomentar::class, 'guru_pembimbing_id');
+    }
 }

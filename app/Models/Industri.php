@@ -25,4 +25,34 @@ class Industri extends Model
     {
         return $this->belongsTo(Jurusan::class);
     }
+
+    public function penempatanPkl()
+    {
+        return $this->hasMany(PenempatanPKL::class);
+    }
+
+    public function hasilRekomendasi()
+    {
+        return $this->hasMany(HasilRekomendasi::class);
+    }
+
+    public function penilaian()
+    {
+        return $this->hasMany(Penilaian::class);
+    }
+
+    public function logbook()
+    {
+        return $this->hasMany(Logbook::class);
+    }
+
+    public function perizinan()
+    {
+        return $this->hasMany(Perizinan::class);
+    }
+
+    public function jadwalWawancara()
+    {
+        return $this->hasMany(JadwalWawancara::class);
+    }
 }
