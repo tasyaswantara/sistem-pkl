@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="referrer" content="always">
+    <link rel="icon" type="image/jpeg" href="{{ asset('assets/images/logo serviam.jpg') }}">
 
     <title>
         @hasSection('title')
