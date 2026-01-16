@@ -115,7 +115,7 @@
                     </button>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mb-4">Atur bobot berdasarkan jurusan. Total bobot harus sama dengan 1.00 (100%).</p>
+            <p class="text-xs text-gray-500 mb-4">Atur bobot berdasarkan jurusan. Total bobot harus sama dengan 100%.</p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
@@ -163,13 +163,16 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max="1"
-                                    value="{{ $row['bobot'] }}"
-                                    class="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500">
+                                <div class="relative w-28">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="100"
+                                        value="{{ $row['bobot'] * 100 }}"
+                                        class="w-full pr-7 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500">
+                                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">%</span>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -177,7 +180,7 @@
                             <td class="px-4 py-3 text-sm text-gray-900" colspan="2">Total Bobot</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2 text-green-700">
-                                    <span class="text-sm">1.00</span>
+                                    <span class="text-sm">100%</span>
                                     <span class="text-xs bg-green-100 px-2 py-0.5 rounded-full">Valid</span>
                                 </div>
                             </td>
@@ -337,7 +340,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jurusan</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Industri Rekomendasi</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nilai Preferensi</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nilai Preferensi (%)</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Peringkat</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pilihan Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status Penempatan</th>
@@ -362,7 +365,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
                                     @if ($row['nilai'])
-                                    <span class="font-semibold text-purple-600">{{ number_format($row['nilai'], 2) }}</span>
+                                    <span class="font-semibold text-purple-600">{{ number_format($row['nilai'] * 100, 2) }}%</span>
                                     @else
                                     <span class="text-gray-400 italic">-</span>
                                     @endif
@@ -466,7 +469,7 @@
                                 <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
                                     <div>
                                         <div class="text-sm font-medium text-gray-900" x-text="item.industri"></div>
-                                        <div class="text-xs text-gray-500">Skor: <span x-text="item.skor.toFixed(2)"></span></div>
+                                        <div class="text-xs text-gray-500">Skor: <span x-text="(item.skor * 100).toFixed(2) + '%'"></span></div>
                                     </div>
                                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700">
                                         Rank <span x-text="item.rank"></span>
