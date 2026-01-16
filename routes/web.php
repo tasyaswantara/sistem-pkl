@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PenempatanController;
+use App\Http\Controllers\Admin\LogbookController;
+use App\Http\Controllers\Admin\PerizinanController;
+use App\Http\Controllers\Admin\PenilaianController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,9 +36,9 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/penempatan', [PenempatanController::class, 'index'])->name('admin.penempatan');
     Route::post('/penempatan/bobot', [PenempatanController::class, 'storeBobot'])->name('admin.penempatan.bobot');
     Route::post('/penempatan/run-saw', [PenempatanController::class, 'runSaw'])->name('admin.penempatan.run-saw');
-    Route::view('/elogbook', 'admin.tables')->name('admin.elogbook');
-    Route::view('/perizinan', 'admin.ui-elements')->name('admin.perizinan');
-    Route::view('/penilaian', 'admin.ui-elements')->name('admin.penilaian');
+    Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
+    Route::get('/perizinan', [PerizinanController::class, 'index'])->name('admin.perizinan');
+    Route::get('/penilaian', [PenilaianController::class, 'index'])->name('admin.penilaian');
 
     Route::get('/forms', function () {
         return view('admin.forms');
