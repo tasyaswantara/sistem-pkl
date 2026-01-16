@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\PenempatanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -29,7 +30,9 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/data-pengguna', [UserController::class, 'index'])
         ->middleware(['auth', 'role:admin'])
         ->name('admin.data-pengguna');
-    Route::view('/penempatan', 'admin.penempatan.index')->name('admin.penempatan');
+    Route::get('/penempatan', [PenempatanController::class, 'index'])->name('admin.penempatan');
+    Route::post('/penempatan/bobot', [PenempatanController::class, 'storeBobot'])->name('admin.penempatan.bobot');
+    Route::post('/penempatan/run-saw', [PenempatanController::class, 'runSaw'])->name('admin.penempatan.run-saw');
     Route::view('/elogbook', 'admin.tables')->name('admin.elogbook');
     Route::view('/perizinan', 'admin.ui-elements')->name('admin.perizinan');
     Route::view('/penilaian', 'admin.ui-elements')->name('admin.penilaian');
