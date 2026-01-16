@@ -89,394 +89,394 @@
             infoOpen: false,
         }">
 
-    {{-- Header --}}
-    <div class="mb-8">
-        <div class="text-sm text-gray-500 mb-2">Dashboard → Penempatan PKL</div>
-        <h1 class="text-gray-900 text-2xl font-semibold mb-2">Penempatan Siswa PKL</h1>
-        <p class="text-gray-500 text-sm max-w-2xl">
-            Kelola penempatan otomatis siswa PKL menggunakan metode SAW, konfirmasi pengajuan ke industri, serta penentuan
-            guru pembimbing.
-        </p>
-    </div>
-
-    {{-- Konfigurasi SAW --}}
-    <div id="konfigurasi-saw" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-base font-semibold text-gray-900">Konfigurasi Pembobotan SAW</h3>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
-                    Bobot per jurusan
-                </span>
-                <button type="button"
-                    class="w-7 h-7 inline-flex items-center justify-center rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50"
-                    @click="infoOpen = true"
-                    title="Info bobot SAW">
-                    i
-                </button>
-            </div>
-        </div>
-        <p class="text-xs text-gray-500 mb-4">Atur bobot berdasarkan jurusan. Total bobot harus sama dengan 1.00 (100%).</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
-                <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                    @foreach ($jurusanOptions as $jurusan)
-                    <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
-                <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                    @foreach ($tahunAjaranList as $tahun)
-                    <option>{{ $tahun }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
-                    Simpan Bobot
-                </button>
-                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
-                    Reset
-                </button>
-            </div>
+        {{-- Header --}}
+        <div id="konfigurasi-saw" class="mb-8">
+            <div class="text-sm text-gray-500 mb-2">Dashboard → Penempatan PKL</div>
+            <h1 class="text-gray-900 text-2xl font-semibold mb-2">Penempatan Siswa PKL</h1>
+            <p class="text-gray-500 text-sm max-w-2xl">
+                Kelola penempatan otomatis siswa PKL menggunakan metode SAW, konfirmasi pengajuan ke industri, serta penentuan
+                guru pembimbing.
+            </p>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="bg-gray-50 border-b border-gray-200">
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kriteria</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tipe</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Bobot</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach ($bobotKriteria as $row)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 text-sm text-gray-700">{{ $row['kriteria'] }}</td>
-                        <td class="px-4 py-3">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                                {{ $row['tipe'] }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3">
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                max="1"
-                                value="{{ $row['bobot'] }}"
-                                class="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500">
-                        </td>
-                    </tr>
-                    @endforeach
-                    <tr class="bg-gray-50 font-semibold">
-                        <td class="px-4 py-3 text-sm text-gray-900" colspan="2">Total Bobot</td>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-2 text-green-700">
-                                <span class="text-sm">1.00</span>
-                                <span class="text-xs bg-green-100 px-2 py-0.5 rounded-full">Valid</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- Info Modal --}}
-    <div x-show="infoOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-            <div class="flex items-center justify-between p-4 border-b">
-                <h4 class="text-base font-semibold text-gray-900">Info Bobot SAW</h4>
-                <button type="button" class="text-gray-400 hover:text-gray-600" @click="infoOpen = false">✕</button>
-            </div>
-            <div class="p-4 text-sm text-gray-700 space-y-3">
-                <p>
-                    Bobot SAW adalah tingkat kepentingan tiap kriteria. Contoh: nilai akademik bobot 0,30 berarti kontribusinya
-                    30% terhadap skor total.
-                </p>
-                <p>Alur perhitungan sederhana:</p>
-                <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
-                    <li>Ambil nilai siswa dan industri.</li>
-                    <li>Normalisasi tiap kriteria.</li>
-                    <li>Kalikan dengan bobot.</li>
-                    <li>Jumlahkan menjadi skor akhir.</li>
-                    <li>Urutkan industri berdasarkan skor tertinggi.</li>
-                </ol>
-                <p>
-                    Karena bobot diset per jurusan, tiap jurusan bisa punya prioritas yang berbeda.
-                </p>
-            </div>
-            <div class="flex justify-end p-4 border-t bg-gray-50">
-                <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                    @click="infoOpen = false">
-                    Mengerti
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Filter --}}
-    <div id="filter-penempatan" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-semibold text-gray-900">Filter Data Penempatan</h3>
-            <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                Status data terbaru
-            </span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
-                <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                    @foreach ($tahunAjaranList as $tahun)
-                    <option>{{ $tahun }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
-                <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                    <option value="">Semua Jurusan</option>
-                    @foreach ($jurusanOptions as $jurusan)
-                    <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Status Penempatan</label>
-                <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                    @foreach ($statusList as $status)
-                    <option>{{ $status }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Nama siswa"
-                        class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+        {{-- Konfigurasi SAW --}}
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-base font-semibold text-gray-900">Konfigurasi Pembobotan SAW</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
+                        Bobot per jurusan
+                    </span>
+                    <button type="button"
+                        class="w-7 h-7 inline-flex items-center justify-center rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50"
+                        @click="infoOpen = true"
+                        title="Info bobot SAW">
+                        i
+                    </button>
                 </div>
             </div>
-        </div>
+            <p class="text-xs text-gray-500 mb-4">Atur bobot berdasarkan jurusan. Total bobot harus sama dengan 1.00 (100%).</p>
 
-        <div class="flex items-center gap-3">
-            <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
-                Terapkan Filter
-            </button>
-            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
-                Reset Filter
-            </button>
-        </div>
-    </div>
-
-    {{-- Jalankan SAW --}}
-    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6 mb-6">
-        <h3 class="text-base font-semibold text-gray-900 mb-4">Menjalankan Penempatan Otomatis (SAW)</h3>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
-                <div class="text-xs text-gray-500 mb-1">Jurusan Aktif</div>
-                <div class="text-sm font-semibold text-gray-900">Pilih jurusan terlebih dahulu</div>
-            </div>
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
-                <div class="text-xs text-gray-500 mb-1">Status Bobot</div>
-                <div class="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Valid</span>
-                    <span class="text-green-700">Bobot siap digunakan</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                    <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($jurusanOptions as $jurusan)
+                        <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
+                    <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($tahunAjaranList as $tahun)
+                        <option>{{ $tahun }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end gap-2">
+                    <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
+                        Simpan Bobot
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                        Reset
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <div class="flex items-center gap-3">
-            <button
-                class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all text-sm font-medium shadow-lg shadow-purple-500/30">
-                Jalankan Penempatan Otomatis (SAW)
-            </button>
-            <div class="px-4 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-                <span class="text-sm text-green-700 font-medium">Hasil SAW Tersedia</span>
-            </div>
-        </div>
-    </div>
-
-    {{-- Hasil Penempatan --}}
-    <div id="hasil-penempatan" class="mb-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-semibold text-gray-900">Hasil Penempatan Siswa</h3>
-            <div class="flex items-center gap-3 text-sm">
-                <div class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                    <span class="text-green-600 font-semibold">2</span>
-                    <span class="text-green-700 ml-1">Diterima</span>
-                </div>
-                <div class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <span class="text-yellow-600 font-semibold">1</span>
-                    <span class="text-yellow-700 ml-1">Proses</span>
-                </div>
-                <div class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
-                    <span class="text-red-600 font-semibold">1</span>
-                    <span class="text-red-700 ml-1">Ditolak</span>
-                </div>
-                <button class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium">
-                    Refresh
-                </button>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Siswa</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jurusan</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Industri Rekomendasi</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nilai Preferensi</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Peringkat</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pilihan Siswa</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status Penempatan</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Guru Pembimbing</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kriteria</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tipe</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Bobot</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach ($penempatanData as $row)
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="font-medium text-gray-900 text-sm">{{ $row['nama'] }}</div>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $row['jurusan'] }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">
-                                @if ($row['industri'])
-                                {{ $row['industri'] }}
-                                @else
-                                <span class="text-gray-400 italic">Belum ada</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">
-                                @if ($row['nilai'])
-                                <span class="font-semibold text-purple-600">{{ number_format($row['nilai'], 2) }}</span>
-                                @else
-                                <span class="text-gray-400 italic">-</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">
-                                @if ($row['peringkat'])
-                                <span class="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-700 rounded-full font-semibold text-xs">
-                                    {{ $row['peringkat'] }}
-                                </span>
-                                @else
-                                <span class="text-gray-400 italic">-</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                @if ($row['pilihan'])
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $row['pilihan'] === 'Rekomendasi' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700' }}">
-                                    {{ $row['pilihan'] }}
-                                </span>
-                                @else
-                                <span class="text-gray-400 italic text-sm">Belum dipilih</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                @php
-                                $status = $row['status'];
-                                $statusClass = match ($status) {
-                                'Diterima Industri' => 'bg-green-50 text-green-700 border border-green-200',
-                                'Proses Pengajuan' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-                                'Ditolak Industri' => 'bg-red-50 text-red-700 border border-red-200',
-                                default => 'bg-gray-50 text-gray-700 border border-gray-200',
-                                };
-                                @endphp
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
-                                    {{ $status }}
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach ($bobotKriteria as $row)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row['kriteria'] }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                    {{ $row['tipe'] }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">
-                                @if ($row['guru'])
-                                {{ $row['guru'] }}
-                                @else
-                                <span class="text-gray-400 italic">Belum ditentukan</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <button
-                                    type="button"
-                                    class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
-                                    @click="detailOpen = true; detailNama = '{{ $row['nama'] }}'; detailJurusan = '{{ $row['jurusan'] }}'; detailList = {{ json_encode($row['rekomendasi']) }};">
-                                    Lihat Detail
-                                </button>
-                            </td>
-                            <td class="px-6 py-4">
-                                @if ($row['aksi'] === 'konfirmasi')
-                                <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-xs font-medium">
-                                    Konfirmasi Pilihan
-                                </button>
-                                @elseif ($row['aksi'] === 'menunggu_industri')
-                                <div class="flex items-center gap-2 text-xs text-orange-600">
-                                    <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                                    <span class="italic">Menunggu konfirmasi industri</span>
-                                </div>
-                                @elseif ($row['aksi'] === 'selesai')
-                                <span class="text-xs text-green-600 font-medium">Penempatan selesai</span>
-                                @elseif ($row['aksi'] === 'ulang')
-                                <span class="text-xs text-red-600 italic">Perlu penempatan ulang</span>
-                                @else
-                                <span class="text-xs text-gray-400 italic">Menunggu hasil SAW</span>
-                                @endif
+                            <td class="px-4 py-3">
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    max="1"
+                                    value="{{ $row['bobot'] }}"
+                                    class="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500">
                             </td>
                         </tr>
                         @endforeach
+                        <tr class="bg-gray-50 font-semibold">
+                            <td class="px-4 py-3 text-sm text-gray-900" colspan="2">Total Bobot</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2 text-green-700">
+                                    <span class="text-sm">1.00</span>
+                                    <span class="text-xs bg-green-100 px-2 py-0.5 rounded-full">Valid</span>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="mt-4 text-sm text-gray-500">
-            Menampilkan {{ count($penempatanData) }} data penempatan
-        </div>
-    </div>
-
-    {{-- Modal Detail --}}
-    <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-            <div class="flex items-center justify-between p-4 border-b">
-                <div>
-                    <h4 class="text-base font-semibold text-gray-900">Detail Rekomendasi SAW</h4>
-                    <p class="text-xs text-gray-500">
-                        <span x-text="detailNama"></span> · <span x-text="detailJurusan"></span>
+        {{-- Info Modal --}}
+        <div x-show="infoOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h4 class="text-base font-semibold text-gray-900">Info Bobot SAW</h4>
+                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="infoOpen = false">✕</button>
+                </div>
+                <div class="p-4 text-sm text-gray-700 space-y-3">
+                    <p>
+                        Bobot SAW adalah tingkat kepentingan tiap kriteria. Contoh: nilai akademik bobot 0,30 berarti kontribusinya
+                        30% terhadap skor total.
+                    </p>
+                    <p>Alur perhitungan sederhana:</p>
+                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
+                        <li>Ambil nilai siswa dan industri.</li>
+                        <li>Normalisasi tiap kriteria.</li>
+                        <li>Kalikan dengan bobot.</li>
+                        <li>Jumlahkan menjadi skor akhir.</li>
+                        <li>Urutkan industri berdasarkan skor tertinggi.</li>
+                    </ol>
+                    <p>
+                        Karena bobot diset per jurusan, tiap jurusan bisa punya prioritas yang berbeda.
                     </p>
                 </div>
-                <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
-            </div>
-            <div class="p-4">
-                <template x-if="detailList.length === 0">
-                    <div class="text-sm text-gray-500 italic">Belum ada hasil rekomendasi.</div>
-                </template>
-                <template x-if="detailList.length > 0">
-                    <div class="space-y-3">
-                        <template x-for="item in detailList" :key="item.rank">
-                            <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900" x-text="item.industri"></div>
-                                    <div class="text-xs text-gray-500">Skor: <span x-text="item.skor.toFixed(2)"></span></div>
-                                </div>
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700">
-                                    Rank <span x-text="item.rank"></span>
-                                </span>
-                            </div>
-                        </template>
-                    </div>
-                </template>
+                <div class="flex justify-end p-4 border-t bg-gray-50">
+                    <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                        @click="infoOpen = false">
+                        Mengerti
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+
+        {{-- Filter --}}
+        <div id="filter-penempatan" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Filter Data Penempatan</h3>
+                <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                    Status data terbaru
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
+                    <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($tahunAjaranList as $tahun)
+                        <option>{{ $tahun }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                    <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        <option value="">Semua Jurusan</option>
+                        @foreach ($jurusanOptions as $jurusan)
+                        <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Status Penempatan</label>
+                    <select class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($statusList as $status)
+                        <option>{{ $status }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Nama siswa"
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
+                    Terapkan Filter
+                </button>
+                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                    Reset Filter
+                </button>
+            </div>
+        </div>
+
+        {{-- Jalankan SAW --}}
+        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6 mb-6">
+            <h3 class="text-base font-semibold text-gray-900 mb-4">Menjalankan Penempatan Otomatis (SAW)</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                    <div class="text-xs text-gray-500 mb-1">Jurusan Aktif</div>
+                    <div class="text-sm font-semibold text-gray-900">Pilih jurusan terlebih dahulu</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                    <div class="text-xs text-gray-500 mb-1">Status Bobot</div>
+                    <div class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Valid</span>
+                        <span class="text-green-700">Bobot siap digunakan</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button
+                    class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all text-sm font-medium shadow-lg shadow-purple-500/30">
+                    Jalankan Penempatan Otomatis (SAW)
+                </button>
+                <div class="px-4 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                    <span class="text-sm text-green-700 font-medium">Hasil SAW Tersedia</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Hasil Penempatan --}}
+        <div id="hasil-penempatan" class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Hasil Penempatan Siswa</h3>
+                <div class="flex items-center gap-3 text-sm">
+                    <div class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
+                        <span class="text-green-600 font-semibold">2</span>
+                        <span class="text-green-700 ml-1">Diterima</span>
+                    </div>
+                    <div class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <span class="text-yellow-600 font-semibold">1</span>
+                        <span class="text-yellow-700 ml-1">Proses</span>
+                    </div>
+                    <div class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+                        <span class="text-red-600 font-semibold">1</span>
+                        <span class="text-red-700 ml-1">Ditolak</span>
+                    </div>
+                    <button class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium">
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200">
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Siswa</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jurusan</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Industri Rekomendasi</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nilai Preferensi</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Peringkat</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pilihan Siswa</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status Penempatan</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Guru Pembimbing</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach ($penempatanData as $row)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-gray-900 text-sm">{{ $row['nama'] }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ $row['jurusan'] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    @if ($row['industri'])
+                                    {{ $row['industri'] }}
+                                    @else
+                                    <span class="text-gray-400 italic">Belum ada</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    @if ($row['nilai'])
+                                    <span class="font-semibold text-purple-600">{{ number_format($row['nilai'], 2) }}</span>
+                                    @else
+                                    <span class="text-gray-400 italic">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    @if ($row['peringkat'])
+                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-700 rounded-full font-semibold text-xs">
+                                        {{ $row['peringkat'] }}
+                                    </span>
+                                    @else
+                                    <span class="text-gray-400 italic">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if ($row['pilihan'])
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $row['pilihan'] === 'Rekomendasi' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700' }}">
+                                        {{ $row['pilihan'] }}
+                                    </span>
+                                    @else
+                                    <span class="text-gray-400 italic text-sm">Belum dipilih</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    @php
+                                    $status = $row['status'];
+                                    $statusClass = match ($status) {
+                                    'Diterima Industri' => 'bg-green-50 text-green-700 border border-green-200',
+                                    'Proses Pengajuan' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                                    'Ditolak Industri' => 'bg-red-50 text-red-700 border border-red-200',
+                                    default => 'bg-gray-50 text-gray-700 border border-gray-200',
+                                    };
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
+                                        {{ $status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    @if ($row['guru'])
+                                    {{ $row['guru'] }}
+                                    @else
+                                    <span class="text-gray-400 italic">Belum ditentukan</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <button
+                                        type="button"
+                                        class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
+                                        @click="detailOpen = true; detailNama = '{{ $row['nama'] }}'; detailJurusan = '{{ $row['jurusan'] }}'; detailList = {{ json_encode($row['rekomendasi']) }};">
+                                        Lihat Detail
+                                    </button>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if ($row['aksi'] === 'konfirmasi')
+                                    <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-xs font-medium">
+                                        Konfirmasi Pilihan
+                                    </button>
+                                    @elseif ($row['aksi'] === 'menunggu_industri')
+                                    <div class="flex items-center gap-2 text-xs text-orange-600">
+                                        <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                                        <span class="italic">Menunggu konfirmasi industri</span>
+                                    </div>
+                                    @elseif ($row['aksi'] === 'selesai')
+                                    <span class="text-xs text-green-600 font-medium">Penempatan selesai</span>
+                                    @elseif ($row['aksi'] === 'ulang')
+                                    <span class="text-xs text-red-600 italic">Perlu penempatan ulang</span>
+                                    @else
+                                    <span class="text-xs text-gray-400 italic">Menunggu hasil SAW</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-4 text-sm text-gray-500">
+                Menampilkan {{ count($penempatanData) }} data penempatan
+            </div>
+        </div>
+
+        {{-- Modal Detail --}}
+        <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-900">Detail Rekomendasi SAW</h4>
+                        <p class="text-xs text-gray-500">
+                            <span x-text="detailNama"></span> · <span x-text="detailJurusan"></span>
+                        </p>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
+                </div>
+                <div class="p-4">
+                    <template x-if="detailList.length === 0">
+                        <div class="text-sm text-gray-500 italic">Belum ada hasil rekomendasi.</div>
+                    </template>
+                    <template x-if="detailList.length > 0">
+                        <div class="space-y-3">
+                            <template x-for="item in detailList" :key="item.rank">
+                                <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900" x-text="item.industri"></div>
+                                        <div class="text-xs text-gray-500">Skor: <span x-text="item.skor.toFixed(2)"></span></div>
+                                    </div>
+                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700">
+                                        Rank <span x-text="item.rank"></span>
+                                    </span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 </x-admin-layout>
