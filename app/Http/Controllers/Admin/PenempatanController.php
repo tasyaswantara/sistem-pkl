@@ -251,20 +251,39 @@ class PenempatanController extends Controller
             return back()->withErrors(['saw' => 'Kriteria belum terhubung dengan data siswa/industri.']);
         }
 
-        $normalisasi = [];
+        $normalisasiSiswa = [];
         foreach ($kriteriaEntries as $entry) {
-            $values = $entry['source'] === 'siswa'
-                ? $siswaList->pluck($entry['field'])->filter(function ($value) {
-                    return $value !== null;
-                })
-                : $industriList->pluck($entry['field'])->filter(function ($value) {
-                    return $value !== null;
-                });
+            if ($entry['source'] !== 'siswa') {
+                continue;
+            }
 
-            $normalisasi[$entry['field']] = [
+            $values = $siswaList->pluck($entry['field'])->filter(function ($value) {
+                return $value !== null;
+            });
+
+            $normalisasiSiswa[$entry['field']] = [
                 'max' => $values->max() ?: 0,
                 'min' => $values->min() ?: 0,
             ];
+        }
+
+        $industriesByGrade = $industriList->groupBy('grade');
+        $normalisasiIndustriByGrade = [];
+        foreach ($industriesByGrade as $grade => $list) {
+            foreach ($kriteriaEntries as $entry) {
+                if ($entry['source'] !== 'industri') {
+                    continue;
+                }
+
+                $values = $list->pluck($entry['field'])->filter(function ($value) {
+                    return $value !== null;
+                });
+
+                $normalisasiIndustriByGrade[$grade][$entry['field']] = [
+                    'max' => $values->max() ?: 0,
+                    'min' => $values->min() ?: 0,
+                ];
+            }
         }
 
         $now = now();
@@ -274,7 +293,9 @@ class PenempatanController extends Controller
             $jurusanId,
             $tahunAjaran,
             $kriteriaEntries,
-            $normalisasi,
+            $normalisasiSiswa,
+            $normalisasiIndustriByGrade,
+            $industriesByGrade,
             $siswaList,
             $industriList,
             $now,
@@ -289,16 +310,28 @@ class PenempatanController extends Controller
 
             $rows = [];
             foreach ($siswaList as $siswa) {
+                $grade = $this->resolveSiswaGrade((float) $siswa->nilai_akademik);
+                $poolIndustri = $industriesByGrade->get($grade, collect());
+                if ($poolIndustri->isEmpty()) {
+                    $poolIndustri = $industriList;
+                }
+
+                $normalisasiIndustri = $normalisasiIndustriByGrade[$grade] ?? [];
                 $scores = [];
-                foreach ($industriList as $industri) {
+                foreach ($poolIndustri as $industri) {
                     $score = 0;
                     foreach ($kriteriaEntries as $entry) {
                         $value = $entry['source'] === 'siswa'
                             ? (float) ($siswa->{$entry['field']} ?? 0)
                             : (float) ($industri->{$entry['field']} ?? 0);
 
-                        $max = $normalisasi[$entry['field']]['max'] ?? 0;
-                        $min = $normalisasi[$entry['field']]['min'] ?? 0;
+                        if ($entry['source'] === 'siswa') {
+                            $max = $normalisasiSiswa[$entry['field']]['max'] ?? 0;
+                            $min = $normalisasiSiswa[$entry['field']]['min'] ?? 0;
+                        } else {
+                            $max = $normalisasiIndustri[$entry['field']]['max'] ?? 0;
+                            $min = $normalisasiIndustri[$entry['field']]['min'] ?? 0;
+                        }
 
                         if ($max <= 0) {
                             $normalized = 0;
@@ -392,5 +425,18 @@ class PenempatanController extends Controller
         }
 
         return null;
+    }
+
+    private function resolveSiswaGrade(float $nilai): string
+    {
+        if ($nilai >= 90) {
+            return 'A';
+        }
+
+        if ($nilai >= 80) {
+            return 'B';
+        }
+
+        return 'C';
     }
 }

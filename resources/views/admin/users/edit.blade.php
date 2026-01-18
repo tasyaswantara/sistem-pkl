@@ -56,29 +56,34 @@
                 <h3 class="font-semibold mb-4">Data Umum</h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="name" value="{{ old('name', $user->name) }}" required
-                        placeholder="Nama Lengkap"
-                        class="input-text">
-
-                    <input type="email" name="email" value="{{ old('email', $user->email) }}" required
-                        placeholder="Email"
-                        class="input-text">
-
-                    <div class="relative">
-                        <input :type="showPassword ? 'text' : 'password'"
-                            name="password"
-                            placeholder="Password (kosongkan jika tidak diubah)"
-                            class="input-text pr-10">
-                        <button type="button"
-                            @click="showPassword=!showPassword"
-                            class="absolute right-3 top-2.5 text-gray-400">
-                            👁
-                        </button>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Nama Lengkap</label>
+                        <input name="name" value="{{ old('name', $user->name) }}" required
+                            placeholder="Nama Lengkap"
+                            class="input-text">
                     </div>
 
-                    <input type="password" name="password_confirmation"
-                        placeholder="Konfirmasi Password"
-                        class="input-text">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                            placeholder="Email"
+                            class="input-text">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Password (opsional)</label>
+                        <input type="password"
+                            name="password"
+                            placeholder="Password (kosongkan jika tidak diubah)"
+                            class="input-text">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Konfirmasi Password</label>
+                        <input type="password" name="password_confirmation"
+                            placeholder="Konfirmasi Password"
+                            class="input-text">
+                    </div>
                 </div>
             </div>
 
@@ -99,22 +104,34 @@
                 class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
                 <h3 class="font-semibold mb-4">Data Siswa</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="nis" value="{{ old('nis', $siswa->nis ?? '') }}" placeholder="NIS" class="input-text">
-                    <select name="jurusan_id" class="input-text"
-                        :disabled="role !== 'siswa'"
-                        x-init="if (!kelas && $el.selectedOptions.length) { const name = $el.selectedOptions[0].dataset.name; kelas = name ? 'XII ' + name : ''; }"
-                        @change="const name = $event.target.selectedOptions[0].dataset.name; kelas = name ? 'XII ' + name : '';">
-                        <option value="">-- Pilih Jurusan --</option>
-                        @foreach($jurusan as $j)
-                        <option value="{{ $j->id }}" data-name="{{ $j->nama }}"
-                            {{ old('jurusan_id', $siswa->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
-                            {{ $j->nama }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <input name="kelas" x-model="kelas" placeholder="Kelas (otomatis)" class="input-text" readonly>
-                    <input name="nilai_akademik" type="number" value="{{ old('nilai_akademik', $siswa->nilai_akademik ?? '') }}"
-                        placeholder="Nilai Akademik" class="input-text">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">NIS</label>
+                        <input name="nis" value="{{ old('nis', $siswa->nis ?? '') }}" placeholder="NIS" class="input-text">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Jurusan</label>
+                        <select name="jurusan_id" class="input-text"
+                            :disabled="role !== 'siswa'"
+                            x-init="if (!kelas && $el.selectedOptions.length) { const name = $el.selectedOptions[0].dataset.name; kelas = name ? 'XII ' + name : ''; }"
+                            @change="const name = $event.target.selectedOptions[0].dataset.name; kelas = name ? 'XII ' + name : '';">
+                            <option value="">-- Pilih Jurusan --</option>
+                            @foreach($jurusan as $j)
+                            <option value="{{ $j->id }}" data-name="{{ $j->nama }}"
+                                {{ old('jurusan_id', $siswa->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
+                                {{ $j->nama }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
+                        <input name="kelas" x-model="kelas" placeholder="Kelas (otomatis)" class="input-text" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Nilai Akademik</label>
+                        <input name="nilai_akademik" type="number" value="{{ old('nilai_akademik', $siswa->nilai_akademik ?? '') }}"
+                            placeholder="Nilai Akademik" class="input-text">
+                    </div>
                     <div class="bg-white border rounded-lg p-3 md:col-span-2">
                         <p class="text-sm font-medium text-gray-700 mb-2">Perangkat (skala 1-5)</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
@@ -136,14 +153,20 @@
                             Skor tersimpan: <span class="font-semibold" x-text="perangkatScore"></span>
                         </p>
                     </div>
-                    <select name="status_pkl" class="input-text">
-                        <option value="">-- Status PKL --</option>
-                        <option value="belum" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'belum' ? 'selected' : '' }}>Belum</option>
-                        <option value="berjalan" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
-                        <option value="selesai" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                    </select>
-                    <input name="tahun_ajaran" value="{{ old('tahun_ajaran', $siswa->tahun_ajaran ?? '') }}"
-                        placeholder="Tahun Ajaran" class="input-text">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Status PKL</label>
+                        <select name="status_pkl" class="input-text">
+                            <option value="">-- Status PKL --</option>
+                            <option value="belum" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'belum' ? 'selected' : '' }}>Belum</option>
+                            <option value="berjalan" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
+                            <option value="selesai" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Tahun Ajaran</label>
+                        <input name="tahun_ajaran" value="{{ old('tahun_ajaran', $siswa->tahun_ajaran ?? '') }}"
+                            placeholder="Tahun Ajaran" class="input-text">
+                    </div>
                 </div>
             </div>
 
@@ -152,16 +175,22 @@
                 class="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
                 <h3 class="font-semibold mb-4">Data Guru Pembimbing</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="nip" value="{{ old('nip', $guru->nip ?? '') }}" placeholder="NIP" class="input-text">
-                    <select name="jurusan_id" class="input-text"
-                        :disabled="role !== 'guru pembimbing'">
-                        <option value="">-- Jurusan --</option>
-                        @foreach($jurusan as $j)
-                        <option value="{{ $j->id }}" {{ old('jurusan_id', $guru->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
-                            {{ $j->nama }}
-                        </option>
-                        @endforeach
-                    </select>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">NIP</label>
+                        <input name="nip" value="{{ old('nip', $guru->nip ?? '') }}" placeholder="NIP" class="input-text">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Jurusan</label>
+                        <select name="jurusan_id" class="input-text"
+                            :disabled="role !== 'guru pembimbing'">
+                            <option value="">-- Jurusan --</option>
+                            @foreach($jurusan as $j)
+                            <option value="{{ $j->id }}" {{ old('jurusan_id', $guru->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
+                                {{ $j->nama }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -170,23 +199,50 @@
                 class="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-6">
                 <h3 class="font-semibold mb-4">Data Industri</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="nama_industri" value="{{ old('nama_industri', $industri->nama_industri ?? '') }}"
-                        placeholder="Nama Perusahaan" class="input-text">
-                    <input name="kapasitas" type="number" value="{{ old('kapasitas', $industri->kapasitas ?? '') }}"
-                        placeholder="Kapasitas" class="input-text">
-                    <input name="reputasi" type="number" value="{{ old('reputasi', $industri->reputasi ?? '') }}"
-                        placeholder="Reputasi" class="input-text">
-                    <select name="jurusan_id" class="input-text"
-                        :disabled="role !== 'perwakilan industri'">
-                        <option value="">-- Pilih Jurusan --</option>
-                        @foreach($jurusan as $j)
-                        <option value="{{ $j->id }}" {{ old('jurusan_id', $industri->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
-                            {{ $j->nama }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <textarea name="alamat" placeholder="Alamat"
-                        class="input-text md:col-span-2">{{ old('alamat', $industri->alamat ?? '') }}</textarea>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Nama Perusahaan</label>
+                        <input name="nama_industri" value="{{ old('nama_industri', $industri->nama_industri ?? '') }}"
+                            placeholder="Nama Perusahaan" class="input-text">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Kapasitas</label>
+                        <input name="kapasitas" type="number" value="{{ old('kapasitas', $industri->kapasitas ?? '') }}"
+                            placeholder="Kapasitas" class="input-text">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Reputasi</label>
+                        <input name="reputasi" type="number" value="{{ old('reputasi', $industri->reputasi ?? '') }}"
+                            placeholder="Reputasi" class="input-text">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Grade</label>
+                        <select name="grade" class="input-text"
+                            :disabled="role !== 'perwakilan industri'">
+                            <option value="">-- Pilih Grade --</option>
+                            @foreach (['A', 'B', 'C'] as $g)
+                            <option value="{{ $g }}" {{ old('grade', $industri->grade ?? '') == $g ? 'selected' : '' }}>
+                                Grade {{ $g }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Jurusan</label>
+                        <select name="jurusan_id" class="input-text"
+                            :disabled="role !== 'perwakilan industri'">
+                            <option value="">-- Pilih Jurusan --</option>
+                            @foreach($jurusan as $j)
+                            <option value="{{ $j->id }}" {{ old('jurusan_id', $industri->jurusan_id ?? '') == $j->id ? 'selected' : '' }}>
+                                {{ $j->nama }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Alamat</label>
+                        <textarea name="alamat" placeholder="Alamat"
+                            class="input-text md:col-span-2">{{ old('alamat', $industri->alamat ?? '') }}</textarea>
+                    </div>
                 </div>
             </div>
 

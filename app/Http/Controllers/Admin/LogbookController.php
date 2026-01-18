@@ -69,7 +69,8 @@ class LogbookController extends Controller
         $logbooks = $logbookQuery
             ->orderByDesc('tanggal')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         $statusLabels = [
             'all' => 'Semua Status',

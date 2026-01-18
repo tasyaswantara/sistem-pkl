@@ -14,7 +14,8 @@ class Industri extends Model
         'kapasitas',
         'alamat',
         'reputasi',
-        'jurusan_id'
+        'jurusan_id',
+        'grade',
     ];
 
     public function user()

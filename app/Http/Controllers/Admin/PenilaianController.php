@@ -57,7 +57,8 @@ class PenilaianController extends Controller
         $penilaianList = $baseQuery
             ->orderByDesc('tanggal_penilaian')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.penilaian.index', [
             'jurusanOptions' => $jurusanOptions,

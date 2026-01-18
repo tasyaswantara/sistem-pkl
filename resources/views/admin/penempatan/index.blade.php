@@ -345,6 +345,7 @@
                             $displayStatus = $statusLabels[$status] ?? $status;
                             $pilihan = $row->pilihan_siswa;
                             $displayPilihan = $pilihanLabels[$pilihan] ?? null;
+                            $pilihanIndustri = $industriNama;
                             @endphp
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4">
@@ -377,7 +378,7 @@
                                 <td class="px-6 py-4">
                                     @if ($displayPilihan)
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $pilihan === 'rekomendasi' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700' }}">
-                                        {{ $displayPilihan }}
+                                        {{ $displayPilihan }}{{ $pilihanIndustri ? ' - ' . $pilihanIndustri : '' }}
                                     </span>
                                     @else
                                     <span class="text-gray-400 italic text-sm">Belum dipilih</span>

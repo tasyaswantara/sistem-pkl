@@ -68,7 +68,7 @@
 
         {{-- Filter & Control --}}
         <form method="GET" class="flex items-center justify-between gap-4 mb-6">
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <select name="role"
                     onchange="this.form.submit()"
                     class="px-4 py-2 w-[200px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
@@ -79,12 +79,60 @@
                     @endforeach
                 </select>
 
+                @if ($roleFilter === 'Siswa')
+                <select name="jurusan_id"
+                    onchange="this.form.submit()"
+                    class="px-4 py-2 w-[200px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                    <option value="">Semua Jurusan</option>
+                    @foreach ($jurusanOptions as $j)
+                    <option value="{{ $j->id }}" {{ request('jurusan_id') == $j->id ? 'selected' : '' }}>
+                        {{ $j->nama }}
+                    </option>
+                    @endforeach
+                </select>
+
+                <select name="kelas"
+                    onchange="this.form.submit()"
+                    class="px-4 py-2 w-[180px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                    <option value="">Semua Kelas</option>
+                    @foreach ($kelasOptions as $kelas)
+                    <option value="{{ $kelas }}" {{ request('kelas') == $kelas ? 'selected' : '' }}>
+                        {{ $kelas }}
+                    </option>
+                    @endforeach
+                </select>
+                @endif
+
+                @if ($roleFilter === 'Perwakilan Industri')
+                <select name="jurusan_id"
+                    onchange="this.form.submit()"
+                    class="px-4 py-2 w-[200px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                    <option value="">Semua Jurusan</option>
+                    @foreach ($jurusanOptions as $j)
+                    <option value="{{ $j->id }}" {{ request('jurusan_id') == $j->id ? 'selected' : '' }}>
+                        {{ $j->nama }}
+                    </option>
+                    @endforeach
+                </select>
+
+                <select name="grade"
+                    onchange="this.form.submit()"
+                    class="px-4 py-2 w-[160px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                    <option value="">Semua Grade</option>
+                    @foreach (['A', 'B', 'C'] as $g)
+                    <option value="{{ $g }}" {{ request('grade') == $g ? 'selected' : '' }}>
+                        Grade {{ $g }}
+                    </option>
+                    @endforeach
+                </select>
+                @endif
+
                 <input
                     type="text"
                     name="search"
                     value="{{ request('search') }}"
                     placeholder="Cari nama atau email"
-                    class="w-[360px] px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm"
+                    class="w-[320px] px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm"
                     oninput="debouncedSubmit(this)">
 
 
@@ -107,6 +155,8 @@
                         @if($roleFilter==='Siswa')
                         <th class="px-6 py-3 text-left">NIS</th>
                         <th class="px-6 py-3 text-left">Jurusan</th>
+                        <th class="px-6 py-3 text-left">Kelas</th>
+                        <th class="px-6 py-3 text-left">Nilai Akademik</th>
                         <th class="px-6 py-3 text-left">Status PKL</th>
                         <th class="px-6 py-3 text-left">Email</th>
                         @elseif($roleFilter==='Guru Pembimbing')
@@ -115,6 +165,7 @@
                         <th class="px-6 py-3 text-left">Email</th>
                         @elseif($roleFilter==='Perwakilan Industri')
                         <th class="px-6 py-3 text-left">Kapasitas</th>
+                        <th class="px-6 py-3 text-left">Grade</th>
                         <th class="px-6 py-3 text-left">Alamat</th>
                         <th class="px-6 py-3 text-left">Email</th>
                         @else
@@ -134,6 +185,8 @@
                         @if($roleFilter === 'Siswa')
                         <td class="px-6 py-4 text-sm">{{ $u->siswa->nis ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm">{{ $u->siswa->jurusan->nama ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm">{{ $u->siswa->kelas ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm">{{ $u->siswa->nilai_akademik ?? '-' }}</td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 rounded-full text-xs {{ statusBadge($u->siswa->status_pkl ?? '-') }}">
                                 {{ $u->siswa->status_pkl ?? '-' }}
@@ -148,6 +201,7 @@
 
                         @elseif($roleFilter === 'Perwakilan Industri')
                         <td class="px-6 py-4 text-sm">{{ $u->industri->kapasitas ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm">{{ $u->industri->grade ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm">{{ $u->industri->alamat ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
 
@@ -206,7 +260,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="py-10 text-center text-gray-500 text-sm">
+                        <td colspan="10" class="py-10 text-center text-gray-500 text-sm">
                             Tidak ada data pengguna
                         </td>
                     </tr>

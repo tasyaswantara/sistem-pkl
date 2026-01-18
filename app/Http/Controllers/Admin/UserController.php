@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use App\Models\Jurusan;
+use App\Models\Siswa;
 use Illuminate\Validation\Rule;
 
 
@@ -17,6 +18,9 @@ class UserController extends Controller
     {
         $role = $request->role;
         $search = $request->search;
+        $jurusanId = $request->jurusan_id;
+        $kelas = $request->kelas;
+        $grade = $request->grade;
 
         $users = User::with([
             'roles',
@@ -29,6 +33,26 @@ class UserController extends Controller
                     $r->where('name', strtolower($role));
                 });
             })
+            ->when($jurusanId && $role === 'Siswa', function ($q) use ($jurusanId) {
+                $q->whereHas('siswa', function ($sq) use ($jurusanId) {
+                    $sq->where('jurusan_id', $jurusanId);
+                });
+            })
+            ->when($jurusanId && $role === 'Perwakilan Industri', function ($q) use ($jurusanId) {
+                $q->whereHas('industri', function ($iq) use ($jurusanId) {
+                    $iq->where('jurusan_id', $jurusanId);
+                });
+            })
+            ->when($kelas && $role === 'Siswa', function ($q) use ($kelas) {
+                $q->whereHas('siswa', function ($sq) use ($kelas) {
+                    $sq->where('kelas', $kelas);
+                });
+            })
+            ->when($grade && $role === 'Perwakilan Industri', function ($q) use ($grade) {
+                $q->whereHas('industri', function ($iq) use ($grade) {
+                    $iq->where('grade', $grade);
+                });
+            })
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($qq) use ($search) {
                     $qq->where('name', 'like', "%$search%")
@@ -38,7 +62,10 @@ class UserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.data-pengguna', compact('users'));
+        $jurusanOptions = Jurusan::orderBy('nama')->get();
+        $kelasOptions = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+
+        return view('admin.data-pengguna', compact('users', 'jurusanOptions', 'kelasOptions'));
     }
 
 
@@ -85,6 +112,7 @@ class UserController extends Controller
                     'kapasitas' => 'required|integer|min:1',
                     'alamat' => 'required|string',
                     'reputasi' => 'required|integer|min:0',
+                    'grade' => 'required|in:A,B,C',
                     'jurusan_id' => 'required|exists:jurusan,id',
                 ]);
                 break;
@@ -130,6 +158,7 @@ class UserController extends Controller
                     'kapasitas' => $request->kapasitas,
                     'alamat' => $request->alamat,
                     'reputasi' => $request->reputasi,
+                    'grade' => $request->grade,
                     'jurusan_id' => $request->jurusan_id,
                 ]);
                 break;
@@ -206,6 +235,7 @@ class UserController extends Controller
                     'kapasitas' => 'required|integer|min:1',
                     'alamat' => 'required|string',
                     'reputasi' => 'required|integer|min:0',
+                    'grade' => 'required|in:A,B,C',
                     'jurusan_id' => 'required|exists:jurusan,id',
                 ]);
                 break;
@@ -258,6 +288,7 @@ class UserController extends Controller
                         'kapasitas' => $request->kapasitas,
                         'alamat' => $request->alamat,
                         'reputasi' => $request->reputasi,
+                        'grade' => $request->grade,
                         'jurusan_id' => $request->jurusan_id,
                     ]
                 );

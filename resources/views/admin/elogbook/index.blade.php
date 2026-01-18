@@ -32,7 +32,7 @@
             <div class="flex flex-wrap items-end gap-4 mb-4">
                 <div class="min-w-[180px]">
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
-                    <select name="tahun_ajaran" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <select name="tahun_ajaran" onchange="this.form.submit()" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                         <option value="">Semua</option>
                         @foreach ($tahunAjaranList as $tahun)
                         <option value="{{ $tahun }}" {{ (string) $filters['tahun_ajaran'] === (string) $tahun ? 'selected' : '' }}>
@@ -43,7 +43,7 @@
                 </div>
                 <div class="min-w-[200px]">
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
-                    <select name="jurusan_id" class="w-[200px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <select name="jurusan_id" onchange="this.form.submit()" class="w-[200px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                         <option value="">Semua Jurusan</option>
                         @foreach ($jurusanOptions as $jurusan)
                         <option value="{{ $jurusan->id }}" {{ (string) $filters['jurusan_id'] === (string) $jurusan->id ? 'selected' : '' }}>
@@ -54,7 +54,7 @@
                 </div>
                 <div class="min-w-[220px]">
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Industri</label>
-                    <select name="industri_id" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <select name="industri_id" onchange="this.form.submit()" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                         <option value="">Semua Industri</option>
                         @foreach ($industriOptions as $industri)
                         <option value="{{ $industri->id }}" {{ (string) $filters['industri_id'] === (string) $industri->id ? 'selected' : '' }}>
@@ -65,7 +65,7 @@
                 </div>
                 <div class="min-w-[160px]">
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
-                    <select name="status" class="w-[200px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <select name="status" onchange="this.form.submit()" class="w-[200px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                         @foreach ($statusLabels as $value => $label)
                         <option value="{{ $value }}" {{ (string) $filters['status'] === (string) $value ? 'selected' : '' }}>
                             {{ $label }}
@@ -82,15 +82,13 @@
                             name="q"
                             value="{{ $filters['q'] }}"
                             placeholder="Nama siswa"
-                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                            oninput="debouncedSubmit(this)">
                     </div>
                 </div>
             </div>
 
             <div class="flex items-center gap-3">
-                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
-                    Terapkan Filter
-                </button>
                 <a href="{{ route('admin.elogbook') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
                     Reset Filter
                 </a>
@@ -161,8 +159,19 @@
             </div>
         </div>
 
-        <div class="mt-4 text-sm text-gray-500">
-            Menampilkan {{ $logbooks->count() }} data logbook
+        <div class="mt-4">
+            {{ $logbooks->links() }}
         </div>
     </div>
 </x-admin-layout>
+<script>
+    let typingTimer;
+
+    function debouncedSubmit(input) {
+        clearTimeout(typingTimer);
+
+        typingTimer = setTimeout(() => {
+            input.form.submit();
+        }, 700);
+    }
+</script>

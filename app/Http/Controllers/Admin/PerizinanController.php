@@ -69,7 +69,8 @@ class PerizinanController extends Controller
         $perizinanList = $perizinanQuery
             ->orderByDesc('tanggal_mulai')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         $statusLabels = [
             'all' => 'Semua Status',
