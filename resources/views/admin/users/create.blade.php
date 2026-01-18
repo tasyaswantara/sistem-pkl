@@ -194,11 +194,6 @@
                             placeholder="Kapasitas" class="input-text">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Reputasi</label>
-                        <input name="reputasi" type="number" value="{{ old('reputasi') }}"
-                            placeholder="Reputasi" class="input-text">
-                    </div>
-                    <div>
                         <label class="block text-xs font-medium text-gray-600 mb-1">Grade</label>
                         <select name="grade" class="input-text"
                             :disabled="role !== 'perwakilan industri'">

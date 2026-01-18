@@ -416,10 +416,6 @@ class PenempatanController extends Controller
             return ['source' => 'siswa', 'field' => 'perangkat'];
         }
 
-        if (str_contains($nama, 'reputasi')) {
-            return ['source' => 'industri', 'field' => 'reputasi'];
-        }
-
         if (str_contains($nama, 'kapasitas')) {
             return ['source' => 'industri', 'field' => 'kapasitas'];
         }

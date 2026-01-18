@@ -15,7 +15,6 @@ class KriteriaSeeder extends Seeder
         $kriteria = [
             ['nama_kriteria' => 'Nilai Akademik', 'tipe' => 'benefit'],
             ['nama_kriteria' => 'Perangkat yang Dimiliki', 'tipe' => 'benefit'],
-            ['nama_kriteria' => 'Reputasi Perusahaan', 'tipe' => 'benefit'],
             ['nama_kriteria' => 'Kapasitas Tempat PKL', 'tipe' => 'benefit'],
         ];
 

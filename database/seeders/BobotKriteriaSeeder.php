@@ -17,8 +17,7 @@ class BobotKriteriaSeeder extends Seeder
         $bobotMap = [
             'Nilai Akademik' => 0.30,
             'Perangkat yang Dimiliki' => 0.25,
-            'Reputasi Perusahaan' => 0.25,
-            'Kapasitas Tempat PKL' => 0.20,
+            'Kapasitas Tempat PKL' => 0.45,
         ];
 
         $jurusanList = Jurusan::all();

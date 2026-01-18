@@ -41,7 +41,6 @@ class IndustriSeeder extends Seeder
                 'nama_industri' => $nama,
                 'kapasitas'     => rand(3, 15),
                 'alamat'        => fake()->address(),
-                'reputasi'      => rand(1, 5),
                 'grade'         => $faker->randomElement(['A', 'B', 'C']),
                 'jurusan_id'     => $faker->randomElement($jurusanIds),
             ]);

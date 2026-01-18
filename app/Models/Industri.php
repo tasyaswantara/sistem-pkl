@@ -13,7 +13,6 @@ class Industri extends Model
         'nama_industri',
         'kapasitas',
         'alamat',
-        'reputasi',
         'jurusan_id',
         'grade',
     ];

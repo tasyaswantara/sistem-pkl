@@ -111,7 +111,6 @@ class UserController extends Controller
                     'nama_industri' => 'required|string|max:255',
                     'kapasitas' => 'required|integer|min:1',
                     'alamat' => 'required|string',
-                    'reputasi' => 'required|integer|min:0',
                     'grade' => 'required|in:A,B,C',
                     'jurusan_id' => 'required|exists:jurusan,id',
                 ]);
@@ -157,7 +156,6 @@ class UserController extends Controller
                     'nama_industri' => $request->nama_industri,
                     'kapasitas' => $request->kapasitas,
                     'alamat' => $request->alamat,
-                    'reputasi' => $request->reputasi,
                     'grade' => $request->grade,
                     'jurusan_id' => $request->jurusan_id,
                 ]);
@@ -234,7 +232,6 @@ class UserController extends Controller
                     'nama_industri' => 'required|string|max:255',
                     'kapasitas' => 'required|integer|min:1',
                     'alamat' => 'required|string',
-                    'reputasi' => 'required|integer|min:0',
                     'grade' => 'required|in:A,B,C',
                     'jurusan_id' => 'required|exists:jurusan,id',
                 ]);
@@ -287,7 +284,6 @@ class UserController extends Controller
                         'nama_industri' => $request->nama_industri,
                         'kapasitas' => $request->kapasitas,
                         'alamat' => $request->alamat,
-                        'reputasi' => $request->reputasi,
                         'grade' => $request->grade,
                         'jurusan_id' => $request->jurusan_id,
                     ]
