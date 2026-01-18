@@ -22,16 +22,26 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans text-gray-900 antialiased">
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
-        <div>
-            <a href="/">
-                <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-            </a>
-        </div>
+<body class="font-sans text-gray-900 antialiased bg-slate-100">
+    <div class="relative min-h-screen flex items-center justify-center px-4 py-10 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-50 via-slate-50 to-teal-100"></div>
+        <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-emerald-200/40 blur-3xl"></div>
+        <div class="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-teal-200/40 blur-3xl"></div>
 
-        <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
-            {{ $slot }}
+        <div class="relative w-full max-w-md">
+            <div class="flex justify-center mb-6">
+                <a href="/" class="inline-flex items-center gap-3">
+                    <img src="{{ asset('assets/images/logo serviam.jpg') }}" alt="Logo Serviam" class="w-14 h-14 rounded-xl object-cover shadow-sm">
+                    <div>
+                        <div class="text-lg font-semibold text-gray-900">Sistem PKL</div>
+                        <div class="text-xs text-gray-500">Portal Administrasi</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="bg-white/90 backdrop-blur rounded-2xl border border-white shadow-lg px-6 py-6">
+                {{ $slot }}
+            </div>
         </div>
     </div>
 </body>

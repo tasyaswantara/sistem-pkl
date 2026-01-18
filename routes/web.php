@@ -11,7 +11,11 @@ use App\Http\Controllers\Admin\PerizinanController;
 use App\Http\Controllers\Admin\PenilaianController;
 
 Route::get('/', function () {
-    return view('welcome');
+    if (!auth()->check()) {
+        return redirect()->route('login');
+    }
+
+    return redirect()->route('dashboard');
 });
 
 Route::get('/dashboard', function () {
