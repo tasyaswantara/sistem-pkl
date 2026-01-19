@@ -69,16 +69,6 @@
         {{-- Filter & Control --}}
         <form method="GET" class="flex items-center justify-between gap-4 mb-6">
             <div class="flex flex-wrap items-center gap-3">
-                <select name="role"
-                    onchange="this.form.submit()"
-                    class="px-4 py-2 w-[200px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
-                    @foreach (['Semua Pengguna','Admin','Siswa','Guru Pembimbing','Perwakilan Industri'] as $r)
-                    <option value="{{ $r }}" {{ request('role')==$r?'selected':'' }}>
-                        {{ $r }}
-                    </option>
-                    @endforeach
-                </select>
-
                 @if ($roleFilter === 'Siswa')
                 <select name="jurusan_id"
                     onchange="this.form.submit()"
