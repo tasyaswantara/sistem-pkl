@@ -37,6 +37,9 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/data-pengguna', [UserController::class, 'index'])
         ->middleware(['auth', 'role:admin'])
         ->name('admin.data-pengguna');
+    Route::post('/data-pengguna/industri/{industri}/pengajuan', [UserController::class, 'kirimPengajuanIndustri'])
+        ->middleware(['auth', 'role:admin'])
+        ->name('admin.industri.pengajuan');
     Route::get('/penempatan', [PenempatanController::class, 'index'])->name('admin.penempatan');
     Route::post('/penempatan/bobot', [PenempatanController::class, 'storeBobot'])->name('admin.penempatan.bobot');
     Route::post('/penempatan/run-saw', [PenempatanController::class, 'runSaw'])->name('admin.penempatan.run-saw');

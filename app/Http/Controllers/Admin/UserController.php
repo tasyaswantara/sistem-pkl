@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use App\Models\Jurusan;
 use App\Models\Siswa;
+use App\Models\Industri;
 use Illuminate\Validation\Rule;
 
 
@@ -302,5 +303,26 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->back()->with('success', 'User deleted successfully.');
+    }
+
+    public function kirimPengajuanIndustri(Industri $industri)
+    {
+        if (!$industri->status_pengajuan) {
+            $industri->update([
+                'status_pengajuan' => 'menunggu',
+                'pengajuan_dikirim_at' => now(),
+            ]);
+        }
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'status' => $industri->status_pengajuan,
+                'label' => ucfirst($industri->status_pengajuan),
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.data-pengguna', request()->query())
+            ->with('success', 'Pengajuan berhasil dikirim ke industri.');
     }
 }

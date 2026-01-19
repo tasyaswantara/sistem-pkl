@@ -15,6 +15,9 @@ class Industri extends Model
         'alamat',
         'jurusan_id',
         'grade',
+        'status_pengajuan',
+        'pengajuan_dikirim_at',
+        'pengajuan_dijawab_at',
     ];
 
     public function user()
