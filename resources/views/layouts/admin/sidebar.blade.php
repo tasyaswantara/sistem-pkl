@@ -28,7 +28,9 @@
     </div>
 
     <!-- MENU -->
-    <nav class="flex-1 px-3 py-6 space-y-1">
+    <nav class="flex-1 px-3 py-6 space-y-1"
+        x-data="{ activeHash: window.location.hash }"
+        x-init="window.addEventListener('hashchange', () => activeHash = window.location.hash)">
 
         @php
         $menus = [
@@ -36,6 +38,28 @@
         'label' => 'Data Pengguna',
         'icon' => 'users',
         'route' => 'admin.data-pengguna',
+        'children' => [
+        [
+        'label' => 'Semua Pengguna',
+        'route' => 'admin.data-pengguna',
+        'params' => ['role' => 'Semua Pengguna'],
+        ],
+        [
+        'label' => 'Admin',
+        'route' => 'admin.data-pengguna',
+        'params' => ['role' => 'Admin'],
+        ],
+        [
+        'label' => 'Siswa',
+        'route' => 'admin.data-pengguna',
+        'params' => ['role' => 'Siswa'],
+        ],
+        [
+        'label' => 'Perwakilan Industri',
+        'route' => 'admin.data-pengguna',
+        'params' => ['role' => 'Perwakilan Industri'],
+        ],
+        ],
         ],
         [
         'label' => 'Penempatan PKL',
@@ -83,7 +107,7 @@
                 @click="open = !open"
                 class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                 {{ request()->routeIs($menu['route'])
-                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 text-white'
+                    ? 'bg-white/10 text-white'
                     : 'text-white/70 hover:bg-white/5 hover:text-white' }}">
 
                 {{-- ICON --}}
@@ -135,14 +159,34 @@
                 </svg>
             </button>
 
-            <div x-show="open" x-collapse class="mt-1 space-y-1 ml-4 border-l border-white/10 pl-3">
+            <div x-show="open" x-collapse class="mt-1 space-y-1 ml-6 border-l border-white/10 pl-4">
                 @foreach ($menu['children'] as $child)
+                @php
+                $childParams = $child['params'] ?? [];
+                $childHash = $child['hash'] ?? null;
+                $childUrl = $childParams ? route($child['route'], $childParams) : route($child['route']);
+                if ($childHash) {
+                $childUrl .= '#' . $childHash;
+                }
+                $isActiveChild = $child['route'] === 'admin.data-pengguna'
+                ? request()->routeIs('admin.data-pengguna') && request('role') === ($childParams['role'] ?? null)
+                : request()->routeIs($child['route']);
+                @endphp
+                @if ($childHash)
                 <a
-                    href="{{ route($child['route']) }}#{{ $child['hash'] }}"
-                    class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-all text-sm">
-                    <span class="w-2 h-2 rounded-full bg-emerald-300/70"></span>
+                    href="{{ $childUrl }}"
+                    class="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm text-white/70 hover:bg-white/5 hover:text-white"
+                    :class="activeHash === '#{{ $childHash }}' ? 'bg-white/10 text-white' : ''">
                     <span>{{ $child['label'] }}</span>
                 </a>
+                @else
+                <a
+                    href="{{ $childUrl }}"
+                    class="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm
+                    {{ $isActiveChild ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white' }}">
+                    <span>{{ $child['label'] }}</span>
+                </a>
+                @endif
                 @endforeach
             </div>
         </div>
@@ -151,7 +195,7 @@
             href="{{ route($menu['route']) }}"
             class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all
             {{ request()->routeIs($menu['route'])
-                ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 text-white'
+                ? 'bg-white/10 text-white'
                 : 'text-white/70 hover:bg-white/5 hover:text-white' }}">
 
             {{-- ICON --}}
