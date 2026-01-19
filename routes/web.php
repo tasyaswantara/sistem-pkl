@@ -43,6 +43,8 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/penempatan', [PenempatanController::class, 'index'])->name('admin.penempatan');
     Route::post('/penempatan/bobot', [PenempatanController::class, 'storeBobot'])->name('admin.penempatan.bobot');
     Route::post('/penempatan/run-saw', [PenempatanController::class, 'runSaw'])->name('admin.penempatan.run-saw');
+    Route::post('/penempatan/{penempatan}/guru', [PenempatanController::class, 'setGuruPembimbing'])
+        ->name('admin.penempatan.guru');
     Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
     Route::get('/perizinan', [PerizinanController::class, 'index'])->name('admin.perizinan');
     Route::get('/penilaian', [PenilaianController::class, 'index'])->name('admin.penilaian');

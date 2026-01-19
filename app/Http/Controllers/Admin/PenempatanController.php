@@ -11,6 +11,7 @@ use App\Models\Kriteria;
 use App\Models\PenempatanPKL;
 use App\Models\SawRun;
 use App\Models\Siswa;
+use App\Models\GuruPembimbing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -116,6 +117,11 @@ class PenempatanController extends Controller
 
         $penempatanData = $penempatanQuery->orderByDesc('id')->get();
 
+        $guruOptions = GuruPembimbing::with('user', 'jurusan')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('jurusan_id');
+
         $statusCounts = [
             'diterima_industri' => $penempatanData->where('status', 'diterima_industri')->count(),
             'proses_pengajuan' => $penempatanData->where('status', 'proses_pengajuan')->count(),
@@ -158,6 +164,7 @@ class PenempatanController extends Controller
             'rekomendasiBySiswa' => $rekomendasiBySiswa,
             'totalBobot' => $totalBobot,
             'isBobotValid' => $isBobotValid,
+            'guruOptions' => $guruOptions,
         ]);
     }
 
@@ -402,6 +409,23 @@ class PenempatanController extends Controller
         ]);
 
         return back()->with('success', 'Perhitungan SAW berhasil dijalankan. Hasil: ' . $rowsCount . ' rekomendasi disimpan.');
+    }
+
+    public function setGuruPembimbing(Request $request, PenempatanPKL $penempatan)
+    {
+        $validated = $request->validate([
+            'guru_pembimbing_id' => 'required|exists:guru_pembimbing,id',
+        ]);
+
+        if ($penempatan->status !== 'diterima_industri') {
+            return back()->withErrors(['guru_pembimbing_id' => 'Guru pembimbing hanya bisa ditentukan setelah industri menerima.']);
+        }
+
+        $penempatan->update([
+            'guru_pembimbing_id' => $validated['guru_pembimbing_id'],
+        ]);
+
+        return back()->with('success', 'Guru pembimbing berhasil ditetapkan.');
     }
 
     private function resolveKriteriaMap(string $nama): ?array

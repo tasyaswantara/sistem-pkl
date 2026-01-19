@@ -7,6 +7,10 @@
             detailJurusan: '',
             detailList: [],
             infoOpen: false,
+            guruOpen: false,
+            guruTargetId: null,
+            guruTargetName: '',
+            guruList: [],
         }">
 
         {{-- Header --}}
@@ -36,6 +40,42 @@
         </div>
         @endif
 
+        {{-- Pilih Jurusan & Tahun Ajaran --}}
+        <form method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Pilih Jurusan & Tahun Ajaran</h3>
+                <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                    Untuk SAW & hasil penempatan
+                </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                    <select name="jurusan_id" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($jurusanOptions as $jurusan)
+                        <option value="{{ $jurusan->id }}" {{ (string) $selectedJurusan === (string) $jurusan->id ? 'selected' : '' }}>
+                            {{ $jurusan->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
+                    <select name="tahun_ajaran" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($tahunAjaranList as $tahun)
+                        <option value="{{ $tahun }}" {{ (string) $selectedTahun === (string) $tahun ? 'selected' : '' }}>
+                            {{ $tahun }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <input type="hidden" name="status" value="{{ $selectedStatus }}">
+            <input type="hidden" name="q" value="{{ $search }}">
+        </form>
+
         {{-- Konfigurasi SAW --}}
         <form method="POST" action="{{ route('admin.penempatan.bobot') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
             @csrf
@@ -58,30 +98,25 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
-                    <select name="jurusan_id" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                        @foreach ($jurusanOptions as $jurusan)
-                        <option value="{{ $jurusan->id }}" {{ (string) $selectedJurusan === (string) $jurusan->id ? 'selected' : '' }}>
-                            {{ $jurusan->nama }}
-                        </option>
-                        @endforeach
-                    </select>
+                    <div class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                        {{ $selectedJurusan ? ($jurusanOptions->firstWhere('id', $selectedJurusan)->nama ?? '-') : 'Pilih jurusan di filter' }}
+                    </div>
+                    <input type="hidden" name="jurusan_id" value="{{ $selectedJurusan }}">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
-                    <select name="tahun_ajaran" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                        @foreach ($tahunAjaranList as $tahun)
-                        <option value="{{ $tahun }}" {{ (string) $selectedTahun === (string) $tahun ? 'selected' : '' }}>
-                            {{ $tahun }}
-                        </option>
-                        @endforeach
-                    </select>
+                    <div class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                        {{ $selectedTahun ?? 'Pilih tahun ajaran di filter' }}
+                    </div>
+                    <input type="hidden" name="tahun_ajaran" value="{{ $selectedTahun }}">
                 </div>
                 <div class="flex items-end gap-2">
                     <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
                         Simpan Bobot
                     </button>
-                    <a href="{{ route('admin.penempatan') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
-                        Reset
+                    <a href="{{ route('admin.penempatan', ['jurusan_id' => $selectedJurusan, 'tahun_ajaran' => $selectedTahun, 'status' => $selectedStatus, 'q' => $search]) }}"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                        Reset Bobot
                     </a>
                 </div>
             </div>
@@ -168,71 +203,6 @@
             </div>
         </div>
 
-        {{-- Filter --}}
-        <form id="filter-penempatan" method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-base font-semibold text-gray-900">Filter Data Penempatan</h3>
-                <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                    Status data terbaru
-                </span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
-                    <select name="tahun_ajaran" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                        @foreach ($tahunAjaranList as $tahun)
-                        <option value="{{ $tahun }}" {{ (string) $selectedTahun === (string) $tahun ? 'selected' : '' }}>
-                            {{ $tahun }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
-                    <select name="jurusan_id" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                        <option value="">Semua Jurusan</option>
-                        @foreach ($jurusanOptions as $jurusan)
-                        <option value="{{ $jurusan->id }}" {{ (string) $selectedJurusan === (string) $jurusan->id ? 'selected' : '' }}>
-                            {{ $jurusan->nama }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Status Penempatan</label>
-                    <select name="status" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                        @foreach ($statusList as $value => $label)
-                        <option value="{{ $value }}" {{ (string) $selectedStatus === (string) $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                        <input
-                            type="text"
-                            name="q"
-                            value="{{ $search }}"
-                            placeholder="Nama siswa"
-                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
-                    Terapkan Filter
-                </button>
-                <a href="{{ route('admin.penempatan') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
-                    Reset Filter
-                </a>
-            </div>
-        </form>
-
         {{-- Jalankan SAW --}}
         <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6 mb-6">
             <h3 class="text-base font-semibold text-gray-900 mb-4">Menjalankan Penempatan Otomatis (SAW)</h3>
@@ -282,6 +252,51 @@
                 @endif
             </div>
         </div>
+
+        {{-- Filter --}}
+        <form id="filter-penempatan" method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Filter Data Penempatan</h3>
+                <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                    Status data terbaru
+                </span>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">
+                Filter ini hanya memengaruhi data tabel penempatan.
+            </p>
+            <input type="hidden" name="jurusan_id" value="{{ $selectedJurusan }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Status Penempatan</label>
+                    <select name="status" onchange="this.form.submit()" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($statusList as $value => $label)
+                        <option value="{{ $value }}" {{ (string) $selectedStatus === (string) $value ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ $search }}"
+                            placeholder="Nama siswa"
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                            oninput="debouncedSubmit(this)">
+                    </div>
+                </div>
+                <div class="flex items-end">
+                    <a href="{{ route('admin.penempatan') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                        Reset Filter
+                    </a>
+                </div>
+            </div>
+        </form>
 
         {{-- Hasil Penempatan --}}
         <div id="hasil-penempatan" class="mb-6">
@@ -398,8 +413,31 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if ($guruNama)
-                                    {{ $guruNama }}
+                                    @if ($status === 'diterima_industri')
+                                    <div class="flex items-center gap-2">
+                                        @if ($guruNama)
+                                        <span>{{ $guruNama }}</span>
+                                        @endif
+                                    <button
+                                        type="button"
+                                        class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
+                                        @click="
+                                            guruOpen = true;
+                                            guruTargetId = {{ $row->id }};
+                                            guruTargetName = @js($row->siswa?->user?->name ?? '-');
+                                            guruList = @js(
+                                                ($guruOptions[$row->siswa?->jurusan_id] ?? collect())->map(function ($guru) {
+                                                    return [
+                                                        'id' => $guru->id,
+                                                        'name' => $guru->user?->name ?? '-',
+                                                        'jurusan' => $guru->jurusan?->nama ?? '-',
+                                                    ];
+                                                })->values()
+                                            );
+                                        ">
+                                        {{ $guruNama ? 'Ubah Guru' : 'Pilih Guru' }}
+                                    </button>
+                                    </div>
                                     @else
                                     <span class="text-gray-400 italic">Belum ditentukan</span>
                                     @endif
@@ -476,5 +514,53 @@
                 </div>
             </div>
         </div>
+
+        {{-- Modal Guru Pembimbing --}}
+        <div x-show="guruOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-900">Pilih Guru Pembimbing</h4>
+                        <p class="text-xs text-gray-500">
+                            Siswa: <span x-text="guruTargetName"></span>
+                        </p>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="guruOpen = false">✕</button>
+                </div>
+                <div class="p-4">
+                    <template x-if="guruList.length === 0">
+                        <div class="text-sm text-gray-500 italic">Belum ada guru pembimbing untuk jurusan ini.</div>
+                    </template>
+                    <template x-if="guruList.length > 0">
+                        <div class="space-y-2">
+                            <template x-for="guru in guruList" :key="guru.id">
+                                <form method="POST" :action="`{{ url('/penempatan') }}/${guruTargetId}/guru`">
+                                    @csrf
+                                    <input type="hidden" name="guru_pembimbing_id" :value="guru.id">
+                                    <button type="submit" class="w-full flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm hover:bg-gray-50">
+                                        <div class="text-left">
+                                            <div class="font-medium text-gray-900" x-text="guru.name"></div>
+                                            <div class="text-xs text-gray-500" x-text="guru.jurusan"></div>
+                                        </div>
+                                        <span class="text-xs text-emerald-600 font-semibold">Pilih</span>
+                                    </button>
+                                </form>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 </x-admin-layout>
+<script>
+    let typingTimer;
+
+    function debouncedSubmit(input) {
+        clearTimeout(typingTimer);
+
+        typingTimer = setTimeout(() => {
+            input.form.submit();
+        }, 700);
+    }
+</script>
