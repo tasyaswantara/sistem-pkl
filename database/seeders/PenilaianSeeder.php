@@ -38,13 +38,19 @@ class PenilaianSeeder extends Seeder
                 $total += $nilai * (float) $aspek->bobot;
             }
 
-            $penilaian = Penilaian::create([
-                'siswa_id' => $siswa->id,
-                'industri_id' => $industri->id,
-                'tanggal_penilaian' => $tanggal->toDateString(),
-                'total_nilai' => round($total, 2),
-                'catatan' => $faker->sentence(10),
-            ]);
+            $penilaian = Penilaian::updateOrCreate(
+                [
+                    'siswa_id' => $siswa->id,
+                    'industri_id' => $industri->id,
+                ],
+                [
+                    'tanggal_penilaian' => $tanggal->toDateString(),
+                    'total_nilai' => round($total, 2),
+                    'catatan' => $faker->sentence(10),
+                ]
+            );
+
+            $penilaian->detailPenilaian()->delete();
 
             foreach ($detailRows as $detail) {
                 $penilaian->detailPenilaian()->create($detail);
