@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PenempatanController;
 use App\Http\Controllers\Admin\LogbookController;
 use App\Http\Controllers\Admin\PerizinanController;
 use App\Http\Controllers\Admin\PenilaianController;
+use App\Http\Controllers\Admin\NotificationController;
 
 Route::get('/', function () {
     if (!auth()->check()) {
@@ -51,6 +52,7 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::post('/penilaian/rubrik', [PenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
     Route::post('/penilaian/aspek', [PenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
     Route::delete('/penilaian/aspek/{aspek}', [PenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications');
 
     Route::get('/forms', function () {
         return view('admin.forms');
