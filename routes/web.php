@@ -10,10 +10,19 @@ use App\Http\Controllers\Admin\LogbookController;
 use App\Http\Controllers\Admin\PerizinanController;
 use App\Http\Controllers\Admin\PenilaianController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Guru\SiswaController as GuruSiswaController;
+use App\Http\Controllers\Guru\LogbookController as GuruLogbookController;
+use App\Http\Controllers\Guru\PerizinanController as GuruPerizinanController;
+use App\Http\Controllers\Guru\PenilaianController as GuruPenilaianController;
 
 Route::get('/', function () {
     if (!auth()->check()) {
         return redirect()->route('login');
+    }
+
+    $user = auth()->user();
+    if ($user->hasRole('guru pembimbing')) {
+        return redirect()->route('guru.siswa');
     }
 
     return redirect()->route('dashboard');
@@ -66,6 +75,14 @@ Route::group(['middleware' => ['role:admin']], function () {
 });
 
 Route::group(['middleware' => ['permission:publish articles']], function () {});
+
+Route::middleware(['auth', 'role:guru pembimbing'])->prefix('guru')->name('guru.')->group(function () {
+    Route::get('/siswa', [GuruSiswaController::class, 'index'])->name('siswa');
+    Route::get('/elogbook', [GuruLogbookController::class, 'index'])->name('elogbook');
+    Route::post('/elogbook/{logbook}/komentar', [GuruLogbookController::class, 'storeKomentar'])->name('elogbook.komentar');
+    Route::get('/perizinan', [GuruPerizinanController::class, 'index'])->name('perizinan');
+    Route::get('/penilaian', [GuruPenilaianController::class, 'index'])->name('penilaian');
+});
 
 // Group routes that need admin role and authentication
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

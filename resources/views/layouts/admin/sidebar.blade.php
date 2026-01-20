@@ -33,6 +33,13 @@
         x-init="window.addEventListener('hashchange', () => activeHash = window.location.hash)">
 
         @php
+        $user = auth()->user();
+        $isAdmin = $user && $user->hasRole('admin');
+        $isGuru = $user && $user->hasRole('guru pembimbing');
+
+        $menus = [];
+
+        if ($isAdmin) {
         $menus = [
         [
         'label' => 'Data Pengguna',
@@ -99,6 +106,32 @@
         'route' => 'admin.penilaian',
         ],
         ];
+        }
+
+        if ($isGuru) {
+        $menus = array_merge($menus, [
+        [
+        'label' => 'Data Siswa',
+        'icon' => 'users',
+        'route' => 'guru.siswa',
+        ],
+        [
+        'label' => 'E-Logbook',
+        'icon' => 'book',
+        'route' => 'guru.elogbook',
+        ],
+        [
+        'label' => 'Perizinan',
+        'icon' => 'file',
+        'route' => 'guru.perizinan',
+        ],
+        [
+        'label' => 'Penilaian',
+        'icon' => 'clipboard',
+        'route' => 'guru.penilaian',
+        ],
+        ]);
+        }
         @endphp
 
         @foreach ($menus as $menu)
