@@ -16,32 +16,108 @@
         </div>
         @endif
 
+        <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
+            <select name="tahun_ajaran" onchange="this.form.submit()"
+                class="px-4 py-2 w-[190px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                <option value="">Semua Tahun Ajaran</option>
+                @foreach ($tahunAjaranOptions as $tahun)
+                <option value="{{ $tahun }}" {{ (string) $filters['tahun_ajaran'] === (string) $tahun ? 'selected' : '' }}>
+                    {{ $tahun }}
+                </option>
+                @endforeach
+            </select>
+
+            <select name="jurusan_id" onchange="this.form.submit()"
+                class="px-4 py-2 w-[200px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                <option value="">Semua Jurusan</option>
+                @foreach ($jurusanOptions as $jurusan)
+                <option value="{{ $jurusan->id }}" {{ (string) $filters['jurusan_id'] === (string) $jurusan->id ? 'selected' : '' }}>
+                    {{ $jurusan->nama }}
+                </option>
+                @endforeach
+            </select>
+
+            <select name="industri_id" onchange="this.form.submit()"
+                class="px-4 py-2 w-[220px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                <option value="">Semua Industri</option>
+                @foreach ($industriOptions as $industri)
+                <option value="{{ $industri->id }}" {{ (string) $filters['industri_id'] === (string) $industri->id ? 'selected' : '' }}>
+                    {{ $industri->nama_industri }}
+                </option>
+                @endforeach
+            </select>
+
+            <select name="status" onchange="this.form.submit()"
+                class="px-4 py-2 w-[170px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                @foreach ($statusLabels as $value => $label)
+                <option value="{{ $value }}" {{ (string) $filters['status'] === (string) $value ? 'selected' : '' }}>
+                    {{ $label }}
+                </option>
+                @endforeach
+            </select>
+
+            <input
+                type="date"
+                name="tanggal"
+                value="{{ $filters['tanggal'] }}"
+                class="px-4 py-2 w-[170px] bg-white border border-gray-300 rounded-lg text-sm"
+                onchange="this.form.submit()">
+
+            <input
+                type="text"
+                name="q"
+                value="{{ $filters['q'] }}"
+                placeholder="Cari nama atau NIS"
+                class="w-[260px] px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm"
+                oninput="debouncedSubmit(this)">
+
+            <a href="{{ route('guru.elogbook') }}" class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg bg-white hover:bg-gray-50">
+                Reset
+            </a>
+        </form>
+
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full min-w-[1200px]">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tanggal</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aktivitas</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Catatan Industri</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status Validasi</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Komentar Guru</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($logbooks as $logbook)
+                        @php
+                        $statusClass = match ($logbook->status_validasi) {
+                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
+                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                        };
+                        @endphp
                         <tr class="hover:bg-gray-50 align-top">
                             <td class="px-6 py-4">
                                 <div class="font-medium text-gray-900 text-sm">{{ $logbook->siswa?->user?->name ?? '-' }}</div>
                                 <div class="text-xs text-gray-500">{{ $logbook->siswa?->kelas ?? '-' }}</div>
                             </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ $logbook->industri?->nama_industri ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">
                                 {{ $logbook->tanggal?->format('d/m/Y') ?? '-' }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-700">
                                 <div>{{ $logbook->aktivitas }}</div>
-                                @if ($logbook->catatan_industri)
-                                <div class="mt-2 text-xs text-gray-500">Catatan industri: {{ $logbook->catatan_industri }}</div>
-                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                {{ $logbook->catatan_industri ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
+                                    {{ ucfirst($logbook->status_validasi ?? 'pending') }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-700">
                                 <div class="space-y-2 mb-3">
@@ -55,7 +131,7 @@
                                 </div>
                                 <form method="POST" action="{{ route('guru.elogbook.komentar', $logbook->id) }}" class="flex items-start gap-2">
                                     @csrf
-                                    <textarea name="komentar" rows="2" class="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500" placeholder="Tulis komentar"></textarea>
+                                    <textarea name="komentar" rows="2" class="w-full min-w-[190px] px-2.5 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500" placeholder="Tulis komentar"></textarea>
                                     <button class="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-medium">
                                         Kirim
                                     </button>
@@ -64,7 +140,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="4">
+                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="7">
                                 Belum ada logbook siswa bimbingan.
                             </td>
                         </tr>
@@ -79,3 +155,14 @@
         </div>
     </div>
 </x-admin-layout>
+<script>
+    let typingTimer;
+
+    function debouncedSubmit(input) {
+        clearTimeout(typingTimer);
+
+        typingTimer = setTimeout(() => {
+            input.form.submit();
+        }, 700);
+    }
+</script>
