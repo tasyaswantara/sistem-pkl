@@ -1,7 +1,12 @@
 @section('title', 'Data Pengguna')
 
 <x-admin-layout>
-    <div x-data="{ toastOpen: {{ session('success') ? 'true' : 'false' }} }"
+    <div x-data="{
+            toastOpen: {{ session('success') ? 'true' : 'false' }},
+            siswaOpen: false,
+            siswaGuruName: '',
+            siswaList: [],
+        }"
         x-init="if (toastOpen) { setTimeout(() => { toastOpen = false }, 3000) }">
 
         {{-- Toast --}}
@@ -152,6 +157,7 @@
                         @elseif($roleFilter==='Guru Pembimbing')
                         <th class="px-6 py-3 text-left">NIP</th>
                         <th class="px-6 py-3 text-left">Jurusan</th>
+                        <th class="px-6 py-3 text-left">Siswa</th>
                         <th class="px-6 py-3 text-left">Email</th>
                         @elseif($roleFilter==='Perwakilan Industri')
                         <th class="px-6 py-3 text-left">Kapasitas</th>
@@ -188,6 +194,30 @@
                         @elseif($roleFilter === 'Guru Pembimbing')
                         <td class="px-6 py-4 text-sm">{{ $u->gurupembimbing->nip ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm">{{ optional(optional($u->gurupembimbing)->jurusan)->nama ?? '-' }}</td>
+                        <td class="px-6 py-4">
+                            @php
+                            $siswaBimbingan = $u->gurupembimbing?->penempatanPkl
+                                ? $u->gurupembimbing->penempatanPkl->map(function ($item) {
+                                    return [
+                                        'nama' => $item->siswa?->user?->name ?? '-',
+                                        'kelas' => $item->siswa?->kelas ?? '-',
+                                        'jurusan' => $item->siswa?->jurusan?->nama ?? '-',
+                                        'industri' => $item->industri?->nama_industri ?? '-',
+                                    ];
+                                })->values()
+                                : collect();
+                            @endphp
+                            @if ($siswaBimbingan->isEmpty())
+                            <span class="text-xs text-gray-400 italic">Belum membimbing</span>
+                            @else
+                            <button
+                                type="button"
+                                class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
+                                @click="siswaOpen = true; siswaGuruName = @js($u->name); siswaList = @js($siswaBimbingan);">
+                                Lihat Detail
+                            </button>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
 
                         @elseif($roleFilter === 'Perwakilan Industri')
@@ -287,6 +317,38 @@
             {{ $users->links() }}
         </div>
 
+        {{-- Modal Siswa Bimbingan --}}
+        <div x-show="siswaOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-900">Daftar Siswa Bimbingan</h4>
+                        <p class="text-xs text-gray-500">
+                            Guru: <span x-text="siswaGuruName"></span>
+                        </p>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="siswaOpen = false">✕</button>
+                </div>
+                <div class="p-4">
+                    <template x-if="siswaList.length === 0">
+                        <div class="text-sm text-gray-500 italic">Belum ada siswa bimbingan.</div>
+                    </template>
+                    <template x-if="siswaList.length > 0">
+                        <div class="space-y-2">
+                            <template x-for="siswa in siswaList" :key="siswa.nama + siswa.kelas">
+                                <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                                    <div>
+                                        <div class="font-medium text-gray-900" x-text="siswa.nama"></div>
+                                        <div class="text-xs text-gray-500" x-text="`${siswa.kelas} · ${siswa.jurusan}`"></div>
+                                        <div class="text-xs text-gray-400" x-text="`Industri: ${siswa.industri}`"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
 
     </div>
 </x-admin-layout>

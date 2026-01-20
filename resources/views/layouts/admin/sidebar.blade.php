@@ -55,6 +55,11 @@
         'params' => ['role' => 'Siswa'],
         ],
         [
+        'label' => 'Guru Pembimbing',
+        'route' => 'admin.data-pengguna',
+        'params' => ['role' => 'Guru Pembimbing'],
+        ],
+        [
         'label' => 'Perwakilan Industri',
         'route' => 'admin.data-pengguna',
         'params' => ['role' => 'Perwakilan Industri'],

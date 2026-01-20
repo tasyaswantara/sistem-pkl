@@ -27,6 +27,7 @@ class UserController extends Controller
             'roles',
             'siswa.jurusan',
             'gurupembimbing.jurusan',
+            'gurupembimbing.penempatanPkl.siswa.user',
             'industri'
         ])
             ->when($role && $role !== 'Semua Pengguna', function ($q) use ($role) {
