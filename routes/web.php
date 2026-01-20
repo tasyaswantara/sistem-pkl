@@ -14,6 +14,10 @@ use App\Http\Controllers\Guru\SiswaController as GuruSiswaController;
 use App\Http\Controllers\Guru\LogbookController as GuruLogbookController;
 use App\Http\Controllers\Guru\PerizinanController as GuruPerizinanController;
 use App\Http\Controllers\Guru\PenilaianController as GuruPenilaianController;
+use App\Http\Controllers\Siswa\PenempatanController as SiswaPenempatanController;
+use App\Http\Controllers\Siswa\LogbookController as SiswaLogbookController;
+use App\Http\Controllers\Siswa\PerizinanController as SiswaPerizinanController;
+use App\Http\Controllers\Siswa\PenilaianController as SiswaPenilaianController;
 
 Route::get('/', function () {
     if (!auth()->check()) {
@@ -23,6 +27,9 @@ Route::get('/', function () {
     $user = auth()->user();
     if ($user->hasRole('guru pembimbing')) {
         return redirect()->route('guru.siswa');
+    }
+    if ($user->hasRole('siswa')) {
+        return redirect()->route('siswa.penempatan');
     }
 
     return redirect()->route('dashboard');
@@ -53,6 +60,10 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/penempatan', [PenempatanController::class, 'index'])->name('admin.penempatan');
     Route::post('/penempatan/bobot', [PenempatanController::class, 'storeBobot'])->name('admin.penempatan.bobot');
     Route::post('/penempatan/run-saw', [PenempatanController::class, 'runSaw'])->name('admin.penempatan.run-saw');
+    Route::post('/penempatan/usulan/{usulan}/approve', [PenempatanController::class, 'approveUsulanIndustri'])
+        ->name('admin.penempatan.usulan.approve');
+    Route::post('/penempatan/usulan/{usulan}/reject', [PenempatanController::class, 'rejectUsulanIndustri'])
+        ->name('admin.penempatan.usulan.reject');
     Route::post('/penempatan/{penempatan}/guru', [PenempatanController::class, 'setGuruPembimbing'])
         ->name('admin.penempatan.guru');
     Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
@@ -82,6 +93,18 @@ Route::middleware(['auth', 'role:guru pembimbing'])->prefix('guru')->name('guru.
     Route::post('/elogbook/{logbook}/komentar', [GuruLogbookController::class, 'storeKomentar'])->name('elogbook.komentar');
     Route::get('/perizinan', [GuruPerizinanController::class, 'index'])->name('perizinan');
     Route::get('/penilaian', [GuruPenilaianController::class, 'index'])->name('penilaian');
+});
+
+Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
+    Route::get('/penempatan', [SiswaPenempatanController::class, 'index'])->name('penempatan');
+    Route::post('/penempatan/pilih', [SiswaPenempatanController::class, 'pilihRekomendasi'])->name('penempatan.pilih');
+    Route::post('/penempatan/usulan', [SiswaPenempatanController::class, 'usulkanIndustri'])->name('penempatan.usulan');
+    Route::get('/elogbook', [SiswaLogbookController::class, 'index'])->name('elogbook');
+    Route::post('/elogbook', [SiswaLogbookController::class, 'store'])->name('elogbook.store');
+    Route::put('/elogbook/{logbook}', [SiswaLogbookController::class, 'update'])->name('elogbook.update');
+    Route::delete('/elogbook/{logbook}', [SiswaLogbookController::class, 'destroy'])->name('elogbook.destroy');
+    Route::get('/perizinan', [SiswaPerizinanController::class, 'index'])->name('perizinan');
+    Route::get('/penilaian', [SiswaPenilaianController::class, 'index'])->name('penilaian');
 });
 
 // Group routes that need admin role and authentication

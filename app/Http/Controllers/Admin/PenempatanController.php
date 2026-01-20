@@ -12,9 +12,12 @@ use App\Models\PenempatanPKL;
 use App\Models\SawRun;
 use App\Models\Siswa;
 use App\Models\GuruPembimbing;
+use App\Models\UsulanIndustri;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class PenempatanController extends Controller
 {
@@ -90,6 +93,7 @@ class PenempatanController extends Controller
             'siswa.user',
             'siswa.jurusan',
             'industri',
+            'usulanIndustri',
             'guruPembimbing.user',
         ]);
 
@@ -116,6 +120,10 @@ class PenempatanController extends Controller
         }
 
         $penempatanData = $penempatanQuery->orderByDesc('id')->get();
+
+        $usulanList = UsulanIndustri::with(['siswa.user', 'jurusan'])
+            ->orderByDesc('id')
+            ->get();
 
         $guruOptions = GuruPembimbing::with('user', 'jurusan')
             ->orderBy('id')
@@ -162,6 +170,7 @@ class PenempatanController extends Controller
             'statusCounts' => $statusCounts,
             'latestSawRun' => $latestSawRun,
             'rekomendasiBySiswa' => $rekomendasiBySiswa,
+            'usulanList' => $usulanList,
             'totalBobot' => $totalBobot,
             'isBobotValid' => $isBobotValid,
             'guruOptions' => $guruOptions,
@@ -372,6 +381,7 @@ class PenempatanController extends Controller
                             ['siswa_id' => $siswa->id],
                             [
                                 'industri_id' => $topChoice['industri_id'],
+                                'usulan_industri_id' => null,
                                 'pilihan_siswa' => 'rekomendasi',
                                 'status' => 'belum_diproses',
                             ]
@@ -409,6 +419,74 @@ class PenempatanController extends Controller
         ]);
 
         return back()->with('success', 'Perhitungan SAW berhasil dijalankan. Hasil: ' . $rowsCount . ' rekomendasi disimpan.');
+    }
+
+    public function approveUsulanIndustri(Request $request, UsulanIndustri $usulan)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'kapasitas' => 'required|integer|min:1',
+            'grade' => 'required|in:A,B,C',
+        ]);
+
+        if ($usulan->status !== 'menunggu') {
+            return back()->withErrors(['usulan' => 'Usulan ini sudah diproses.']);
+        }
+
+        $user = User::create([
+            'name' => $usulan->nama_industri,
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        $user->assignRole('perwakilan industri');
+
+        $industri = $user->industri()->create([
+            'nama_industri' => $usulan->nama_industri,
+            'kapasitas' => $validated['kapasitas'],
+            'alamat' => $usulan->alamat,
+            'grade' => $validated['grade'],
+            'jurusan_id' => $usulan->jurusan_id,
+        ]);
+
+        $usulan->update([
+            'status' => 'disetujui',
+        ]);
+
+        PenempatanPKL::updateOrCreate(
+            ['siswa_id' => $usulan->siswa_id],
+            [
+                'industri_id' => $industri->id,
+                'usulan_industri_id' => $usulan->id,
+                'pilihan_siswa' => 'usulan_lain',
+                'status' => 'proses_pengajuan',
+            ]
+        );
+
+        return back()->with('success', 'Usulan industri disetujui dan akun industri dibuat.');
+    }
+
+    public function rejectUsulanIndustri(Request $request, UsulanIndustri $usulan)
+    {
+        if ($usulan->status !== 'menunggu') {
+            return back()->withErrors(['usulan' => 'Usulan ini sudah diproses.']);
+        }
+
+        $usulan->update([
+            'status' => 'ditolak',
+        ]);
+
+        PenempatanPKL::where('siswa_id', $usulan->siswa_id)
+            ->where('usulan_industri_id', $usulan->id)
+            ->update([
+                'industri_id' => null,
+                'usulan_industri_id' => null,
+                'pilihan_siswa' => null,
+                'status' => 'belum_diproses',
+            ]);
+
+        return back()->with('success', 'Usulan industri ditolak. Siswa perlu memilih ulang.');
     }
 
     public function setGuruPembimbing(Request $request, PenempatanPKL $penempatan)

@@ -36,6 +36,7 @@
         $user = auth()->user();
         $isAdmin = $user && $user->hasRole('admin');
         $isGuru = $user && $user->hasRole('guru pembimbing');
+        $isSiswa = $user && $user->hasRole('siswa');
 
         $menus = [];
 
@@ -129,6 +130,31 @@
         'label' => 'Penilaian',
         'icon' => 'clipboard',
         'route' => 'guru.penilaian',
+        ],
+        ]);
+        }
+
+        if ($isSiswa) {
+        $menus = array_merge($menus, [
+        [
+        'label' => 'Penempatan PKL',
+        'icon' => 'map',
+        'route' => 'siswa.penempatan',
+        ],
+        [
+        'label' => 'E-Logbook',
+        'icon' => 'book',
+        'route' => 'siswa.elogbook',
+        ],
+        [
+        'label' => 'Perizinan',
+        'icon' => 'file',
+        'route' => 'siswa.perizinan',
+        ],
+        [
+        'label' => 'Penilaian',
+        'icon' => 'clipboard',
+        'route' => 'siswa.penilaian',
         ],
         ]);
         }

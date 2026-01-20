@@ -253,6 +253,122 @@
             </div>
         </div>
 
+        {{-- Usulan Industri Siswa --}}
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Usulan Industri Siswa</h3>
+                <span class="text-xs text-gray-500">Menunggu konfirmasi admin</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[900px]">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri Usulan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kontak</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200" x-data="{ openId: null }">
+                        @forelse ($usulanList as $usulan)
+                        @php
+                        $usulanStatusClass = match ($usulan->status) {
+                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
+                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                        };
+                        @endphp
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <div class="font-medium text-gray-900">{{ $usulan->siswa?->user?->name ?? '-' }}</div>
+                                <div class="text-xs text-gray-500">{{ $usulan->siswa?->nis ?? '-' }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ $usulan->jurusan?->nama ?? '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <div class="font-medium text-gray-900">{{ $usulan->nama_industri }}</div>
+                                <div class="text-xs text-gray-500">{{ $usulan->alamat }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ $usulan->email ?? '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ $usulan->kontak ?? '-' }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $usulanStatusClass }}">
+                                    {{ ucfirst($usulan->status) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if ($usulan->status === 'menunggu')
+                                <div class="flex items-center gap-2">
+                                    <button type="button"
+                                        class="px-3 py-1.5 text-xs border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-50"
+                                        @click="openId = openId === {{ $usulan->id }} ? null : {{ $usulan->id }}">
+                                        Setujui
+                                    </button>
+                                    <form method="POST" action="{{ route('admin.penempatan.usulan.reject', $usulan->id) }}"
+                                        onsubmit="return confirm('Tolak usulan industri ini?')">
+                                        @csrf
+                                        <button class="px-3 py-1.5 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50">
+                                            Tolak
+                                        </button>
+                                    </form>
+                                </div>
+                                @else
+                                <span class="text-xs text-gray-500 italic">Sudah diproses</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr x-show="openId === {{ $usulan->id }}" x-cloak>
+                            <td colspan="7" class="px-4 pb-4">
+                                <form method="POST" action="{{ route('admin.penempatan.usulan.approve', $usulan->id) }}"
+                                    class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    @csrf
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Email Akun *</label>
+                                        <input name="email" type="email" value="{{ $usulan->email ?? '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                            placeholder="email@industri.com" required>
+                                        <p class="mt-1 text-xs text-gray-500">Wajib diisi untuk membuat akun industri.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Password</label>
+                                        <input name="password" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                            placeholder="Minimal 8 karakter" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Kapasitas</label>
+                                        <input name="kapasitas" type="number" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                            placeholder="Kapasitas" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Grade</label>
+                                        <select name="grade" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" required>
+                                            <option value="">Pilih Grade</option>
+                                            @foreach (['A', 'B', 'C'] as $grade)
+                                            <option value="{{ $grade }}">Grade {{ $grade }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-4 flex justify-end">
+                                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                                            Konfirmasi & Buat Akun
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td class="px-4 py-6 text-center text-sm text-gray-500" colspan="7">
+                                Belum ada usulan industri dari siswa.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         {{-- Filter --}}
         <form id="filter-penempatan" method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
@@ -344,9 +460,11 @@
                             $namaSiswa = $row->siswa?->user?->name ?? '-';
                             $jurusanNama = $row->siswa?->jurusan?->nama ?? '-';
                             $industriNama = $row->industri?->nama_industri ?? null;
+                            $usulanNama = $row->usulanIndustri?->nama_industri ?? null;
                             $guruNama = $row->guruPembimbing?->user?->name ?? null;
                             $rekomList = $rekomendasiBySiswa->get($row->siswa_id, collect());
                             $topRekom = $rekomList->first();
+                            $rekomIndustriNama = $topRekom?->industri?->nama_industri ?? null;
                             $nilaiPreferensi = $topRekom?->nilai_preferensi;
                             $peringkat = $topRekom?->peringkat;
                             $detailItems = $rekomList->map(function ($item) {
@@ -360,7 +478,9 @@
                             $displayStatus = $statusLabels[$status] ?? $status;
                             $pilihan = $row->pilihan_siswa;
                             $displayPilihan = $pilihanLabels[$pilihan] ?? null;
-                            $pilihanIndustri = $industriNama;
+                            $pilihanIndustri = $pilihan === 'usulan_lain'
+                                ? $usulanNama
+                                : $industriNama;
                             @endphp
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4">
@@ -368,7 +488,9 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ $jurusanNama }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if ($industriNama)
+                                    @if ($rekomIndustriNama)
+                                    {{ $rekomIndustriNama }}
+                                    @elseif ($industriNama)
                                     {{ $industriNama }}
                                     @else
                                     <span class="text-gray-400 italic">Belum ada</span>

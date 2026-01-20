@@ -17,6 +17,7 @@ class PenempatanPKL extends Model
     protected $fillable = [
         'siswa_id',
         'industri_id',
+        'usulan_industri_id',
         'pilihan_siswa',
         'status',
         'tanggal_mulai',
@@ -38,6 +39,11 @@ class PenempatanPKL extends Model
     public function industri()
     {
         return $this->belongsTo(Industri::class);
+    }
+
+    public function usulanIndustri()
+    {
+        return $this->belongsTo(UsulanIndustri::class);
     }
 
     public function guruPembimbing()
