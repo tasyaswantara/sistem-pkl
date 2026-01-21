@@ -18,6 +18,7 @@ use App\Http\Controllers\Siswa\PenempatanController as SiswaPenempatanController
 use App\Http\Controllers\Siswa\LogbookController as SiswaLogbookController;
 use App\Http\Controllers\Siswa\PerizinanController as SiswaPerizinanController;
 use App\Http\Controllers\Siswa\PenilaianController as SiswaPenilaianController;
+use App\Http\Controllers\Siswa\BerkasController as SiswaBerkasController;
 use App\Http\Controllers\Industri\PengajuanController as IndustriPengajuanController;
 use App\Http\Controllers\Industri\DataSiswaController as IndustriDataSiswaController;
 use App\Http\Controllers\Industri\LogbookController as IndustriLogbookController;
@@ -117,6 +118,8 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::delete('/elogbook/{logbook}', [SiswaLogbookController::class, 'destroy'])->name('elogbook.destroy');
     Route::get('/perizinan', [SiswaPerizinanController::class, 'index'])->name('perizinan');
     Route::get('/penilaian', [SiswaPenilaianController::class, 'index'])->name('penilaian');
+    Route::get('/berkas', [SiswaBerkasController::class, 'index'])->name('berkas');
+    Route::put('/berkas', [SiswaBerkasController::class, 'update'])->name('berkas.update');
 });
 
 Route::middleware(['auth', 'role:perwakilan industri'])->prefix('industri')->name('industri.')->group(function () {

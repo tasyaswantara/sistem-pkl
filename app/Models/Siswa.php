@@ -21,6 +21,14 @@ class Siswa extends Model
         'perangkat',
         'status_pkl',
         'tahun_ajaran',
+        'bpjs_link',
+        'kartu_pelajar_link',
+        'cv_link',
+        'portofolio_links',
+    ];
+
+    protected $casts = [
+        'portofolio_links' => 'array',
     ];
 
     /**

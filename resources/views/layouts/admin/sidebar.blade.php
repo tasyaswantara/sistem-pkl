@@ -149,6 +149,11 @@
         'route' => 'siswa.elogbook',
         ],
         [
+        'label' => 'Berkas Siswa',
+        'icon' => 'file',
+        'route' => 'siswa.berkas',
+        ],
+        [
         'label' => 'Perizinan',
         'icon' => 'file',
         'route' => 'siswa.perizinan',
