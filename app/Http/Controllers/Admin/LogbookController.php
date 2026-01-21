@@ -31,7 +31,7 @@ class LogbookController extends Controller
         ];
 
         $baseQuery = Logbook::query()
-            ->with(['siswa.user', 'siswa.jurusan', 'industri']);
+            ->with(['siswa.user', 'siswa.jurusan', 'industri', 'komentar']);
 
         if ($filters['tahun_ajaran']) {
             $baseQuery->whereHas('siswa', function ($query) use ($filters) {

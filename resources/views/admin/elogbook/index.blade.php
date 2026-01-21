@@ -105,6 +105,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Industri</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aktivitas</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pesan Guru</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Validasi</th>
                         </tr>
@@ -134,6 +135,19 @@
                                 <div class="text-xs text-gray-500 mt-1">Catatan: {{ \Illuminate\Support\Str::limit($row->catatan_industri, 60) }}</div>
                                 @endif
                             </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                @if ($row->komentar->isNotEmpty())
+                                <div class="space-y-1">
+                                    @foreach ($row->komentar as $komentar)
+                                    <div class="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                                        {{ \Illuminate\Support\Str::limit($komentar->komentar, 80) }}
+                                    </div>
+                                    @endforeach
+                                </div>
+                                @else
+                                <span class="text-gray-400 italic">Belum ada pesan.</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
                                     {{ ucfirst($row->status_validasi) }}
@@ -149,7 +163,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="7">
+                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="8">
                                 Belum ada data logbook.
                             </td>
                         </tr>
