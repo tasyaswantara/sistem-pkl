@@ -57,21 +57,34 @@
 
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full min-w-[1150px]">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kelas</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nilai Akademik</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rata Rata Nilai Kejuruan</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tahun Ajaran</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Berkas Siswa</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($penempatanList as $row)
                         @php
+                        $bpjsUrl = $row->siswa?->bpjs_link
+                            ? (\Illuminate\Support\Str::startsWith($row->siswa->bpjs_link, ['http://', 'https://'])
+                                ? $row->siswa->bpjs_link
+                                : Storage::url($row->siswa->bpjs_link))
+                            : null;
+                        $kartuUrl = $row->siswa?->kartu_pelajar_link
+                            ? (\Illuminate\Support\Str::startsWith($row->siswa->kartu_pelajar_link, ['http://', 'https://'])
+                                ? $row->siswa->kartu_pelajar_link
+                                : Storage::url($row->siswa->kartu_pelajar_link))
+                            : null;
+                        $cvUrl = $row->siswa?->cv_link;
+                        $portofolioLinks = collect($row->siswa?->portofolio_links ?? []);
                         $statusClass = match ($row->status) {
                         'diterima_industri' => 'bg-green-50 text-green-700 border border-green-200',
                         'proses_wawancara' => 'bg-blue-50 text-blue-700 border border-blue-200',
@@ -90,6 +103,29 @@
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $row->siswa?->nilai_akademik ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $row->siswa?->tahun_ajaran ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <div class="flex flex-col gap-1">
+                                    @if ($bpjsUrl)
+                                    <a href="{{ $bpjsUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">BPJS</a>
+                                    @endif
+                                    @if ($kartuUrl)
+                                    <a href="{{ $kartuUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">Kartu Pelajar</a>
+                                    @endif
+                                    @if ($cvUrl)
+                                    <a href="{{ $cvUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">CV</a>
+                                    @endif
+                                    @if ($portofolioLinks->isNotEmpty())
+                                    <div class="text-xs text-gray-500">
+                                        @foreach ($portofolioLinks as $idx => $link)
+                                        <a href="{{ $link }}" target="_blank" class="text-emerald-700 hover:underline">Portfolio-{{ $idx + 1 }}</a>@if (!$loop->last),@endif
+                                        @endforeach
+                                    </div>
+                                    @endif
+                                    @if (!$bpjsUrl && !$kartuUrl && !$cvUrl && $portofolioLinks->isEmpty())
+                                    <span class="text-gray-400 italic text-xs">Belum ada berkas</span>
+                                    @endif
+                                </div>
+                            </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
                                     {{ $statusLabels[$row->status] ?? $row->status }}
@@ -98,7 +134,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="7">
+                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="8">
                                 Belum ada siswa bimbingan.
                             </td>
                         </tr>

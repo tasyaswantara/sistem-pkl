@@ -415,6 +415,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nilai Preferensi (%)</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pilihan Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status Penempatan</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Berkas Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Guru Pembimbing</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
@@ -446,6 +447,18 @@
                             $pilihanIndustri = $pilihan === 'usulan_lain'
                                 ? $usulanNama
                                 : $industriNama;
+                            $bpjsUrl = $row->siswa?->bpjs_link
+                                ? (\Illuminate\Support\Str::startsWith($row->siswa->bpjs_link, ['http://', 'https://'])
+                                    ? $row->siswa->bpjs_link
+                                    : Storage::url($row->siswa->bpjs_link))
+                                : null;
+                            $kartuUrl = $row->siswa?->kartu_pelajar_link
+                                ? (\Illuminate\Support\Str::startsWith($row->siswa->kartu_pelajar_link, ['http://', 'https://'])
+                                    ? $row->siswa->kartu_pelajar_link
+                                    : Storage::url($row->siswa->kartu_pelajar_link))
+                                : null;
+                            $cvUrl = $row->siswa?->cv_link;
+                            $portofolioLinks = collect($row->siswa?->portofolio_links ?? []);
                             @endphp
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4">
@@ -490,6 +503,29 @@
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
                                         {{ $displayStatus }}
                                     </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    <div class="flex flex-col gap-1">
+                                        @if ($bpjsUrl)
+                                        <a href="{{ $bpjsUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">BPJS</a>
+                                        @endif
+                                        @if ($kartuUrl)
+                                        <a href="{{ $kartuUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">Kartu Pelajar</a>
+                                        @endif
+                                        @if ($cvUrl)
+                                        <a href="{{ $cvUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">CV</a>
+                                        @endif
+                                        @if ($portofolioLinks->isNotEmpty())
+                                        <div class="text-xs text-gray-500">
+                                            @foreach ($portofolioLinks as $idx => $link)
+                                            <a href="{{ $link }}" target="_blank" class="text-emerald-700 hover:underline">Portfolio-{{ $idx + 1 }}</a>@if (!$loop->last),@endif
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                        @if (!$bpjsUrl && !$kartuUrl && !$cvUrl && $portofolioLinks->isEmpty())
+                                        <span class="text-gray-400 italic text-xs">Belum ada berkas</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
                                     @if ($status === 'diterima_industri')

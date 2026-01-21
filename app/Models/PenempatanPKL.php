@@ -66,5 +66,11 @@ class PenempatanPKL extends Model
                 Notification::send($admins, new PenempatanStatusChanged($penempatan, $oldStatus, $newStatus));
             }
         });
+
+        static::updated(function (PenempatanPKL $penempatan) {
+            if ($penempatan->wasChanged('status') && $penempatan->status === 'diterima_industri') {
+                $penempatan->siswa?->update(['status_pkl' => 'berjalan']);
+            }
+        });
     }
 }

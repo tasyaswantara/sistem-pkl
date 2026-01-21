@@ -82,6 +82,8 @@ class PenilaianController extends Controller
                     'nilai' => $nilai,
                 ]);
             }
+
+            $penempatan->siswa?->update(['status_pkl' => 'selesai']);
         });
 
         return back()->with('success', 'Penilaian berhasil disimpan.');

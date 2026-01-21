@@ -89,16 +89,31 @@
             <p class="text-sm text-gray-500">Belum ada siswa yang memilih atau mengusulkan industri ini.</p>
             @else
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[700px]">
+                <table class="w-full min-w-[900px]">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status Penempatan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Berkas Siswa</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @foreach ($penempatanList as $row)
+                        @php
+                        $bpjsUrl = $row->siswa?->bpjs_link
+                            ? (\Illuminate\Support\Str::startsWith($row->siswa->bpjs_link, ['http://', 'https://'])
+                                ? $row->siswa->bpjs_link
+                                : Storage::url($row->siswa->bpjs_link))
+                            : null;
+                        $kartuUrl = $row->siswa?->kartu_pelajar_link
+                            ? (\Illuminate\Support\Str::startsWith($row->siswa->kartu_pelajar_link, ['http://', 'https://'])
+                                ? $row->siswa->kartu_pelajar_link
+                                : Storage::url($row->siswa->kartu_pelajar_link))
+                            : null;
+                        $cvUrl = $row->siswa?->cv_link;
+                        $portofolioLinks = collect($row->siswa?->portofolio_links ?? []);
+                        @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm text-gray-700">
                                 <div class="font-medium text-gray-900">{{ $row->siswa?->user?->name ?? '-' }}</div>
@@ -107,6 +122,29 @@
                             <td class="px-4 py-3 text-sm text-gray-700">{{ $row->siswa?->jurusan?->nama ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-700">
                                 {{ $statusLabels[$row->status] ?? $row->status }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <div class="flex flex-col gap-1">
+                                    @if ($bpjsUrl)
+                                    <a href="{{ $bpjsUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">BPJS</a>
+                                    @endif
+                                    @if ($kartuUrl)
+                                    <a href="{{ $kartuUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">Kartu Pelajar</a>
+                                    @endif
+                                    @if ($cvUrl)
+                                    <a href="{{ $cvUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">CV</a>
+                                    @endif
+                                    @if ($portofolioLinks->isNotEmpty())
+                                    <div class="text-xs text-gray-500">
+                                        @foreach ($portofolioLinks as $idx => $link)
+                                        <a href="{{ $link }}" target="_blank" class="text-emerald-700 hover:underline">Portfolio-{{ $idx + 1 }}</a>@if (!$loop->last),@endif
+                                        @endforeach
+                                    </div>
+                                    @endif
+                                    @if (!$bpjsUrl && !$kartuUrl && !$cvUrl && $portofolioLinks->isEmpty())
+                                    <span class="text-gray-400 italic text-xs">Belum ada berkas</span>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @endforeach
