@@ -1,6 +1,6 @@
 <x-admin-layout>
     <div x-data="{
-            role: '{{ old('role') }}',
+            role: '{{ old('role', $prefillRole ?? '') }}',
             showPassword: false,
             kelas: '{{ old('kelas') }}',
             perangkatItems: [],
@@ -112,9 +112,9 @@
                         <input name="kelas" x-model="kelas" placeholder="Kelas (otomatis)" class="input-text" readonly>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Nilai Akademik</label>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Rata-rata Nilai Kejuruan</label>
                         <input name="nilai_akademik" type="number" value="{{ old('nilai_akademik') }}"
-                            placeholder="Nilai Akademik" class="input-text">
+                            placeholder="Rata-rata Nilai Kejuruan" class="input-text">
                     </div>
                     <div class="bg-white border rounded-lg p-3 md:col-span-2">
                         <p class="text-sm font-medium text-gray-700 mb-2">Perangkat (skala 1-5)</p>

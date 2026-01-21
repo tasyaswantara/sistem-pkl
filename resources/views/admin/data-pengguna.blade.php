@@ -136,7 +136,7 @@
 
                 <button class="hidden">Cari</button>
             </div>
-            <a href="{{ route('admin.users.create') }}"
+            <a href="{{ route('admin.users.create', request()->only('role')) }}"
                 class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
                 + Tambah Pengguna
             </a>
@@ -154,7 +154,7 @@
                         <th class="px-6 py-3 text-left">NIS</th>
                         <th class="px-6 py-3 text-left">Jurusan</th>
                         <th class="px-6 py-3 text-left">Kelas</th>
-                        <th class="px-6 py-3 text-left">Nilai Akademik</th>
+                        <th class="px-6 py-3 text-left">Rata-rata Nilai Kejuruan</th>
                         <th class="px-6 py-3 text-left">Status PKL</th>
                         <th class="px-6 py-3 text-left">Email</th>
                         @elseif($roleFilter==='Guru Pembimbing')

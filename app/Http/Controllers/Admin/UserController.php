@@ -72,11 +72,25 @@ class UserController extends Controller
 
 
 
-    public function create()
+    public function create(Request $request)
     {
         $roles = Role::all();
         $jurusan = Jurusan::all();
-        return view('admin.users.create', compact('roles', 'jurusan'));
+        $rawRole = $request->input('role');
+        $prefillRole = null;
+
+        if ($rawRole && strtolower($rawRole) !== 'semua pengguna') {
+            $normalized = strtolower($rawRole);
+            $map = [
+                'siswa' => 'siswa',
+                'guru pembimbing' => 'guru pembimbing',
+                'perwakilan industri' => 'perwakilan industri',
+                'admin' => 'admin',
+            ];
+            $prefillRole = $map[$normalized] ?? null;
+        }
+
+        return view('admin.users.create', compact('roles', 'jurusan', 'prefillRole'));
     }
 
     public function store(Request $request)
