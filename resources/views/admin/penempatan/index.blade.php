@@ -16,7 +16,7 @@
         }">
 
         {{-- Header --}}
-        <div id="konfigurasi-saw" class="mb-8">
+        <div class="mb-8">
             <div class="text-sm text-gray-500 mb-2">Dashboard → Penempatan PKL</div>
             <h1 class="text-gray-900 text-2xl font-semibold mb-2">Penempatan Siswa PKL</h1>
             <p class="text-gray-500 text-sm max-w-2xl">
@@ -42,8 +42,15 @@
         </div>
         @endif
 
+        @php
+        $tab = request('tab', 'konfigurasi');
+        @endphp
+
+        @if ($tab === 'konfigurasi')
+        <div id="konfigurasi-bobot">
         {{-- Pilih Jurusan & Tahun Ajaran --}}
         <form method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <input type="hidden" name="tab" value="konfigurasi">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Pilih Jurusan & Tahun Ajaran</h3>
                 <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
@@ -116,7 +123,7 @@
                     <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
                         Simpan Bobot
                     </button>
-                    <a href="{{ route('admin.penempatan', ['jurusan_id' => $selectedJurusan, 'tahun_ajaran' => $selectedTahun, 'status' => $selectedStatus, 'q' => $search]) }}"
+                    <a href="{{ route('admin.penempatan', ['tab' => 'konfigurasi', 'jurusan_id' => $selectedJurusan, 'tahun_ajaran' => $selectedTahun, 'status' => $selectedStatus, 'q' => $search]) }}"
                         class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
                         Reset Bobot
                     </a>
@@ -254,8 +261,11 @@
                 @endif
             </div>
         </div>
+        </div>
+        @endif
 
         {{-- Usulan Industri Siswa --}}
+        @if ($tab === 'usulan')
         <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Usulan Industri Siswa</h3>
@@ -335,9 +345,12 @@
                 </table>
             </div>
         </div>
+        @endif
 
         {{-- Filter --}}
+        @if ($tab === 'hasil')
         <form id="filter-penempatan" method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <input type="hidden" name="tab" value="hasil">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Filter Data Penempatan</h3>
                 <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
@@ -374,7 +387,7 @@
                     </div>
                 </div>
                 <div class="flex items-end">
-                    <a href="{{ route('admin.penempatan') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                    <a href="{{ route('admin.penempatan', ['tab' => 'hasil']) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
                         Reset Filter
                     </a>
                 </div>
@@ -382,7 +395,7 @@
         </form>
 
         {{-- Hasil Penempatan --}}
-        <div id="hasil-penempatan" class="mb-6">
+        <div class="mb-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Hasil Penempatan Siswa</h3>
                 <div class="flex items-center gap-3 text-sm">
@@ -411,13 +424,11 @@
                             <tr class="bg-gray-50 border-b border-gray-200">
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jurusan</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Industri Rekomendasi</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nilai Preferensi (%)</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pilihan Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status Penempatan</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Berkas Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Guru Pembimbing</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail Rekomendasi</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -430,9 +441,6 @@
                             $usulanNama = $row->usulanIndustri?->nama_industri ?? null;
                             $guruNama = $row->guruPembimbing?->user?->name ?? null;
                             $rekomList = $rekomendasiBySiswa->get($row->siswa_id, collect());
-                            $topRekom = $rekomList->first();
-                            $rekomIndustriNama = $topRekom?->industri?->nama_industri ?? null;
-                            $nilaiPreferensi = $topRekom?->nilai_preferensi;
                             $detailItems = $rekomList->map(function ($item) {
                                 return [
                                     'industri' => $item->industri?->nama_industri ?? '-',
@@ -465,22 +473,6 @@
                                     <div class="font-medium text-gray-900 text-sm">{{ $namaSiswa }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ $jurusanNama }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if ($rekomIndustriNama)
-                                    {{ $rekomIndustriNama }}
-                                    @elseif ($industriNama)
-                                    {{ $industriNama }}
-                                    @else
-                                    <span class="text-gray-400 italic">Belum ada</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if ($nilaiPreferensi !== null)
-                                    <span class="font-semibold text-purple-600">{{ number_format($nilaiPreferensi * 100, 2) }}%</span>
-                                    @else
-                                    <span class="text-gray-400 italic">-</span>
-                                    @endif
-                                </td>
                                 <td class="px-6 py-4">
                                     @if ($displayPilihan)
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $pilihan === 'rekomendasi' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700' }}">
@@ -622,6 +614,7 @@
                 Menampilkan {{ count($penempatanData) }} data penempatan
             </div>
         </div>
+        @endif
 
         {{-- Modal Detail --}}
         <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

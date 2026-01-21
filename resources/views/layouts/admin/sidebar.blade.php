@@ -82,14 +82,19 @@
         'route' => 'admin.penempatan',
         'children' => [
         [
-        'label' => 'Konfigurasi SAW',
+        'label' => 'Konfigurasi Pembobotan',
         'route' => 'admin.penempatan',
-        'hash' => 'konfigurasi-saw',
+        'params' => ['tab' => 'konfigurasi'],
+        ],
+        [
+        'label' => 'Usulan Industri',
+        'route' => 'admin.penempatan',
+        'params' => ['tab' => 'usulan'],
         ],
         [
         'label' => 'Hasil Penempatan',
         'route' => 'admin.penempatan',
-        'hash' => 'hasil-penempatan',
+        'params' => ['tab' => 'hasil'],
         ],
         ],
         ],
@@ -276,7 +281,9 @@
                 }
                 $isActiveChild = $child['route'] === 'admin.data-pengguna'
                 ? request()->routeIs('admin.data-pengguna') && request('role') === ($childParams['role'] ?? null)
-                : request()->routeIs($child['route']);
+                : ($child['route'] === 'admin.penempatan'
+                    ? request()->routeIs('admin.penempatan') && request('tab', 'konfigurasi') === ($childParams['tab'] ?? null)
+                    : request()->routeIs($child['route']));
                 @endphp
                 @if ($childHash)
                 <a
