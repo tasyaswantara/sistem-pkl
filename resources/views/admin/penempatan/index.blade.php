@@ -347,6 +347,155 @@
         </div>
         @endif
 
+        {{-- Penempatan Langsung --}}
+        @if ($tab === 'langsung')
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Penempatan Langsung</h3>
+                <span class="text-xs text-gray-500">Ditetapkan oleh admin</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">
+                Gunakan fitur ini untuk menempatkan siswa langsung ke industri atau magang di sekolah.
+            </p>
+            @php
+            $siswaSelectData = $siswaOptions->map(function ($siswa) {
+                return [
+                    'id' => $siswa->id,
+                    'label' => trim(($siswa->user?->name ?? '-') . ' · ' . ($siswa->nis ?? '-') . ' · ' . ($siswa->jurusan?->nama ?? '-')),
+                ];
+            })->values();
+            $industriSelectData = $industriOptions->map(function ($industri) {
+                return [
+                    'id' => $industri->id,
+                    'label' => $industri->nama_industri,
+                ];
+            })->values();
+            @endphp
+            <form method="POST" action="{{ route('admin.penempatan.langsung') }}"
+                x-data="penempatanLangsungForm({
+                    siswa: @js($siswaSelectData),
+                    industri: @js($industriSelectData),
+                    initialSiswaId: @js(old('siswa_id')),
+                    initialIndustriId: @js(old('industri_id'))
+                })"
+                x-init="init()"
+                class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Siswa</label>
+                    <input type="hidden" name="siswa_id" :value="siswaId">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            x-model="siswaQuery"
+                            @focus="openSiswa = true"
+                            @input="openSiswa = true"
+                            placeholder="Cari nama/NIS siswa"
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                        <div x-show="openSiswa" x-cloak @click.outside="openSiswa = false"
+                            class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                            <template x-if="filteredSiswa.length === 0">
+                                <div class="px-3 py-2 text-xs text-gray-500">Tidak ditemukan.</div>
+                            </template>
+                            <template x-for="item in filteredSiswa" :key="item.id">
+                                <button type="button"
+                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                    @click="selectSiswa(item)">
+                                    <span x-text="item.label"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Industri</label>
+                    <input type="hidden" name="industri_id" :value="industriId">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            x-model="industriQuery"
+                            @focus="openIndustri = true"
+                            @input="openIndustri = true"
+                            placeholder="Cari nama industri"
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                        <div x-show="openIndustri" x-cloak @click.outside="openIndustri = false"
+                            class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                            <template x-if="filteredIndustri.length === 0">
+                                <div class="px-3 py-2 text-xs text-gray-500">Tidak ditemukan.</div>
+                            </template>
+                            <template x-for="item in filteredIndustri" :key="item.id">
+                                <button type="button"
+                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                    @click="selectIndustri(item)">
+                                    <span x-text="item.label"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Mode Penempatan</label>
+                    <select name="mode" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                        <option value="industri">Penempatan ke Industri (Ikuti prosedur)</option>
+                        <option value="sekolah">Magang di Sekolah (Langsung diterima)</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Alasan Penempatan Langsung</label>
+                    <textarea name="alasan" rows="3" required
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm"
+                        placeholder="Contoh: sudah berkali-kali melamar, ada keluhan industri, atau kebutuhan khusus."></textarea>
+                </div>
+                <div class="md:col-span-2 flex justify-end">
+                    <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                        Tetapkan Penempatan Langsung
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-900">Riwayat Penempatan Langsung</h4>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[900px]">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Siswa</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Industri</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Alasan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse ($penempatanData->where('jenis_penempatan', 'langsung') as $row)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <div class="font-medium text-gray-900">{{ $row->siswa?->user?->name ?? '-' }}</div>
+                                <div class="text-xs text-gray-500">{{ $row->siswa?->nis ?? '-' }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium">
+                                    {{ $statusLabels[$row->status] ?? $row->status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $row->alasan_penempatan_langsung ?? '-' }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="4">
+                                Belum ada penempatan langsung.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
         {{-- Filter --}}
         @if ($tab === 'hasil')
         <form id="filter-penempatan" method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
@@ -722,5 +871,56 @@
         typingTimer = setTimeout(() => {
             input.form.submit();
         }, 700);
+    }
+
+    function penempatanLangsungForm({ siswa, industri, initialSiswaId, initialIndustriId }) {
+        return {
+            siswaList: siswa || [],
+            industriList: industri || [],
+            siswaQuery: '',
+            industriQuery: '',
+            siswaId: initialSiswaId || '',
+            industriId: initialIndustriId || '',
+            openSiswa: false,
+            openIndustri: false,
+            get filteredSiswa() {
+                const term = this.siswaQuery.trim().toLowerCase();
+                if (!term) {
+                    return this.siswaList.slice(0, 10);
+                }
+                return this.siswaList.filter((item) => item.label.toLowerCase().includes(term)).slice(0, 10);
+            },
+            get filteredIndustri() {
+                const term = this.industriQuery.trim().toLowerCase();
+                if (!term) {
+                    return this.industriList.slice(0, 10);
+                }
+                return this.industriList.filter((item) => item.label.toLowerCase().includes(term)).slice(0, 10);
+            },
+            selectSiswa(item) {
+                this.siswaId = item.id;
+                this.siswaQuery = item.label;
+                this.openSiswa = false;
+            },
+            selectIndustri(item) {
+                this.industriId = item.id;
+                this.industriQuery = item.label;
+                this.openIndustri = false;
+            },
+            init() {
+                if (this.siswaId) {
+                    const found = this.siswaList.find((item) => String(item.id) === String(this.siswaId));
+                    if (found) {
+                        this.siswaQuery = found.label;
+                    }
+                }
+                if (this.industriId) {
+                    const found = this.industriList.find((item) => String(item.id) === String(this.industriId));
+                    if (found) {
+                        this.industriQuery = found.label;
+                    }
+                }
+            },
+        };
     }
 </script>

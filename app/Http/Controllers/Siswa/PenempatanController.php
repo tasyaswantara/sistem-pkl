@@ -79,6 +79,9 @@ class PenempatanController extends Controller
         ]);
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
+        if ($penempatan && $penempatan->jenis_penempatan === 'langsung') {
+            return back()->withErrors(['pilihan' => 'Penempatan langsung sudah ditetapkan oleh admin.']);
+        }
         if ($penempatan && !in_array($penempatan->status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true)) {
             return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
         }
@@ -104,6 +107,9 @@ class PenempatanController extends Controller
         }
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
+        if ($penempatan && $penempatan->jenis_penempatan === 'langsung') {
+            return back()->withErrors(['pilihan' => 'Penempatan langsung sudah ditetapkan oleh admin.']);
+        }
         if ($penempatan && !in_array($penempatan->status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true)) {
             return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
         }

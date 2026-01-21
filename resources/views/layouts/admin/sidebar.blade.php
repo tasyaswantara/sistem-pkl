@@ -92,6 +92,11 @@
         'params' => ['tab' => 'usulan'],
         ],
         [
+        'label' => 'Penempatan Langsung',
+        'route' => 'admin.penempatan',
+        'params' => ['tab' => 'langsung'],
+        ],
+        [
         'label' => 'Hasil Penempatan',
         'route' => 'admin.penempatan',
         'params' => ['tab' => 'hasil'],

@@ -79,6 +79,8 @@ Route::group(['middleware' => ['role:admin']], function () {
         ->name('admin.penempatan.reject');
     Route::post('/penempatan/{penempatan}/guru', [PenempatanController::class, 'setGuruPembimbing'])
         ->name('admin.penempatan.guru');
+    Route::post('/penempatan/langsung', [PenempatanController::class, 'penempatanLangsung'])
+        ->name('admin.penempatan.langsung');
     Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
     Route::get('/perizinan', [PerizinanController::class, 'index'])->name('admin.perizinan');
     Route::get('/penilaian', [PenilaianController::class, 'index'])->name('admin.penilaian');

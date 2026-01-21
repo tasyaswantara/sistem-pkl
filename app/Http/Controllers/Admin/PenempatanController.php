@@ -14,6 +14,7 @@ use App\Models\Siswa;
 use App\Models\GuruPembimbing;
 use App\Models\UsulanIndustri;
 use App\Models\User;
+use App\Notifications\PenempatanLangsungAssigned;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -70,6 +71,7 @@ class PenempatanController extends Controller
         $pilihanLabels = [
             'rekomendasi' => 'Rekomendasi',
             'usulan_lain' => 'Usulan Lain',
+            'langsung' => 'Penempatan Langsung',
         ];
 
         $selectedStatus = $request->input('status', 'all');
@@ -129,6 +131,12 @@ class PenempatanController extends Controller
 
         $penempatanData = $penempatanQuery->orderByDesc('id')->get();
 
+        $siswaOptions = Siswa::with('user', 'jurusan')
+            ->orderBy('id')
+            ->get();
+
+        $industriOptions = Industri::orderBy('nama_industri')->get();
+
         $usulanList = UsulanIndustri::with(['siswa.user', 'jurusan'])
             ->orderByDesc('id')
             ->get();
@@ -182,7 +190,58 @@ class PenempatanController extends Controller
             'totalBobot' => $totalBobot,
             'isBobotValid' => $isBobotValid,
             'guruOptions' => $guruOptions,
+            'siswaOptions' => $siswaOptions,
+            'industriOptions' => $industriOptions,
         ]);
+    }
+
+    public function penempatanLangsung(Request $request)
+    {
+        $validated = $request->validate([
+            'siswa_id' => 'required|exists:siswa,id',
+            'industri_id' => 'required|exists:industri,id',
+            'mode' => 'required|in:industri,sekolah',
+            'alasan' => 'required|string|max:1000',
+        ]);
+
+        $siswa = Siswa::find($validated['siswa_id']);
+        $industri = Industri::find($validated['industri_id']);
+
+        if (!$siswa || !$industri) {
+            return back()->withErrors(['penempatan' => 'Data siswa atau industri tidak valid.']);
+        }
+
+        $status = $validated['mode'] === 'sekolah' ? 'diterima_industri' : 'proses_pengajuan';
+
+        $penempatan = PenempatanPKL::updateOrCreate(
+            ['siswa_id' => $siswa->id],
+            [
+                'industri_id' => $industri->id,
+                'usulan_industri_id' => null,
+                'pilihan_siswa' => 'langsung',
+                'status' => $status,
+                'jenis_penempatan' => 'langsung',
+                'alasan_penempatan_langsung' => $validated['alasan'],
+                'ditetapkan_oleh' => $request->user()->id,
+                'ditetapkan_at' => now(),
+            ]
+        );
+
+        if ($status === 'proses_pengajuan' && !$industri->status_pengajuan) {
+            $industri->update([
+                'status_pengajuan' => 'menunggu',
+                'pengajuan_dikirim_at' => now(),
+            ]);
+        }
+
+        if ($status === 'diterima_industri') {
+            $siswa->update(['status_pkl' => 'berjalan']);
+        }
+
+        $siswa->user?->notify(new PenempatanLangsungAssigned($penempatan));
+        $penempatan->guruPembimbing?->user?->notify(new PenempatanLangsungAssigned($penempatan));
+
+        return back()->with('success', 'Penempatan langsung berhasil ditetapkan.');
     }
 
     public function storeBobot(Request $request)

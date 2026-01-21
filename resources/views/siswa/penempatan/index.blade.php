@@ -38,7 +38,9 @@
         default => 'bg-gray-50 text-gray-700 border border-gray-200',
         };
         $pilihan = $penempatan?->pilihan_siswa;
-        $pilihanLabel = $pilihan === 'rekomendasi' ? 'Rekomendasi' : ($pilihan === 'usulan_lain' ? 'Usulan Lain' : 'Belum dipilih');
+        $pilihanLabel = $pilihan === 'rekomendasi'
+            ? 'Rekomendasi'
+            : ($pilihan === 'usulan_lain' ? 'Usulan Lain' : ($pilihan === 'langsung' ? 'Penempatan Langsung' : 'Belum dipilih'));
         $pilihanIndustri = $pilihan === 'usulan_lain'
         ? ($penempatan?->usulanIndustri?->nama_industri ?? '-')
         : ($penempatan?->industri?->nama_industri ?? '-');
@@ -78,6 +80,11 @@
             @if ($isLocked)
             <p class="mt-4 text-sm text-gray-500">
                 Penempatan sudah diterima industri, pilihan tidak dapat diubah.
+            </p>
+            @endif
+            @if (($penempatan?->jenis_penempatan ?? 'normal') === 'langsung')
+            <p class="mt-2 text-sm text-emerald-600">
+                Penempatan langsung ditetapkan oleh admin.
             </p>
             @endif
         </div>
