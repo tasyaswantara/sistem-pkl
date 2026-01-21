@@ -85,6 +85,7 @@ Route::group(['middleware' => ['role:admin']], function () {
         ->name('admin.penempatan.langsung');
     Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
     Route::get('/perizinan', [PerizinanController::class, 'index'])->name('admin.perizinan');
+    Route::post('/perizinan', [PerizinanController::class, 'store'])->name('admin.perizinan.store');
     Route::get('/penilaian', [PenilaianController::class, 'index'])->name('admin.penilaian');
     Route::post('/penilaian/rubrik', [PenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
     Route::post('/penilaian/aspek', [PenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');

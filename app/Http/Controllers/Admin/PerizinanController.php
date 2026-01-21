@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Industri;
 use App\Models\Jurusan;
 use App\Models\Perizinan;
+use App\Models\PenempatanPKL;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,11 @@ class PerizinanController extends Controller
     {
         $jurusanOptions = Jurusan::orderBy('nama')->get();
         $industriOptions = Industri::orderBy('nama_industri')->get();
+        $siswaPenempatanOptions = PenempatanPKL::with(['siswa.user', 'siswa.jurusan', 'industri'])
+            ->where('status', 'diterima_industri')
+            ->whereNotNull('industri_id')
+            ->orderByDesc('id')
+            ->get();
 
         $tahunAjaranList = Siswa::query()
             ->select('tahun_ajaran')
@@ -82,11 +88,57 @@ class PerizinanController extends Controller
         return view('admin.perizinan.index', [
             'jurusanOptions' => $jurusanOptions,
             'industriOptions' => $industriOptions,
+            'siswaPenempatanOptions' => $siswaPenempatanOptions,
             'tahunAjaranList' => $tahunAjaranList,
             'filters' => $filters,
             'statusCounts' => $statusCounts,
             'statusLabels' => $statusLabels,
             'perizinanList' => $perizinanList,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'scope' => 'required|in:all,selected',
+            'siswa_ids' => 'nullable|array',
+            'siswa_ids.*' => 'exists:siswa,id',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        ]);
+
+        if ($validated['scope'] === 'selected' && empty($validated['siswa_ids'])) {
+            return back()->withErrors(['siswa_ids' => 'Pilih minimal satu siswa.'])->withInput();
+        }
+
+        $penempatanQuery = PenempatanPKL::query()
+            ->where('status', 'diterima_industri')
+            ->whereNotNull('industri_id');
+
+        if ($validated['scope'] === 'selected') {
+            $penempatanQuery->whereIn('siswa_id', $validated['siswa_ids']);
+        }
+
+        $penempatanList = $penempatanQuery->get();
+
+        $created = 0;
+        foreach ($penempatanList as $penempatan) {
+            Perizinan::create([
+                'siswa_id' => $penempatan->siswa_id,
+                'industri_id' => $penempatan->industri_id,
+                'created_by' => $request->user()->id,
+                'jenis_izin' => 'Izin Kegiatan Sekolah',
+                'tanggal_mulai' => $validated['tanggal_mulai'],
+                'tanggal_selesai' => $validated['tanggal_selesai'],
+                'status' => 'menunggu',
+            ]);
+            $created++;
+        }
+
+        if ($created === 0) {
+            return back()->withErrors(['siswa_ids' => 'Tidak ada siswa dengan penempatan aktif untuk dikirim.'])->withInput();
+        }
+
+        return back()->with('success', "Perizinan berhasil dikirim ke {$created} siswa.");
     }
 }

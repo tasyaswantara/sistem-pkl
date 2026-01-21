@@ -10,6 +10,73 @@
             </p>
         </div>
 
+        <div id="tambah-perizinan" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Tambah Perizinan</h3>
+                <span class="text-xs text-gray-500">Dibuat oleh admin</span>
+            </div>
+            <form method="POST" action="{{ route('admin.perizinan.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @csrf
+                @php
+                $siswaSelectData = $siswaPenempatanOptions->map(function ($item) {
+                    $nama = $item->siswa?->user?->name ?? '-';
+                    $nis = $item->siswa?->nis ?? '-';
+                    $jurusan = $item->siswa?->jurusan?->nama ?? '-';
+                    $kelas = $item->siswa?->kelas ?? '-';
+                    $industri = $item->industri?->nama_industri ?? '-';
+                    return [
+                        'id' => $item->siswa_id,
+                        'label' => trim("{$nama} · {$nis} · {$jurusan} · {$kelas} · {$industri}"),
+                    ];
+                })->values();
+                @endphp
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Target Siswa</label>
+                    <select name="scope" id="scope-select"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm"
+                        onchange="toggleScope()">
+                        <option value="all" {{ old('scope', 'selected') === 'all' ? 'selected' : '' }}>Semua siswa yang sudah ditempatkan</option>
+                        <option value="selected" {{ old('scope', 'selected') === 'selected' ? 'selected' : '' }}>Siswa pilihan</option>
+                    </select>
+                </div>
+                <div id="scope-selected" class="md:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Pilih Siswa</label>
+                    <div class="relative">
+                        <input type="text" id="siswa-search" placeholder="Cari nama/NIS siswa"
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm"
+                            oninput="filterSiswaSearch()">
+                        <div id="siswa-results" class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg hidden"></div>
+                    </div>
+                    <div id="siswa-selected-list" class="mt-3 flex flex-wrap gap-2"></div>
+                    <div id="siswa-hidden-inputs"></div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        Ketik nama/NIS, lalu klik untuk menambahkan.
+                    </p>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jenis Izin</label>
+                    <div class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                        Izin Kegiatan Sekolah
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal Mulai</label>
+                    <input type="date" name="tanggal_mulai" value="{{ old('tanggal_mulai') }}" required
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal Selesai</label>
+                    <input type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai') }}" required
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                </div>
+                <div class="md:col-span-2 flex justify-end">
+                    <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                        Simpan Perizinan
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <form method="GET" action="{{ route('admin.perizinan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Filter Perizinan</h3>
@@ -168,4 +235,110 @@
             input.form.submit();
         }, 700);
     }
+
+    const siswaData = @js($siswaSelectData);
+    let selectedSiswa = new Map();
+
+    function toggleScope() {
+        const scope = document.getElementById('scope-select')?.value;
+        const selectedBlock = document.getElementById('scope-selected');
+        if (selectedBlock) {
+            selectedBlock.style.display = scope === 'selected' ? 'block' : 'none';
+        }
+    }
+
+    function renderSiswaResults(list) {
+        const results = document.getElementById('siswa-results');
+        if (!results) return;
+        results.innerHTML = '';
+        if (list.length === 0) {
+            results.innerHTML = '<div class="px-3 py-2 text-xs text-gray-500">Tidak ditemukan.</div>';
+            return;
+        }
+        list.forEach((item) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'w-full text-left px-3 py-2 text-sm hover:bg-gray-50';
+            button.textContent = item.label;
+            button.onclick = () => addSiswa(item);
+            results.appendChild(button);
+        });
+    }
+
+    function filterSiswaSearch() {
+        const input = document.getElementById('siswa-search');
+        const results = document.getElementById('siswa-results');
+        if (!input || !results) return;
+        const term = input.value.toLowerCase().trim();
+        const list = term
+            ? siswaData.filter((item) => item.label.toLowerCase().includes(term)).slice(0, 10)
+            : siswaData.slice(0, 10);
+        results.classList.remove('hidden');
+        renderSiswaResults(list);
+    }
+
+    function addSiswa(item) {
+        if (selectedSiswa.has(String(item.id))) {
+            return;
+        }
+        selectedSiswa.set(String(item.id), item);
+        renderSelectedSiswa();
+        const results = document.getElementById('siswa-results');
+        if (results) {
+            results.classList.add('hidden');
+        }
+    }
+
+    function removeSiswa(id) {
+        selectedSiswa.delete(String(id));
+        renderSelectedSiswa();
+    }
+
+    function renderSelectedSiswa() {
+        const list = document.getElementById('siswa-selected-list');
+        const inputs = document.getElementById('siswa-hidden-inputs');
+        if (!list || !inputs) return;
+        list.innerHTML = '';
+        inputs.innerHTML = '';
+        selectedSiswa.forEach((item) => {
+            const badge = document.createElement('span');
+            badge.className = 'inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs';
+            badge.innerHTML = `<span>${item.label}</span>`;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'text-emerald-700 hover:text-emerald-900';
+            button.textContent = '✕';
+            button.onclick = () => removeSiswa(item.id);
+            badge.appendChild(button);
+            list.appendChild(badge);
+
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'siswa_ids[]';
+            hidden.value = item.id;
+            inputs.appendChild(hidden);
+        });
+    }
+
+    document.addEventListener('click', (event) => {
+        const results = document.getElementById('siswa-results');
+        const input = document.getElementById('siswa-search');
+        if (!results || !input) return;
+        if (results.contains(event.target) || input.contains(event.target)) {
+            return;
+        }
+        results.classList.add('hidden');
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        toggleScope();
+        const oldSelected = @js(old('siswa_ids', []));
+        oldSelected.forEach((id) => {
+            const found = siswaData.find((item) => String(item.id) === String(id));
+            if (found) {
+                selectedSiswa.set(String(id), found);
+            }
+        });
+        renderSelectedSiswa();
+    });
 </script>
