@@ -28,17 +28,23 @@ class BerkasController extends Controller
         }
 
         $validated = $request->validate([
-            'bpjs_file' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
-            'kartu_pelajar_file' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
-            'cv_link' => 'nullable|url|max:2048',
-            'portofolio_links' => 'nullable|array',
-            'portofolio_links.*' => 'nullable|url|max:2048',
+            'bpjs_file' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+            'kartu_pelajar_file' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+            'cv_link' => 'required|url|max:2048',
+            'portofolio_links' => 'required|array|min:1',
+            'portofolio_links.*' => 'required|url|max:2048',
         ]);
 
         $portofolioLinks = collect($validated['portofolio_links'] ?? [])
             ->filter()
             ->values()
             ->all();
+
+        if (count($portofolioLinks) === 0) {
+            return back()
+                ->withErrors(['portofolio_links' => 'Link portofolio wajib diisi minimal satu.'])
+                ->withInput();
+        }
 
         $updates = [
             'cv_link' => $validated['cv_link'] ?? null,
