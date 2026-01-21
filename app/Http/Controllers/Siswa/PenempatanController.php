@@ -18,7 +18,7 @@ class PenempatanController extends Controller
             abort(403, 'Akun siswa belum terhubung.');
         }
 
-        $penempatan = PenempatanPKL::with(['industri', 'usulanIndustri'])
+        $penempatan = PenempatanPKL::with(['industri', 'usulanIndustri', 'guruPembimbing.user', 'guruPembimbing.jurusan'])
             ->where('siswa_id', $siswa->id)
             ->first();
 

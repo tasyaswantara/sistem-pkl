@@ -52,7 +52,7 @@
                     {{ $statusLabels[$status] ?? $status }}
                 </span>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div class="text-xs text-gray-500 mb-1">Pilihan Siswa</div>
                     <div class="text-sm font-semibold text-gray-900">{{ $pilihanLabel }}</div>
@@ -64,6 +64,15 @@
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div class="text-xs text-gray-500 mb-1">Jurusan</div>
                     <div class="text-sm font-semibold text-gray-900">{{ $siswa->jurusan?->nama ?? '-' }}</div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div class="text-xs text-gray-500 mb-1">Guru Pembimbing</div>
+                    <div class="text-sm font-semibold text-gray-900">
+                        {{ $penempatan?->guruPembimbing?->user?->name ?? 'Belum ditentukan' }}
+                    </div>
+                    @if ($penempatan?->guruPembimbing?->jurusan?->nama)
+                    <div class="text-xs text-gray-500">{{ $penempatan->guruPembimbing->jurusan->nama }}</div>
+                    @endif
                 </div>
             </div>
             @if ($isLocked)
