@@ -79,6 +79,8 @@ Route::group(['middleware' => ['role:admin']], function () {
         ->name('admin.penempatan.reject');
     Route::post('/penempatan/{penempatan}/guru', [PenempatanController::class, 'setGuruPembimbing'])
         ->name('admin.penempatan.guru');
+    Route::post('/penempatan/{penempatan}/laporan', [PenempatanController::class, 'updateLaporanStatus'])
+        ->name('admin.penempatan.laporan');
     Route::post('/penempatan/langsung', [PenempatanController::class, 'penempatanLangsung'])
         ->name('admin.penempatan.langsung');
     Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
@@ -133,6 +135,7 @@ Route::middleware(['auth', 'role:perwakilan industri', 'industri.approved'])->pr
     Route::get('/siswa', [IndustriDataSiswaController::class, 'index'])->name('siswa');
     Route::post('/siswa/{penempatan}/status', [IndustriDataSiswaController::class, 'setStatus'])->name('siswa.status');
     Route::post('/siswa/{penempatan}/jadwal', [IndustriDataSiswaController::class, 'storeJadwal'])->name('siswa.jadwal');
+    Route::post('/siswa/{penempatan}/laporan', [IndustriDataSiswaController::class, 'storeLaporan'])->name('siswa.laporan');
     Route::get('/elogbook', [IndustriLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}', [IndustriLogbookController::class, 'update'])->name('elogbook.update');
     Route::get('/perizinan', [IndustriPerizinanController::class, 'index'])->name('perizinan');

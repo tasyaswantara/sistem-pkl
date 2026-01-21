@@ -1,7 +1,7 @@
 @section('title', 'Data Siswa')
 
 <x-admin-layout>
-    <div x-data="{ openId: null }">
+    <div x-data="{ openId: null, reportId: null }">
         <div class="mb-8">
             <div class="text-sm text-gray-500 mb-2">Dashboard → Data Siswa</div>
             <h1 class="text-gray-900 text-2xl font-semibold mb-2">Data Siswa</h1>
@@ -32,7 +32,7 @@
 
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[1150px]">
+                <table class="w-full min-w-[1350px]">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
@@ -40,6 +40,7 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jadwal Wawancara</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Berkas Siswa</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Laporan</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aksi</th>
                         </tr>
                     </thead>
@@ -112,6 +113,14 @@
                                     @endif
                                 </div>
                             </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                @if ($row->laporan_industri)
+                                <div class="text-xs text-gray-500">{{ \Illuminate\Support\Str::limit($row->laporan_industri, 80) }}</div>
+                                <div class="text-xs text-emerald-600 mt-1">Status: {{ ucfirst($row->laporan_status ?? 'menunggu') }}</div>
+                                @else
+                                <span class="text-gray-400 italic text-xs">Belum ada</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
                                     <button type="button"
@@ -119,10 +128,15 @@
                                         @click="openId = openId === {{ $row->id }} ? null : {{ $row->id }}">
                                         Atur Jadwal
                                     </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                        @click="reportId = reportId === {{ $row->id }} ? null : {{ $row->id }}">
+                                        Laporan
+                                    </button>
                                     <form method="POST" action="{{ route('industri.siswa.status', $row->id) }}">
                                         @csrf
                                         <select name="status" onchange="this.form.submit()"
-                                            class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 bg-white">
+                                            class="px-3 py-1.5 text-xs border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg font-semibold">
                                             @foreach ([
                                             'diterima_industri' => 'Diterima',
                                             'tidak_lolos_industri' => 'Tidak Lolos',
@@ -137,7 +151,7 @@
                             </td>
                         </tr>
                         <tr x-show="openId === {{ $row->id }}" x-cloak class="bg-gray-50">
-                            <td colspan="5" class="px-4 py-4">
+                            <td colspan="7" class="px-4 py-4">
                                 <form method="POST" action="{{ route('industri.siswa.jadwal', $row->id) }}" class="grid grid-cols-1 md:grid-cols-5 gap-3">
                                     @csrf
                                     <div>
@@ -178,9 +192,27 @@
                                 </form>
                             </td>
                         </tr>
+                        <tr x-show="reportId === {{ $row->id }}" x-cloak class="bg-gray-50">
+                            <td colspan="7" class="px-4 py-4">
+                                <form method="POST" action="{{ route('industri.siswa.laporan', $row->id) }}" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                                    @csrf
+                                    <div class="md:col-span-4">
+                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Isi Laporan</label>
+                                        <textarea name="laporan" rows="3" required
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                            placeholder="Tuliskan keluhan atau laporan terkait siswa...">{{ old('laporan', $row->laporan_industri) }}</textarea>
+                                    </div>
+                                    <div class="md:col-span-1 flex items-end justify-end">
+                                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                                            Kirim Laporan
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
                         @empty
                         <tr>
-                            <td class="px-4 py-6 text-center text-sm text-gray-500" colspan="5">
+                            <td class="px-4 py-6 text-center text-sm text-gray-500" colspan="7">
                                 Belum ada siswa melamar.
                             </td>
                         </tr>

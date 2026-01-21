@@ -57,7 +57,7 @@
 
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[1150px]">
+                <table class="w-full min-w-[1350px]">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
@@ -66,6 +66,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rata Rata Nilai Kejuruan</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tahun Ajaran</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Laporan Industri</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Berkas Siswa</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                         </tr>
@@ -104,6 +105,17 @@
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $row->siswa?->tahun_ajaran ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-700">
+                                @if ($row->laporan_industri)
+                                <div class="text-xs text-gray-600">{{ \Illuminate\Support\Str::limit($row->laporan_industri, 80) }}</div>
+                                <div class="text-xs text-emerald-600 mt-1">Status: {{ ucfirst($row->laporan_status ?? 'menunggu') }}</div>
+                                @if ($row->laporan_at)
+                                <div class="text-xs text-gray-500">{{ $row->laporan_at->format('d/m/Y H:i') }}</div>
+                                @endif
+                                @else
+                                <span class="text-gray-400 italic text-xs">Tidak ada laporan</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
                                 <div class="flex flex-col gap-1">
                                     @if ($bpjsUrl)
                                     <a href="{{ $bpjsUrl }}" target="_blank" class="text-emerald-700 hover:underline text-xs">BPJS</a>
@@ -134,7 +146,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="8">
+                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="9">
                                 Belum ada siswa bimbingan.
                             </td>
                         </tr>

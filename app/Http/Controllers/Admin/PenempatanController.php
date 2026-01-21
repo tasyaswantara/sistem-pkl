@@ -674,6 +674,19 @@ class PenempatanController extends Controller
         return back()->with('success', 'Guru pembimbing berhasil ditetapkan.');
     }
 
+    public function updateLaporanStatus(Request $request, PenempatanPKL $penempatan)
+    {
+        $validated = $request->validate([
+            'laporan_status' => 'required|in:menunggu,ditindak,selesai',
+        ]);
+
+        $penempatan->update([
+            'laporan_status' => $validated['laporan_status'],
+        ]);
+
+        return back()->with('success', 'Status laporan berhasil diperbarui.');
+    }
+
     private function resolveKriteriaMap(string $nama): ?array
     {
         $nama = strtolower($nama);

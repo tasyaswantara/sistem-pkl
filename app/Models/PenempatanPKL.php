@@ -28,11 +28,15 @@ class PenempatanPKL extends Model
         'tanggal_selesai',
         'guru_pembimbing_id',
         'keterangan',
+        'laporan_industri',
+        'laporan_status',
+        'laporan_at',
     ];
 
     protected $casts = [
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
+        'laporan_at' => 'datetime',
     ];
 
     public function siswa()

@@ -103,4 +103,24 @@ class DataSiswaController extends Controller
 
         return back()->with('success', 'Jadwal wawancara berhasil disimpan.');
     }
+
+    public function storeLaporan(Request $request, PenempatanPKL $penempatan)
+    {
+        $industri = $request->user()->industri;
+        if (!$industri || $penempatan->industri_id !== $industri->id) {
+            abort(403, 'Aksi tidak diizinkan.');
+        }
+
+        $validated = $request->validate([
+            'laporan' => 'required|string|max:1000',
+        ]);
+
+        $penempatan->update([
+            'laporan_industri' => $validated['laporan'],
+            'laporan_status' => 'menunggu',
+            'laporan_at' => now(),
+        ]);
+
+        return back()->with('success', 'Laporan berhasil dikirim ke admin.');
+    }
 }

@@ -576,6 +576,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pilihan Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status Penempatan</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Berkas Siswa</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Laporan Industri</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Guru Pembimbing</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail Rekomendasi</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
@@ -667,6 +668,27 @@
                                         <span class="text-gray-400 italic text-xs">Belum ada berkas</span>
                                         @endif
                                     </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    @if ($row->laporan_industri)
+                                    <div class="text-xs text-gray-600">{{ \Illuminate\Support\Str::limit($row->laporan_industri, 80) }}</div>
+                                    <form method="POST" action="{{ route('admin.penempatan.laporan', $row->id) }}" class="mt-2">
+                                        @csrf
+                                        <select name="laporan_status" onchange="this.form.submit()"
+                                            class="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white">
+                                            @foreach (['menunggu' => 'Menunggu', 'ditindak' => 'Ditindak', 'selesai' => 'Selesai'] as $value => $label)
+                                            <option value="{{ $value }}" {{ ($row->laporan_status ?? 'menunggu') === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                    </form>
+                                    @if ($row->laporan_at)
+                                    <div class="text-xs text-gray-500">{{ $row->laporan_at->format('d/m/Y H:i') }}</div>
+                                    @endif
+                                    @else
+                                    <span class="text-gray-400 italic text-xs">Tidak ada laporan</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
                                     @if ($status === 'diterima_industri')
