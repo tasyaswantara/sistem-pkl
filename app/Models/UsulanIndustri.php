@@ -16,6 +16,7 @@ class UsulanIndustri extends Model
         'jurusan_id',
         'nama_industri',
         'email',
+        'kapasitas',
         'alamat',
         'kontak',
         'keterangan',

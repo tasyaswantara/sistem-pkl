@@ -28,12 +28,13 @@
         @endif
 
         @php
-        $status = $penempatan?->status ?? 'belum_diproses';
+        $status = $penempatan?->status ?? 'belum_memilih';
         $statusLabels = $statusLabels ?? [];
         $statusClass = match ($status) {
         'diterima_industri' => 'bg-green-50 text-green-700 border border-green-200',
-        'proses_pengajuan' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-        'ditolak_industri' => 'bg-red-50 text-red-700 border border-red-200',
+        'proses_wawancara' => 'bg-blue-50 text-blue-700 border border-blue-200',
+        'proses_pengajuan', 'menunggu_konfirmasi' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri' => 'bg-red-50 text-red-700 border border-red-200',
         default => 'bg-gray-50 text-gray-700 border border-gray-200',
         };
         $pilihan = $penempatan?->pilihan_siswa;
@@ -41,7 +42,7 @@
         $pilihanIndustri = $pilihan === 'usulan_lain'
         ? ($penempatan?->usulanIndustri?->nama_industri ?? '-')
         : ($penempatan?->industri?->nama_industri ?? '-');
-        $isLocked = $status === 'diterima_industri';
+        $isLocked = !in_array($status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true);
         @endphp
 
         <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
@@ -192,6 +193,12 @@
                     <input name="email" type="email" value="{{ old('email') }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                         placeholder="email@industri.com" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Kapasitas</label>
+                    <input name="kapasitas" type="number" min="1" value="{{ old('kapasitas') }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                        placeholder="Jumlah siswa yang diterima" required>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Kontak (opsional)</label>

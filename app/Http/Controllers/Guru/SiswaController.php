@@ -80,6 +80,16 @@ class SiswaController extends Controller
             'jurusanOptions' => $jurusanOptions,
             'kelasOptions' => $kelasOptions,
             'tahunAjaranOptions' => $tahunAjaranOptions,
+            'statusLabels' => [
+                'belum_memilih' => 'Belum memilih',
+                'menunggu_konfirmasi' => 'Menunggu konfirmasi',
+                'ditolak_sekolah' => 'Ditolak sekolah',
+                'proses_pengajuan' => 'Proses pengajuan',
+                'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
+                'proses_wawancara' => 'Proses wawancara',
+                'diterima_industri' => 'Diterima industri',
+                'tidak_lolos_industri' => 'Tidak lolos industri',
+            ],
         ]);
     }
 }

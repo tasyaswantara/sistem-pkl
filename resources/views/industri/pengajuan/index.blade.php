@@ -65,5 +65,55 @@
             <p class="text-sm text-gray-500">Status pengajuan sudah dikonfirmasi.</p>
             @endif
         </div>
+
+        @php
+        $statusLabels = [
+        'belum_memilih' => 'Belum memilih',
+        'menunggu_konfirmasi' => 'Menunggu konfirmasi',
+        'ditolak_sekolah' => 'Ditolak sekolah',
+        'proses_pengajuan' => 'Proses pengajuan',
+        'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
+        'proses_wawancara' => 'Proses wawancara',
+        'diterima_industri' => 'Diterima industri',
+        'tidak_lolos_industri' => 'Tidak lolos industri',
+        ];
+        @endphp
+
+        <div class="mt-6 bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Siswa yang Memilih</h3>
+                <span class="text-xs text-gray-500">{{ $penempatanList->count() }} siswa</span>
+            </div>
+
+            @if ($penempatanList->isEmpty())
+            <p class="text-sm text-gray-500">Belum ada siswa yang memilih atau mengusulkan industri ini.</p>
+            @else
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[700px]">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status Penempatan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach ($penempatanList as $row)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <div class="font-medium text-gray-900">{{ $row->siswa?->user?->name ?? '-' }}</div>
+                                <div class="text-xs text-gray-500">{{ $row->siswa?->nis ?? '-' }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row->siswa?->jurusan?->nama ?? '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                {{ $statusLabels[$row->status] ?? $row->status }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        </div>
     </div>
 </x-admin-layout>

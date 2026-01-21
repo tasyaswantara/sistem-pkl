@@ -11,6 +11,8 @@
             guruTargetId: null,
             guruTargetName: '',
             guruList: [],
+            usulanOpen: false,
+            usulanDetail: {},
         }">
 
         {{-- Header --}}
@@ -267,12 +269,13 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri Usulan</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kapasitas</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kontak</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200" x-data="{ openId: null }">
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($usulanList as $usulan)
                         @php
                         $usulanStatusClass = match ($usulan->status) {
@@ -292,6 +295,7 @@
                                 <div class="text-xs text-gray-500">{{ $usulan->alamat }}</div>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-700">{{ $usulan->email ?? '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ $usulan->kapasitas ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-700">{{ $usulan->kontak ?? '-' }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $usulanStatusClass }}">
@@ -301,11 +305,12 @@
                             <td class="px-4 py-3">
                                 @if ($usulan->status === 'menunggu')
                                 <div class="flex items-center gap-2">
-                                    <button type="button"
-                                        class="px-3 py-1.5 text-xs border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-50"
-                                        @click="openId = openId === {{ $usulan->id }} ? null : {{ $usulan->id }}">
-                                        Setujui
-                                    </button>
+                                    <form method="POST" action="{{ route('admin.penempatan.usulan.approve', $usulan->id) }}">
+                                        @csrf
+                                        <button class="px-3 py-1.5 text-xs border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-50">
+                                            Setujui
+                                        </button>
+                                    </form>
                                     <form method="POST" action="{{ route('admin.penempatan.usulan.reject', $usulan->id) }}"
                                         onsubmit="return confirm('Tolak usulan industri ini?')">
                                         @csrf
@@ -319,47 +324,9 @@
                                 @endif
                             </td>
                         </tr>
-                        <tr x-show="openId === {{ $usulan->id }}" x-cloak>
-                            <td colspan="7" class="px-4 pb-4">
-                                <form method="POST" action="{{ route('admin.penempatan.usulan.approve', $usulan->id) }}"
-                                    class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                    @csrf
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Email Akun *</label>
-                                        <input name="email" type="email" value="{{ $usulan->email ?? '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                            placeholder="email@industri.com" required>
-                                        <p class="mt-1 text-xs text-gray-500">Wajib diisi untuk membuat akun industri.</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Password</label>
-                                        <input name="password" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                            placeholder="Minimal 8 karakter" required>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Kapasitas</label>
-                                        <input name="kapasitas" type="number" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                            placeholder="Kapasitas" required>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Grade</label>
-                                        <select name="grade" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" required>
-                                            <option value="">Pilih Grade</option>
-                                            @foreach (['A', 'B', 'C'] as $grade)
-                                            <option value="{{ $grade }}">Grade {{ $grade }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="md:col-span-4 flex justify-end">
-                                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
-                                            Konfirmasi & Buat Akun
-                                        </button>
-                                    </div>
-                                </form>
-                            </td>
-                        </tr>
                         @empty
                         <tr>
-                            <td class="px-4 py-6 text-center text-sm text-gray-500" colspan="7">
+                            <td class="px-4 py-6 text-center text-sm text-gray-500" colspan="8">
                                 Belum ada usulan industri dari siswa.
                             </td>
                         </tr>
@@ -419,17 +386,17 @@
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Hasil Penempatan Siswa</h3>
                 <div class="flex items-center gap-3 text-sm">
-                    <div class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                        <span class="text-green-600 font-semibold">{{ $statusCounts['diterima_industri'] ?? 0 }}</span>
-                        <span class="text-green-700 ml-1">Diterima</span>
+                    <div class="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                        <span class="text-blue-600 font-semibold">{{ $statusCounts['menunggu_konfirmasi'] ?? 0 }}</span>
+                        <span class="text-blue-700 ml-1">Menunggu Konfirmasi</span>
                     </div>
                     <div class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <span class="text-yellow-600 font-semibold">{{ $statusCounts['proses_pengajuan'] ?? 0 }}</span>
-                        <span class="text-yellow-700 ml-1">Proses</span>
+                        <span class="text-yellow-700 ml-1">Proses Pengajuan</span>
                     </div>
-                    <div class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
-                        <span class="text-red-600 font-semibold">{{ $statusCounts['ditolak_industri'] ?? 0 }}</span>
-                        <span class="text-red-700 ml-1">Ditolak</span>
+                    <div class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
+                        <span class="text-green-600 font-semibold">{{ $statusCounts['diterima_industri'] ?? 0 }}</span>
+                        <span class="text-green-700 ml-1">Diterima</span>
                     </div>
                     <button class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium">
                         Refresh
@@ -446,7 +413,6 @@
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jurusan</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Industri Rekomendasi</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nilai Preferensi (%)</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Peringkat</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pilihan Siswa</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status Penempatan</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Guru Pembimbing</th>
@@ -466,7 +432,6 @@
                             $topRekom = $rekomList->first();
                             $rekomIndustriNama = $topRekom?->industri?->nama_industri ?? null;
                             $nilaiPreferensi = $topRekom?->nilai_preferensi;
-                            $peringkat = $topRekom?->peringkat;
                             $detailItems = $rekomList->map(function ($item) {
                                 return [
                                     'industri' => $item->industri?->nama_industri ?? '-',
@@ -503,15 +468,6 @@
                                     <span class="text-gray-400 italic">-</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if ($peringkat)
-                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-700 rounded-full font-semibold text-xs">
-                                        {{ $peringkat }}
-                                    </span>
-                                    @else
-                                    <span class="text-gray-400 italic">-</span>
-                                    @endif
-                                </td>
                                 <td class="px-6 py-4">
                                     @if ($displayPilihan)
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $pilihan === 'rekomendasi' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700' }}">
@@ -525,8 +481,9 @@
                                     @php
                                     $statusClass = match ($status) {
                                     'diterima_industri' => 'bg-green-50 text-green-700 border border-green-200',
-                                    'proses_pengajuan' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-                                    'ditolak_industri' => 'bg-red-50 text-red-700 border border-red-200',
+                                    'proses_wawancara' => 'bg-blue-50 text-blue-700 border border-blue-200',
+                                    'proses_pengajuan', 'menunggu_konfirmasi' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                                    'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri' => 'bg-red-50 text-red-700 border border-red-200',
                                     default => 'bg-gray-50 text-gray-700 border border-gray-200',
                                     };
                                     @endphp
@@ -573,21 +530,49 @@
                                     </button>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if ($status === 'belum_diproses')
-                                    <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-xs font-medium">
-                                        Konfirmasi Pilihan
-                                    </button>
+                                    @if ($status === 'menunggu_konfirmasi')
+                                    <div class="flex items-center gap-2">
+                                        <form method="POST" action="{{ route('admin.penempatan.confirm', $row->id) }}">
+                                            @csrf
+                                            <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-xs font-medium">
+                                                Konfirmasi
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.penempatan.reject', $row->id) }}">
+                                            @csrf
+                                            <button class="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all text-xs font-medium">
+                                                Tolak
+                                            </button>
+                                        </form>
+                                        @if ($pilihan === 'usulan_lain' && $row->usulanIndustri)
+                                        <button
+                                            type="button"
+                                            class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
+                                            @click="usulanOpen = true; usulanDetail = @js([
+                                                'nama' => $row->usulanIndustri->nama_industri,
+                                                'email' => $row->usulanIndustri->email ?? '-',
+                                                'kapasitas' => $row->usulanIndustri->kapasitas ?? '-',
+                                                'alamat' => $row->usulanIndustri->alamat,
+                                                'kontak' => $row->usulanIndustri->kontak ?? '-',
+                                                'keterangan' => $row->usulanIndustri->keterangan ?? '-',
+                                            ]);">
+                                            Usulan
+                                        </button>
+                                        @endif
+                                    </div>
                                     @elseif ($status === 'proses_pengajuan')
                                     <div class="flex items-center gap-2 text-xs text-orange-600">
                                         <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
                                         <span class="italic">Menunggu konfirmasi industri</span>
                                     </div>
+                                    @elseif ($status === 'proses_wawancara')
+                                    <span class="text-xs text-blue-600 italic">Proses wawancara</span>
                                     @elseif ($status === 'diterima_industri')
                                     <span class="text-xs text-green-600 font-medium">Penempatan selesai</span>
-                                    @elseif ($status === 'ditolak_industri')
+                                    @elseif (in_array($status, ['pengajuan_ditolak_industri', 'tidak_lolos_industri', 'ditolak_sekolah'], true))
                                     <span class="text-xs text-red-600 italic">Perlu penempatan ulang</span>
                                     @else
-                                    <span class="text-xs text-gray-400 italic">Menunggu hasil SAW</span>
+                                    <span class="text-xs text-gray-400 italic">Menunggu pilihan siswa</span>
                                     @endif
                                 </td>
                             </tr>
@@ -633,6 +618,30 @@
                             </template>
                         </div>
                     </template>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal Usulan --}}
+        <div x-show="usulanOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h4 class="text-base font-semibold text-gray-900">Detail Usulan Industri</h4>
+                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="usulanOpen = false">✕</button>
+                </div>
+                <div class="p-4 text-sm text-gray-700 space-y-2">
+                    <div><span class="text-gray-500">Nama:</span> <span class="font-medium" x-text="usulanDetail.nama"></span></div>
+                    <div><span class="text-gray-500">Email:</span> <span class="font-medium" x-text="usulanDetail.email"></span></div>
+                    <div><span class="text-gray-500">Kapasitas:</span> <span class="font-medium" x-text="usulanDetail.kapasitas"></span></div>
+                    <div><span class="text-gray-500">Alamat:</span> <span class="font-medium" x-text="usulanDetail.alamat"></span></div>
+                    <div><span class="text-gray-500">Kontak:</span> <span class="font-medium" x-text="usulanDetail.kontak"></span></div>
+                    <div><span class="text-gray-500">Keterangan:</span> <span class="font-medium" x-text="usulanDetail.keterangan"></span></div>
+                </div>
+                <div class="flex justify-end p-4 border-t bg-gray-50">
+                    <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                        @click="usulanOpen = false">
+                        Tutup
+                    </button>
                 </div>
             </div>
         </div>

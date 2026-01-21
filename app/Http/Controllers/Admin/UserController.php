@@ -110,7 +110,7 @@ class UserController extends Controller
 
             case 'perwakilan industri':
                 $rules = array_merge($rules, [
-                    'nama_industri' => 'required|string|max:255',
+                    'nama_industri' => 'required|string|max:255|unique:industri,nama_industri',
                     'kapasitas' => 'required|integer|min:1',
                     'alamat' => 'required|string',
                     'grade' => 'required|in:A,B,C',
@@ -231,7 +231,12 @@ class UserController extends Controller
 
             case 'perwakilan industri':
                 $rules = array_merge($rules, [
-                    'nama_industri' => 'required|string|max:255',
+                    'nama_industri' => [
+                        'required',
+                        'string',
+                        'max:255',
+                        Rule::unique('industri', 'nama_industri')->ignore($user->industri?->id),
+                    ],
                     'kapasitas' => 'required|integer|min:1',
                     'alamat' => 'required|string',
                     'grade' => 'required|in:A,B,C',
@@ -294,7 +299,7 @@ class UserController extends Controller
         }
 
         return redirect()
-            ->route('admin.data-pengguna')
+            ->route('admin.data-pengguna', request()->query())
             ->with('success', 'User berhasil diperbarui');
     }
 
@@ -303,7 +308,9 @@ class UserController extends Controller
     {
         $user->delete();
 
-        return redirect()->back()->with('success', 'User deleted successfully.');
+        return redirect()
+            ->route('admin.data-pengguna', request()->query())
+            ->with('success', 'User deleted successfully.');
     }
 
     public function kirimPengajuanIndustri(Industri $industri)

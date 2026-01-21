@@ -46,17 +46,25 @@ class PenempatanController extends Controller
 
         $statusList = [
             'all' => 'Semua Status',
-            'belum_diproses' => 'Belum Diproses',
+            'belum_memilih' => 'Belum Memilih',
+            'menunggu_konfirmasi' => 'Menunggu Konfirmasi',
+            'ditolak_sekolah' => 'Ditolak Sekolah',
             'proses_pengajuan' => 'Proses Pengajuan',
+            'pengajuan_ditolak_industri' => 'Pengajuan Ditolak Industri',
+            'proses_wawancara' => 'Proses Wawancara',
             'diterima_industri' => 'Diterima Industri',
-            'ditolak_industri' => 'Ditolak Industri',
+            'tidak_lolos_industri' => 'Tidak Lolos Industri',
         ];
 
         $statusLabels = [
-            'belum_diproses' => 'Belum Diproses',
-            'proses_pengajuan' => 'Proses Pengajuan',
-            'diterima_industri' => 'Diterima Industri',
-            'ditolak_industri' => 'Ditolak Industri',
+            'belum_memilih' => 'Belum memilih',
+            'menunggu_konfirmasi' => 'Menunggu konfirmasi',
+            'ditolak_sekolah' => 'Ditolak sekolah',
+            'proses_pengajuan' => 'Proses pengajuan',
+            'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
+            'proses_wawancara' => 'Proses wawancara',
+            'diterima_industri' => 'Diterima industri',
+            'tidak_lolos_industri' => 'Tidak lolos industri',
         ];
 
         $pilihanLabels = [
@@ -133,7 +141,7 @@ class PenempatanController extends Controller
         $statusCounts = [
             'diterima_industri' => $penempatanData->where('status', 'diterima_industri')->count(),
             'proses_pengajuan' => $penempatanData->where('status', 'proses_pengajuan')->count(),
-            'ditolak_industri' => $penempatanData->where('status', 'ditolak_industri')->count(),
+            'menunggu_konfirmasi' => $penempatanData->where('status', 'menunggu_konfirmasi')->count(),
         ];
 
         $latestSawRun = null;
@@ -374,16 +382,16 @@ class PenempatanController extends Controller
                 if ($topChoice) {
                     $existingPenempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
                     $shouldUpdate = !$existingPenempatan
-                        || in_array($existingPenempatan->status, ['belum_diproses', 'ditolak_industri'], true);
+                        || in_array($existingPenempatan->status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true);
 
                     if ($shouldUpdate) {
                         PenempatanPKL::updateOrCreate(
                             ['siswa_id' => $siswa->id],
                             [
-                                'industri_id' => $topChoice['industri_id'],
+                                'industri_id' => null,
                                 'usulan_industri_id' => null,
-                                'pilihan_siswa' => 'rekomendasi',
-                                'status' => 'belum_diproses',
+                                'pilihan_siswa' => null,
+                                'status' => 'belum_memilih',
                             ]
                         );
                     }
@@ -423,31 +431,34 @@ class PenempatanController extends Controller
 
     public function approveUsulanIndustri(Request $request, UsulanIndustri $usulan)
     {
-        $validated = $request->validate([
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'kapasitas' => 'required|integer|min:1',
-            'grade' => 'required|in:A,B,C',
-        ]);
-
         if ($usulan->status !== 'menunggu') {
             return back()->withErrors(['usulan' => 'Usulan ini sudah diproses.']);
         }
 
+        if (User::where('email', $usulan->email)->exists()) {
+            return back()->withErrors(['usulan' => 'Email industri sudah digunakan.']);
+        }
+
+        if (Industri::where('nama_industri', $usulan->nama_industri)->exists()) {
+            return back()->withErrors(['usulan' => 'Nama industri sudah terdaftar.']);
+        }
+
         $user = User::create([
             'name' => $usulan->nama_industri,
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'email' => $usulan->email,
+            'password' => Hash::make($usulan->email),
         ]);
 
         $user->assignRole('perwakilan industri');
 
         $industri = $user->industri()->create([
             'nama_industri' => $usulan->nama_industri,
-            'kapasitas' => $validated['kapasitas'],
+            'kapasitas' => $usulan->kapasitas,
             'alamat' => $usulan->alamat,
-            'grade' => $validated['grade'],
+            'grade' => 'C',
             'jurusan_id' => $usulan->jurusan_id,
+            'status_pengajuan' => 'menunggu',
+            'pengajuan_dikirim_at' => now(),
         ]);
 
         $usulan->update([
@@ -483,10 +494,108 @@ class PenempatanController extends Controller
                 'industri_id' => null,
                 'usulan_industri_id' => null,
                 'pilihan_siswa' => null,
-                'status' => 'belum_diproses',
+                'status' => 'ditolak_sekolah',
             ]);
 
         return back()->with('success', 'Usulan industri ditolak. Siswa perlu memilih ulang.');
+    }
+
+    public function confirmPilihan(PenempatanPKL $penempatan)
+    {
+        if ($penempatan->status !== 'menunggu_konfirmasi') {
+            return back()->withErrors(['penempatan' => 'Penempatan ini tidak dalam status menunggu konfirmasi.']);
+        }
+
+        if ($penempatan->pilihan_siswa === 'rekomendasi') {
+            $industri = $penempatan->industri;
+            if (!$industri) {
+                return back()->withErrors(['penempatan' => 'Industri rekomendasi belum tersedia.']);
+            }
+
+            $industri->update([
+                'status_pengajuan' => 'menunggu',
+                'pengajuan_dikirim_at' => now(),
+                'pengajuan_dijawab_at' => null,
+            ]);
+
+            $penempatan->update([
+                'status' => 'proses_pengajuan',
+            ]);
+
+            return back()->with('success', 'Pilihan siswa dikonfirmasi. Pengajuan ke industri dikirim.');
+        }
+
+        if ($penempatan->pilihan_siswa === 'usulan_lain') {
+            $usulan = $penempatan->usulanIndustri;
+            if (!$usulan) {
+                return back()->withErrors(['penempatan' => 'Usulan industri tidak ditemukan.']);
+            }
+
+            if ($usulan->status !== 'menunggu') {
+                return back()->withErrors(['penempatan' => 'Usulan industri sudah diproses.']);
+            }
+
+            if (User::where('email', $usulan->email)->exists()) {
+                return back()->withErrors(['penempatan' => 'Email industri sudah digunakan.']);
+            }
+
+            if (Industri::where('nama_industri', $usulan->nama_industri)->exists()) {
+                return back()->withErrors(['penempatan' => 'Nama industri sudah terdaftar.']);
+            }
+
+            $user = User::create([
+                'name' => $usulan->nama_industri,
+                'email' => $usulan->email,
+                'password' => Hash::make($usulan->email),
+            ]);
+
+            $user->assignRole('perwakilan industri');
+
+            $industri = $user->industri()->create([
+                'nama_industri' => $usulan->nama_industri,
+                'kapasitas' => $usulan->kapasitas,
+                'alamat' => $usulan->alamat,
+                'grade' => 'C',
+                'jurusan_id' => $usulan->jurusan_id,
+                'status_pengajuan' => 'menunggu',
+                'pengajuan_dikirim_at' => now(),
+            ]);
+
+            $usulan->update([
+                'status' => 'disetujui',
+            ]);
+
+            $penempatan->update([
+                'industri_id' => $industri->id,
+                'status' => 'proses_pengajuan',
+            ]);
+
+            return back()->with('success', 'Usulan siswa dikonfirmasi. Akun industri dibuat dan pengajuan dikirim.');
+        }
+
+        return back()->withErrors(['penempatan' => 'Pilihan siswa belum tersedia.']);
+    }
+
+    public function rejectPilihan(PenempatanPKL $penempatan)
+    {
+        if ($penempatan->status !== 'menunggu_konfirmasi') {
+            return back()->withErrors(['penempatan' => 'Penempatan ini tidak dalam status menunggu konfirmasi.']);
+        }
+
+        if ($penempatan->pilihan_siswa === 'usulan_lain' && $penempatan->usulanIndustri) {
+            $penempatan->usulanIndustri->update([
+                'status' => 'ditolak',
+            ]);
+        }
+
+        $penempatan->update([
+            'industri_id' => null,
+            'usulan_industri_id' => null,
+            'pilihan_siswa' => null,
+            'status' => 'ditolak_sekolah',
+        ]);
+
+        return back()->with('success', 'Pilihan siswa ditolak. Siswa dapat memilih ulang.');
     }
 
     public function setGuruPembimbing(Request $request, PenempatanPKL $penempatan)

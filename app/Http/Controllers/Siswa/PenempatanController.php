@@ -47,10 +47,14 @@ class PenempatanController extends Controller
         ];
 
         $statusLabels = [
-            'belum_diproses' => 'Belum Diproses',
-            'proses_pengajuan' => 'Proses Pengajuan',
-            'diterima_industri' => 'Diterima Industri',
-            'ditolak_industri' => 'Ditolak Industri',
+            'belum_memilih' => 'Belum memilih',
+            'menunggu_konfirmasi' => 'Menunggu konfirmasi',
+            'ditolak_sekolah' => 'Ditolak sekolah',
+            'proses_pengajuan' => 'Proses pengajuan',
+            'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
+            'proses_wawancara' => 'Proses wawancara',
+            'diterima_industri' => 'Diterima industri',
+            'tidak_lolos_industri' => 'Tidak lolos industri',
         ];
 
         return view('siswa.penempatan.index', [
@@ -75,8 +79,8 @@ class PenempatanController extends Controller
         ]);
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
-        if ($penempatan && $penempatan->status === 'diterima_industri') {
-            return back()->withErrors(['pilihan' => 'Penempatan sudah diterima, tidak dapat diubah.']);
+        if ($penempatan && !in_array($penempatan->status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true)) {
+            return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
         }
 
         PenempatanPKL::updateOrCreate(
@@ -85,7 +89,7 @@ class PenempatanController extends Controller
                 'industri_id' => $validated['industri_id'],
                 'usulan_industri_id' => null,
                 'pilihan_siswa' => 'rekomendasi',
-                'status' => 'proses_pengajuan',
+                'status' => 'menunggu_konfirmasi',
             ]
         );
 
@@ -100,13 +104,14 @@ class PenempatanController extends Controller
         }
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
-        if ($penempatan && $penempatan->status === 'diterima_industri') {
-            return back()->withErrors(['pilihan' => 'Penempatan sudah diterima, tidak dapat diubah.']);
+        if ($penempatan && !in_array($penempatan->status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true)) {
+            return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
         }
 
         $validated = $request->validate([
             'nama_industri' => 'required|string|max:255',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users,email',
+            'kapasitas' => 'required|integer|min:1',
             'alamat' => 'required|string',
             'kontak' => 'nullable|string|max:100',
             'keterangan' => 'nullable|string|max:500',
@@ -117,6 +122,7 @@ class PenempatanController extends Controller
             'jurusan_id' => $siswa->jurusan_id,
             'nama_industri' => $validated['nama_industri'],
             'email' => $validated['email'],
+            'kapasitas' => $validated['kapasitas'],
             'alamat' => $validated['alamat'],
             'kontak' => $validated['kontak'] ?? null,
             'keterangan' => $validated['keterangan'] ?? null,
@@ -129,7 +135,7 @@ class PenempatanController extends Controller
                 'industri_id' => null,
                 'usulan_industri_id' => $usulan->id,
                 'pilihan_siswa' => 'usulan_lain',
-                'status' => 'proses_pengajuan',
+                'status' => 'menunggu_konfirmasi',
             ]
         );
 

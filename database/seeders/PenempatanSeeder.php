@@ -22,7 +22,15 @@ class PenempatanSeeder extends Seeder
             return;
         }
 
-        $statusPool = ['belum_diproses', 'proses_pengajuan', 'diterima_industri', 'ditolak_industri'];
+        $statusPool = [
+            'belum_memilih',
+            'menunggu_konfirmasi',
+            'proses_pengajuan',
+            'pengajuan_ditolak_industri',
+            'proses_wawancara',
+            'diterima_industri',
+            'tidak_lolos_industri',
+        ];
 
         foreach ($siswaList as $siswa) {
             $industri = $industriList->firstWhere('jurusan_id', $siswa->jurusan_id) ?? $industriList->random();
@@ -36,7 +44,7 @@ class PenempatanSeeder extends Seeder
                     'pilihan_siswa' => $faker->randomElement(['rekomendasi', 'usulan_lain']),
                     'status' => $status,
                     'guru_pembimbing_id' => $status === 'diterima_industri' ? ($guru->id ?? null) : null,
-                    'keterangan' => $status === 'ditolak_industri' ? 'Perlu penempatan ulang' : null,
+                    'keterangan' => in_array($status, ['pengajuan_ditolak_industri', 'tidak_lolos_industri', 'ditolak_sekolah'], true) ? 'Perlu penempatan ulang' : null,
                 ]
             );
         }

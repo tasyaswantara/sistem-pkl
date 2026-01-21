@@ -48,8 +48,10 @@
                         $jadwal = $jadwalMap->get($row->siswa_id);
                         $statusClass = match ($row->status) {
                         'diterima_industri' => 'bg-green-50 text-green-700 border border-green-200',
-                        'ditolak_industri' => 'bg-red-50 text-red-700 border border-red-200',
-                        default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                        'proses_wawancara' => 'bg-blue-50 text-blue-700 border border-blue-200',
+                        'proses_pengajuan', 'menunggu_konfirmasi' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                        'pengajuan_ditolak_industri', 'tidak_lolos_industri', 'ditolak_sekolah' => 'bg-red-50 text-red-700 border border-red-200',
+                        default => 'bg-gray-50 text-gray-700 border border-gray-200',
                         };
                         @endphp
                         <tr class="hover:bg-gray-50 align-top">
@@ -60,7 +62,7 @@
                             <td class="px-4 py-3 text-sm text-gray-700">{{ $row->siswa?->jurusan?->nama ?? '-' }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
-                                    {{ $row->status }}
+                                    {{ $statusLabels[$row->status] ?? $row->status }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-700">
@@ -85,7 +87,10 @@
                                         @csrf
                                         <select name="status" onchange="this.form.submit()"
                                             class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 bg-white">
-                                            @foreach (['proses_pengajuan' => 'Proses', 'diterima_industri' => 'Terima', 'ditolak_industri' => 'Tolak'] as $value => $label)
+                                            @foreach ([
+                                            'diterima_industri' => 'Diterima',
+                                            'tidak_lolos_industri' => 'Tidak Lolos',
+                                            ] as $value => $label)
                                             <option value="{{ $value }}" {{ $row->status === $value ? 'selected' : '' }}>
                                                 {{ $label }}
                                             </option>

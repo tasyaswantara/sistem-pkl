@@ -47,7 +47,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('admin.users.update', $user->id) }}">
+        <form method="POST" action="{{ route('admin.users.update', array_merge(['user' => $user->id], request()->query())) }}">
             @csrf
             @method('PUT')
 

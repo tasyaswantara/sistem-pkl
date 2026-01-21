@@ -35,9 +35,11 @@ class DataSiswaController extends Controller
 
         $statusLabels = [
             'all' => 'Semua',
-            'proses_pengajuan' => 'Proses Pengajuan',
-            'diterima_industri' => 'Diterima',
-            'ditolak_industri' => 'Ditolak',
+            'proses_pengajuan' => 'Proses pengajuan',
+            'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
+            'proses_wawancara' => 'Proses wawancara',
+            'diterima_industri' => 'Diterima industri',
+            'tidak_lolos_industri' => 'Tidak lolos industri',
         ];
 
         return view('industri.siswa.index', [
@@ -56,7 +58,7 @@ class DataSiswaController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:diterima_industri,ditolak_industri,proses_pengajuan',
+            'status' => 'required|in:diterima_industri,tidak_lolos_industri',
         ]);
 
         $penempatan->update([
@@ -94,6 +96,10 @@ class DataSiswaController extends Controller
                 'status' => $validated['status'],
             ]
         );
+
+        $penempatan->update([
+            'status' => 'proses_wawancara',
+        ]);
 
         return back()->with('success', 'Jadwal wawancara berhasil disimpan.');
     }

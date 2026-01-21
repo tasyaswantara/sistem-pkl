@@ -74,8 +74,9 @@
                         @php
                         $statusClass = match ($row->status) {
                         'diterima_industri' => 'bg-green-50 text-green-700 border border-green-200',
-                        'proses_pengajuan' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-                        'ditolak_industri' => 'bg-red-50 text-red-700 border border-red-200',
+                        'proses_wawancara' => 'bg-blue-50 text-blue-700 border border-blue-200',
+                        'proses_pengajuan', 'menunggu_konfirmasi' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                        'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri' => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-gray-50 text-gray-700 border border-gray-200',
                         };
                         @endphp
@@ -91,7 +92,7 @@
                             <td class="px-6 py-4 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
-                                    {{ $row->status }}
+                                    {{ $statusLabels[$row->status] ?? $row->status }}
                                 </span>
                             </td>
                         </tr>

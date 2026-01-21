@@ -73,6 +73,9 @@
 
         {{-- Filter & Control --}}
         <form method="GET" class="flex items-center justify-between gap-4 mb-6">
+            @if (request('role'))
+            <input type="hidden" name="role" value="{{ request('role') }}">
+            @endif
             <div class="flex flex-wrap items-center gap-3">
                 @if ($roleFilter === 'Siswa')
                 <select name="jurusan_id"
@@ -162,8 +165,9 @@
                         @elseif($roleFilter==='Perwakilan Industri')
                         <th class="px-6 py-3 text-left">Kapasitas</th>
                         <th class="px-6 py-3 text-left">Grade</th>
+                        <th class="px-6 py-3 text-left">Jurusan</th>
                         <th class="px-6 py-3 text-left">Pengajuan</th>
-                        <th class="px-6 py-3 text-left">Alamat</th>
+                        <th class="px-6 py-3 text-left w-64">Alamat</th>
                         <th class="px-6 py-3 text-left">Email</th>
                         @else
                         <th class="px-6 py-3 text-left">Email</th>
@@ -223,16 +227,9 @@
                         @elseif($roleFilter === 'Perwakilan Industri')
                         <td class="px-6 py-4 text-sm">{{ $u->industri->kapasitas ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm">{{ $u->industri->grade ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm">{{ $u->industri->jurusan->nama ?? '-' }}</td>
                         <td class="px-6 py-4">
-                            @if (!($u->industri?->status_pengajuan))
-                            <form method="POST" action="{{ route('admin.industri.pengajuan', $u->industri->id) }}"
-                                class="js-pengajuan-form">
-                                @csrf
-                                <button class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-xs font-medium">
-                                    Kirim Pengajuan
-                                </button>
-                            </form>
-                            @else
+                            @if ($u->industri?->status_pengajuan)
                             @php
                             $pengajuanClass = match ($u->industri->status_pengajuan) {
                             'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
@@ -243,9 +240,11 @@
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $pengajuanClass }}">
                                 {{ ucfirst($u->industri->status_pengajuan) }}
                             </span>
+                            @else
+                            <span class="text-xs text-gray-400 italic">-</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-sm">{{ $u->industri->alamat ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm w-64">{{ $u->industri->alamat ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
 
                         @else
@@ -263,7 +262,7 @@
                             <div class="flex items-center gap-2">
 
                                 {{-- Edit --}}
-                                <a href="{{ route('admin.users.edit', $u->id) }}"
+                                <a href="{{ route('admin.users.edit', array_merge(['user' => $u->id], request()->query())) }}"
                                     class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-blue-50 transition"
                                     title="Edit">
                                     <svg xmlns="http://www.w3.org/2000/svg"
@@ -278,7 +277,7 @@
                                 </a>
 
                                 {{-- Delete --}}
-                                <form method="POST" action="{{ route('admin.users.destroy', $u->id) }}"
+                                <form method="POST" action="{{ route('admin.users.destroy', array_merge(['user' => $u->id], request()->query())) }}"
                                     onsubmit="return confirm('Yakin hapus pengguna ini?')">
                                     @csrf
                                     @method('DELETE')
@@ -363,50 +362,4 @@
         }, 700);
     }
 
-    function statusBadgeClass(status) {
-        switch (status) {
-            case 'disetujui':
-                return 'bg-green-50 text-green-700 border border-green-200';
-            case 'ditolak':
-                return 'bg-red-50 text-red-700 border border-red-200';
-            default:
-                return 'bg-yellow-50 text-yellow-700 border border-yellow-200';
-        }
-    }
-
-    document.querySelectorAll('.js-pengajuan-form').forEach((form) => {
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            const button = form.querySelector('button');
-            button.disabled = true;
-            button.textContent = 'Mengirim...';
-
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Gagal mengirim pengajuan');
-                }
-
-                const data = await response.json();
-                const badge = document.createElement('span');
-                badge.className = `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusBadgeClass(data.status)}`;
-                badge.textContent = data.label || 'Menunggu';
-
-                form.replaceWith(badge);
-            } catch (error) {
-                button.disabled = false;
-                button.textContent = 'Kirim Pengajuan';
-                alert('Pengajuan gagal dikirim. Coba lagi.');
-            }
-        });
-    });
 </script>

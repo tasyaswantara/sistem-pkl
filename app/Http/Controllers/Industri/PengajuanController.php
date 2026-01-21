@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Industri;
 
 use App\Http\Controllers\Controller;
+use App\Models\PenempatanPKL;
 use Illuminate\Http\Request;
 
 class PengajuanController extends Controller
@@ -14,8 +15,14 @@ class PengajuanController extends Controller
             abort(403, 'Akun industri belum terhubung.');
         }
 
+        $penempatanList = PenempatanPKL::with(['siswa.user', 'siswa.jurusan'])
+            ->where('industri_id', $industri->id)
+            ->orderByDesc('id')
+            ->get();
+
         return view('industri.pengajuan.index', [
             'industri' => $industri,
+            'penempatanList' => $penempatanList,
         ]);
     }
 
