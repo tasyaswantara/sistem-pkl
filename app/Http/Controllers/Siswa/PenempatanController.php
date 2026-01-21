@@ -74,6 +74,10 @@ class PenempatanController extends Controller
             abort(403, 'Akun siswa belum terhubung.');
         }
 
+        if (!$this->berkasLengkap($siswa)) {
+            return back()->withErrors(['berkas' => 'Lengkapi berkas siswa terlebih dahulu sebelum memilih industri.']);
+        }
+
         $validated = $request->validate([
             'industri_id' => 'required|exists:industri,id',
         ]);
@@ -104,6 +108,10 @@ class PenempatanController extends Controller
         $siswa = $request->user()->siswa;
         if (!$siswa) {
             abort(403, 'Akun siswa belum terhubung.');
+        }
+
+        if (!$this->berkasLengkap($siswa)) {
+            return back()->withErrors(['berkas' => 'Lengkapi berkas siswa terlebih dahulu sebelum mengajukan industri.']);
         }
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
@@ -146,5 +154,16 @@ class PenempatanController extends Controller
         );
 
         return back()->with('success', 'Usulan industri berhasil dikirim.');
+    }
+
+    private function berkasLengkap($siswa): bool
+    {
+        $hasBpjs = !empty($siswa->bpjs_link);
+        $hasKartu = !empty($siswa->kartu_pelajar_link);
+        $hasCv = !empty($siswa->cv_link);
+        $portofolio = is_array($siswa->portofolio_links) ? $siswa->portofolio_links : [];
+        $hasPortofolio = count($portofolio) > 0;
+
+        return $hasBpjs && $hasKartu && $hasCv && $hasPortofolio;
     }
 }
