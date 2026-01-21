@@ -18,6 +18,11 @@ use App\Http\Controllers\Siswa\PenempatanController as SiswaPenempatanController
 use App\Http\Controllers\Siswa\LogbookController as SiswaLogbookController;
 use App\Http\Controllers\Siswa\PerizinanController as SiswaPerizinanController;
 use App\Http\Controllers\Siswa\PenilaianController as SiswaPenilaianController;
+use App\Http\Controllers\Industri\PengajuanController as IndustriPengajuanController;
+use App\Http\Controllers\Industri\DataSiswaController as IndustriDataSiswaController;
+use App\Http\Controllers\Industri\LogbookController as IndustriLogbookController;
+use App\Http\Controllers\Industri\PerizinanController as IndustriPerizinanController;
+use App\Http\Controllers\Industri\PenilaianController as IndustriPenilaianController;
 
 Route::get('/', function () {
     if (!auth()->check()) {
@@ -30,6 +35,9 @@ Route::get('/', function () {
     }
     if ($user->hasRole('siswa')) {
         return redirect()->route('siswa.penempatan');
+    }
+    if ($user->hasRole('perwakilan industri')) {
+        return redirect()->route('industri.pengajuan');
     }
 
     return redirect()->route('dashboard');
@@ -105,6 +113,23 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::delete('/elogbook/{logbook}', [SiswaLogbookController::class, 'destroy'])->name('elogbook.destroy');
     Route::get('/perizinan', [SiswaPerizinanController::class, 'index'])->name('perizinan');
     Route::get('/penilaian', [SiswaPenilaianController::class, 'index'])->name('penilaian');
+});
+
+Route::middleware(['auth', 'role:perwakilan industri'])->prefix('industri')->name('industri.')->group(function () {
+    Route::get('/pengajuan', [IndustriPengajuanController::class, 'index'])->name('pengajuan');
+    Route::post('/pengajuan', [IndustriPengajuanController::class, 'konfirmasi'])->name('pengajuan.konfirmasi');
+});
+
+Route::middleware(['auth', 'role:perwakilan industri', 'industri.approved'])->prefix('industri')->name('industri.')->group(function () {
+    Route::get('/siswa', [IndustriDataSiswaController::class, 'index'])->name('siswa');
+    Route::post('/siswa/{penempatan}/status', [IndustriDataSiswaController::class, 'setStatus'])->name('siswa.status');
+    Route::post('/siswa/{penempatan}/jadwal', [IndustriDataSiswaController::class, 'storeJadwal'])->name('siswa.jadwal');
+    Route::get('/elogbook', [IndustriLogbookController::class, 'index'])->name('elogbook');
+    Route::post('/elogbook/{logbook}', [IndustriLogbookController::class, 'update'])->name('elogbook.update');
+    Route::get('/perizinan', [IndustriPerizinanController::class, 'index'])->name('perizinan');
+    Route::post('/perizinan/{perizinan}', [IndustriPerizinanController::class, 'update'])->name('perizinan.update');
+    Route::get('/penilaian', [IndustriPenilaianController::class, 'index'])->name('penilaian');
+    Route::post('/penilaian/{penempatan}', [IndustriPenilaianController::class, 'store'])->name('penilaian.store');
 });
 
 // Group routes that need admin role and authentication

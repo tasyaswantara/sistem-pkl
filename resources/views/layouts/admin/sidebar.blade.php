@@ -37,6 +37,8 @@
         $isAdmin = $user && $user->hasRole('admin');
         $isGuru = $user && $user->hasRole('guru pembimbing');
         $isSiswa = $user && $user->hasRole('siswa');
+        $isIndustri = $user && $user->hasRole('perwakilan industri');
+        $industriApproved = $isIndustri && $user->industri?->status_pengajuan === 'disetujui';
 
         $menus = [];
 
@@ -155,6 +157,41 @@
         'label' => 'Penilaian',
         'icon' => 'clipboard',
         'route' => 'siswa.penilaian',
+        ],
+        ]);
+        }
+
+        if ($isIndustri) {
+        $menus = array_merge($menus, [
+        [
+        'label' => 'Pengajuan',
+        'icon' => 'file',
+        'route' => 'industri.pengajuan',
+        ],
+        ]);
+        }
+
+        if ($industriApproved) {
+        $menus = array_merge($menus, [
+        [
+        'label' => 'Data Siswa',
+        'icon' => 'users',
+        'route' => 'industri.siswa',
+        ],
+        [
+        'label' => 'E-Logbook',
+        'icon' => 'book',
+        'route' => 'industri.elogbook',
+        ],
+        [
+        'label' => 'Perizinan',
+        'icon' => 'file',
+        'route' => 'industri.perizinan',
+        ],
+        [
+        'label' => 'Penilaian',
+        'icon' => 'clipboard',
+        'route' => 'industri.penilaian',
         ],
         ]);
         }

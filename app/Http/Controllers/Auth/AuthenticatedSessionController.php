@@ -43,6 +43,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('siswa.penempatan');
         }
 
+        if ($user->hasRole('perwakilan industri')) {
+            return redirect()->route('industri.pengajuan');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
