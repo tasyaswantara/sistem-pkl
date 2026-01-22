@@ -1,7 +1,7 @@
 @section('title', 'Perizinan')
 
 <x-admin-layout>
-    <div>
+    <div x-data="{ editId: null }">
         <div class="mb-8">
             <div class="text-sm text-gray-500 mb-2">Dashboard -> Perizinan</div>
             <h1 class="text-gray-900 text-2xl font-semibold mb-2">Perizinan Siswa</h1>
@@ -174,6 +174,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Catatan Industri</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -207,10 +208,51 @@
                             <td class="px-6 py-4 text-sm text-gray-700">
                                 {{ $row->catatan_industri ? \Illuminate\Support\Str::limit($row->catatan_industri, 80) : '-' }}
                             </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <button type="button"
+                                        class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                        @click="editId = editId === {{ $row->id }} ? null : {{ $row->id }}">
+                                        Edit
+                                    </button>
+                                    <form method="POST" action="{{ route('admin.perizinan.destroy', $row->id) }}"
+                                        onsubmit="return confirm('Hapus perizinan ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="px-3 py-1.5 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr x-show="editId === {{ $row->id }}" x-cloak class="bg-gray-50">
+                            <td colspan="8" class="px-6 py-4">
+                                <form method="POST" action="{{ route('admin.perizinan.update', $row->id) }}"
+                                    class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                                    @csrf
+                                    @method('PUT')
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal Mulai</label>
+                                        <input type="date" name="tanggal_mulai" value="{{ $row->tanggal_mulai?->format('Y-m-d') }}"
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal Selesai</label>
+                                        <input type="date" name="tanggal_selesai" value="{{ $row->tanggal_selesai?->format('Y-m-d') }}"
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                                            Simpan Perubahan
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="7">
+                            <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="8">
                                 Belum ada data perizinan.
                             </td>
                         </tr>

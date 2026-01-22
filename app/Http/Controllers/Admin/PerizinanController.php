@@ -141,4 +141,26 @@ class PerizinanController extends Controller
 
         return back()->with('success', "Perizinan berhasil dikirim ke {$created} siswa.");
     }
+
+    public function update(Request $request, Perizinan $perizinan)
+    {
+        $validated = $request->validate([
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        ]);
+
+        $perizinan->update([
+            'tanggal_mulai' => $validated['tanggal_mulai'],
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+        ]);
+
+        return back()->with('success', 'Perizinan berhasil diperbarui.');
+    }
+
+    public function destroy(Perizinan $perizinan)
+    {
+        $perizinan->delete();
+
+        return back()->with('success', 'Perizinan berhasil dihapus.');
+    }
 }

@@ -86,6 +86,8 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
     Route::get('/perizinan', [PerizinanController::class, 'index'])->name('admin.perizinan');
     Route::post('/perizinan', [PerizinanController::class, 'store'])->name('admin.perizinan.store');
+    Route::put('/perizinan/{perizinan}', [PerizinanController::class, 'update'])->name('admin.perizinan.update');
+    Route::delete('/perizinan/{perizinan}', [PerizinanController::class, 'destroy'])->name('admin.perizinan.destroy');
     Route::get('/penilaian', [PenilaianController::class, 'index'])->name('admin.penilaian');
     Route::post('/penilaian/rubrik', [PenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
     Route::post('/penilaian/aspek', [PenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
