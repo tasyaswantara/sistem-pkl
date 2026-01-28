@@ -10,7 +10,7 @@ use App\Models\PenempatanPKL;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 
-class PerizinanController extends Controller
+class AdminPerizinanController extends Controller
 {
     public function index(Request $request)
     {

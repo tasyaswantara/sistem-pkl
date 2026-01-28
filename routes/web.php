@@ -5,25 +5,25 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\PenempatanController;
-use App\Http\Controllers\Admin\LogbookController;
-use App\Http\Controllers\Admin\PerizinanController;
-use App\Http\Controllers\Admin\PenilaianController;
+use App\Http\Controllers\Admin\AdminPenempatanController;
+use App\Http\Controllers\Admin\AdminLogbookController;
+use App\Http\Controllers\Admin\AdminPerizinanController;
+use App\Http\Controllers\Admin\AdminPenilaianController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Guru\SiswaController as GuruSiswaController;
-use App\Http\Controllers\Guru\LogbookController as GuruLogbookController;
-use App\Http\Controllers\Guru\PerizinanController as GuruPerizinanController;
-use App\Http\Controllers\Guru\PenilaianController as GuruPenilaianController;
-use App\Http\Controllers\Siswa\PenempatanController as SiswaPenempatanController;
-use App\Http\Controllers\Siswa\LogbookController as SiswaLogbookController;
-use App\Http\Controllers\Siswa\PerizinanController as SiswaPerizinanController;
-use App\Http\Controllers\Siswa\PenilaianController as SiswaPenilaianController;
+use App\Http\Controllers\Guru\GuruLogbookController;
+use App\Http\Controllers\Guru\GuruPerizinanController;
+use App\Http\Controllers\Guru\GuruPenilaianController;
+use App\Http\Controllers\Siswa\SiswaPenempatanController;
+use App\Http\Controllers\Siswa\SiswaLogbookController;
+use App\Http\Controllers\Siswa\SiswaPerizinanController;
+use App\Http\Controllers\Siswa\SiswaPenilaianController;
 use App\Http\Controllers\Siswa\BerkasController as SiswaBerkasController;
 use App\Http\Controllers\Industri\PengajuanController as IndustriPengajuanController;
 use App\Http\Controllers\Industri\DataSiswaController as IndustriDataSiswaController;
-use App\Http\Controllers\Industri\LogbookController as IndustriLogbookController;
-use App\Http\Controllers\Industri\PerizinanController as IndustriPerizinanController;
-use App\Http\Controllers\Industri\PenilaianController as IndustriPenilaianController;
+use App\Http\Controllers\Industri\IndustriLogbookController;
+use App\Http\Controllers\Industri\IndustriPerizinanController;
+use App\Http\Controllers\Industri\IndustriPenilaianController;
 
 Route::get('/', function () {
     if (!auth()->check()) {
@@ -66,32 +66,32 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::post('/data-pengguna/industri/{industri}/pengajuan', [UserController::class, 'kirimPengajuanIndustri'])
         ->middleware(['auth', 'role:admin'])
         ->name('admin.industri.pengajuan');
-    Route::get('/penempatan', [PenempatanController::class, 'index'])->name('admin.penempatan');
-    Route::post('/penempatan/bobot', [PenempatanController::class, 'storeBobot'])->name('admin.penempatan.bobot');
-    Route::post('/penempatan/run-saw', [PenempatanController::class, 'runSaw'])->name('admin.penempatan.run-saw');
-    Route::post('/penempatan/usulan/{usulan}/approve', [PenempatanController::class, 'approveUsulanIndustri'])
+    Route::get('/penempatan', [AdminPenempatanController::class, 'index'])->name('admin.penempatan');
+    Route::post('/penempatan/bobot', [AdminPenempatanController::class, 'storeBobot'])->name('admin.penempatan.bobot');
+    Route::post('/penempatan/run-saw', [AdminPenempatanController::class, 'runSaw'])->name('admin.penempatan.run-saw');
+    Route::post('/penempatan/usulan/{usulan}/approve', [AdminPenempatanController::class, 'approveUsulanIndustri'])
         ->name('admin.penempatan.usulan.approve');
-    Route::post('/penempatan/usulan/{usulan}/reject', [PenempatanController::class, 'rejectUsulanIndustri'])
+    Route::post('/penempatan/usulan/{usulan}/reject', [AdminPenempatanController::class, 'rejectUsulanIndustri'])
         ->name('admin.penempatan.usulan.reject');
-    Route::post('/penempatan/{penempatan}/confirm', [PenempatanController::class, 'confirmPilihan'])
+    Route::post('/penempatan/{penempatan}/confirm', [AdminPenempatanController::class, 'confirmPilihan'])
         ->name('admin.penempatan.confirm');
-    Route::post('/penempatan/{penempatan}/reject', [PenempatanController::class, 'rejectPilihan'])
+    Route::post('/penempatan/{penempatan}/reject', [AdminPenempatanController::class, 'rejectPilihan'])
         ->name('admin.penempatan.reject');
-    Route::post('/penempatan/{penempatan}/guru', [PenempatanController::class, 'setGuruPembimbing'])
+    Route::post('/penempatan/{penempatan}/guru', [AdminPenempatanController::class, 'setGuruPembimbing'])
         ->name('admin.penempatan.guru');
-    Route::post('/penempatan/{penempatan}/laporan', [PenempatanController::class, 'updateLaporanStatus'])
+    Route::post('/penempatan/{penempatan}/laporan', [AdminPenempatanController::class, 'updateLaporanStatus'])
         ->name('admin.penempatan.laporan');
-    Route::post('/penempatan/langsung', [PenempatanController::class, 'penempatanLangsung'])
+    Route::post('/penempatan/langsung', [AdminPenempatanController::class, 'penempatanLangsung'])
         ->name('admin.penempatan.langsung');
-    Route::get('/elogbook', [LogbookController::class, 'index'])->name('admin.elogbook');
-    Route::get('/perizinan', [PerizinanController::class, 'index'])->name('admin.perizinan');
-    Route::post('/perizinan', [PerizinanController::class, 'store'])->name('admin.perizinan.store');
-    Route::put('/perizinan/{perizinan}', [PerizinanController::class, 'update'])->name('admin.perizinan.update');
-    Route::delete('/perizinan/{perizinan}', [PerizinanController::class, 'destroy'])->name('admin.perizinan.destroy');
-    Route::get('/penilaian', [PenilaianController::class, 'index'])->name('admin.penilaian');
-    Route::post('/penilaian/rubrik', [PenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
-    Route::post('/penilaian/aspek', [PenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
-    Route::delete('/penilaian/aspek/{aspek}', [PenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
+    Route::get('/elogbook', [AdminLogbookController::class, 'index'])->name('admin.elogbook');
+    Route::get('/perizinan', [AdminPerizinanController::class, 'index'])->name('admin.perizinan');
+    Route::post('/perizinan', [AdminPerizinanController::class, 'store'])->name('admin.perizinan.store');
+    Route::put('/perizinan/{perizinan}', [AdminPerizinanController::class, 'update'])->name('admin.perizinan.update');
+    Route::delete('/perizinan/{perizinan}', [AdminPerizinanController::class, 'destroy'])->name('admin.perizinan.destroy');
+    Route::get('/penilaian', [AdminPenilaianController::class, 'index'])->name('admin.penilaian');
+    Route::post('/penilaian/rubrik', [AdminPenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
+    Route::post('/penilaian/aspek', [AdminPenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
+    Route::delete('/penilaian/aspek/{aspek}', [AdminPenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications');
 
     Route::get('/forms', function () {

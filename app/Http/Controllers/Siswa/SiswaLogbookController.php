@@ -7,7 +7,7 @@ use App\Models\Logbook;
 use App\Models\PenempatanPKL;
 use Illuminate\Http\Request;
 
-class LogbookController extends Controller
+class SiswaLogbookController extends Controller
 {
     public function index(Request $request)
     {

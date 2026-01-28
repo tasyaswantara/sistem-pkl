@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 
-class PenempatanController extends Controller
+class AdminPenempatanController extends Controller
 {
     public function index(Request $request)
     {

@@ -9,7 +9,7 @@ use App\Models\Logbook;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 
-class LogbookController extends Controller
+class AdminLogbookController extends Controller
 {
     public function index(Request $request)
     {

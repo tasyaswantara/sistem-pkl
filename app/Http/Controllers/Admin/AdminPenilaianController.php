@@ -11,7 +11,7 @@ use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class PenilaianController extends Controller
+class AdminPenilaianController extends Controller
 {
     public function index(Request $request)
     {

@@ -11,7 +11,7 @@ use App\Models\Penilaian;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 
-class PenilaianController extends Controller
+class GuruPenilaianController extends Controller
 {
     public function index(Request $request)
     {

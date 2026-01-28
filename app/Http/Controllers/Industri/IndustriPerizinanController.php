@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Industri;
 
 use App\Http\Controllers\Controller;
-use App\Models\Logbook;
+use App\Models\Perizinan;
 use Illuminate\Http\Request;
 
-class LogbookController extends Controller
+class IndustriPerizinanController extends Controller
 {
     public function index(Request $request)
     {
@@ -15,36 +15,34 @@ class LogbookController extends Controller
             abort(403, 'Akun industri belum terhubung.');
         }
 
-        $logbooks = Logbook::with(['siswa.user', 'siswa.jurusan'])
+        $perizinanList = Perizinan::with('siswa.user')
             ->where('industri_id', $industri->id)
-            ->orderByDesc('tanggal')
             ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
-        return view('industri.elogbook.index', [
-            'logbooks' => $logbooks,
+        return view('industri.perizinan.index', [
+            'perizinanList' => $perizinanList,
         ]);
     }
 
-    public function update(Request $request, Logbook $logbook)
+    public function update(Request $request, Perizinan $perizinan)
     {
         $industri = $request->user()->industri;
-        if (!$industri || $logbook->industri_id !== $industri->id) {
+        if (!$industri || $perizinan->industri_id !== $industri->id) {
             abort(403, 'Aksi tidak diizinkan.');
         }
 
         $validated = $request->validate([
-            'status_validasi' => 'required|in:pending,disetujui,ditolak',
+            'status' => 'required|in:menunggu,disetujui,ditolak',
             'catatan_industri' => 'nullable|string|max:1000',
         ]);
 
-        $logbook->update([
-            'status_validasi' => $validated['status_validasi'],
+        $perizinan->update([
+            'status' => $validated['status'],
             'catatan_industri' => $validated['catatan_industri'],
-            'validated_at' => $validated['status_validasi'] === 'pending' ? null : now(),
         ]);
 
-        return back()->with('success', 'Logbook berhasil divalidasi.');
+        return back()->with('success', 'Perizinan berhasil diperbarui.');
     }
 }

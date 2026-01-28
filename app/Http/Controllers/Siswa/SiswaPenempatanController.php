@@ -9,7 +9,7 @@ use App\Models\PenempatanPKL;
 use App\Models\UsulanIndustri;
 use Illuminate\Http\Request;
 
-class PenempatanController extends Controller
+class SiswaPenempatanController extends Controller
 {
     public function index(Request $request)
     {

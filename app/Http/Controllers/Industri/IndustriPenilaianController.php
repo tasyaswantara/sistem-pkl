@@ -10,7 +10,7 @@ use App\Models\Penilaian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class PenilaianController extends Controller
+class IndustriPenilaianController extends Controller
 {
     public function index(Request $request)
     {

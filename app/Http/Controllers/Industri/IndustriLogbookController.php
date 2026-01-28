@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Industri;
 
 use App\Http\Controllers\Controller;
-use App\Models\Perizinan;
+use App\Models\Logbook;
 use Illuminate\Http\Request;
 
-class PerizinanController extends Controller
+class IndustriLogbookController extends Controller
 {
     public function index(Request $request)
     {
@@ -15,34 +15,36 @@ class PerizinanController extends Controller
             abort(403, 'Akun industri belum terhubung.');
         }
 
-        $perizinanList = Perizinan::with('siswa.user')
+        $logbooks = Logbook::with(['siswa.user', 'siswa.jurusan'])
             ->where('industri_id', $industri->id)
+            ->orderByDesc('tanggal')
             ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
-        return view('industri.perizinan.index', [
-            'perizinanList' => $perizinanList,
+        return view('industri.elogbook.index', [
+            'logbooks' => $logbooks,
         ]);
     }
 
-    public function update(Request $request, Perizinan $perizinan)
+    public function update(Request $request, Logbook $logbook)
     {
         $industri = $request->user()->industri;
-        if (!$industri || $perizinan->industri_id !== $industri->id) {
+        if (!$industri || $logbook->industri_id !== $industri->id) {
             abort(403, 'Aksi tidak diizinkan.');
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:menunggu,disetujui,ditolak',
+            'status_validasi' => 'required|in:pending,disetujui,ditolak',
             'catatan_industri' => 'nullable|string|max:1000',
         ]);
 
-        $perizinan->update([
-            'status' => $validated['status'],
+        $logbook->update([
+            'status_validasi' => $validated['status_validasi'],
             'catatan_industri' => $validated['catatan_industri'],
+            'validated_at' => $validated['status_validasi'] === 'pending' ? null : now(),
         ]);
 
-        return back()->with('success', 'Perizinan berhasil diperbarui.');
+        return back()->with('success', 'Logbook berhasil divalidasi.');
     }
 }

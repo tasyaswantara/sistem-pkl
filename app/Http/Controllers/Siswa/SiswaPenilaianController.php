@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
-use App\Models\Perizinan;
+use App\Models\AspekPenilaian;
+use App\Models\Penilaian;
 use Illuminate\Http\Request;
 
-class PerizinanController extends Controller
+class SiswaPenilaianController extends Controller
 {
     public function index(Request $request)
     {
@@ -15,14 +16,18 @@ class PerizinanController extends Controller
             abort(403, 'Akun siswa belum terhubung.');
         }
 
-        $perizinanList = Perizinan::with('industri')
+        $penilaianList = Penilaian::with(['industri', 'detailPenilaian.aspekPenilaian'])
             ->where('siswa_id', $siswa->id)
+            ->orderByDesc('tanggal_penilaian')
             ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
-        return view('siswa.perizinan.index', [
-            'perizinanList' => $perizinanList,
+        $aspekList = AspekPenilaian::orderBy('nama_aspek')->get();
+
+        return view('siswa.penilaian.index', [
+            'penilaianList' => $penilaianList,
+            'aspekList' => $aspekList,
         ]);
     }
 }

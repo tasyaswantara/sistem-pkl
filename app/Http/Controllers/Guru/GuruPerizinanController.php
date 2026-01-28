@@ -7,7 +7,7 @@ use App\Models\PenempatanPKL;
 use App\Models\Perizinan;
 use Illuminate\Http\Request;
 
-class PerizinanController extends Controller
+class GuruPerizinanController extends Controller
 {
     public function index(Request $request)
     {
