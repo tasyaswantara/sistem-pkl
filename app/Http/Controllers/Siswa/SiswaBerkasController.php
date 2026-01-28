@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class BerkasController extends Controller
+class SiswaBerkasController extends Controller
 {
     public function index(Request $request)
     {

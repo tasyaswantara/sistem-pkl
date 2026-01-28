@@ -2,15 +2,15 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminRoleController;
+use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\AdminPenempatanController;
 use App\Http\Controllers\Admin\AdminLogbookController;
 use App\Http\Controllers\Admin\AdminPerizinanController;
 use App\Http\Controllers\Admin\AdminPenilaianController;
-use App\Http\Controllers\Admin\NotificationController;
-use App\Http\Controllers\Guru\SiswaController as GuruSiswaController;
+use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\Guru\GuruSiswaController;
 use App\Http\Controllers\Guru\GuruLogbookController;
 use App\Http\Controllers\Guru\GuruPerizinanController;
 use App\Http\Controllers\Guru\GuruPenilaianController;
@@ -18,9 +18,9 @@ use App\Http\Controllers\Siswa\SiswaPenempatanController;
 use App\Http\Controllers\Siswa\SiswaLogbookController;
 use App\Http\Controllers\Siswa\SiswaPerizinanController;
 use App\Http\Controllers\Siswa\SiswaPenilaianController;
-use App\Http\Controllers\Siswa\BerkasController as SiswaBerkasController;
-use App\Http\Controllers\Industri\PengajuanController as IndustriPengajuanController;
-use App\Http\Controllers\Industri\DataSiswaController as IndustriDataSiswaController;
+use App\Http\Controllers\Siswa\SiswaBerkasController;
+use App\Http\Controllers\Industri\IndustriPengajuanController;
+use App\Http\Controllers\Industri\IndustriDataSiswaController;
 use App\Http\Controllers\Industri\IndustriLogbookController;
 use App\Http\Controllers\Industri\IndustriPerizinanController;
 use App\Http\Controllers\Industri\IndustriPenilaianController;
@@ -60,10 +60,10 @@ Route::group(['middleware' => ['role:admin']], function () {
     // })->name('admin.dashboard');  
 
     //ROUTE ADMIN DATA PENGGUNA
-    Route::get('/data-pengguna', [UserController::class, 'index'])
+    Route::get('/data-pengguna', [AdminUserController::class, 'index'])
         ->middleware(['auth', 'role:admin'])
         ->name('admin.data-pengguna');
-    Route::post('/data-pengguna/industri/{industri}/pengajuan', [UserController::class, 'kirimPengajuanIndustri'])
+    Route::post('/data-pengguna/industri/{industri}/pengajuan', [AdminUserController::class, 'kirimPengajuanIndustri'])
         ->middleware(['auth', 'role:admin'])
         ->name('admin.industri.pengajuan');
     Route::get('/penempatan', [AdminPenempatanController::class, 'index'])->name('admin.penempatan');
@@ -92,7 +92,7 @@ Route::group(['middleware' => ['role:admin']], function () {
     Route::post('/penilaian/rubrik', [AdminPenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
     Route::post('/penilaian/aspek', [AdminPenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
     Route::delete('/penilaian/aspek/{aspek}', [AdminPenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications');
+    Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
 
     Route::get('/forms', function () {
         return view('admin.forms');
@@ -149,9 +149,9 @@ Route::middleware(['auth', 'role:perwakilan industri', 'industri.approved'])->pr
 
 // Group routes that need admin role and authentication
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', UserController::class);
-    Route::resource('roles', RoleController::class);
-    Route::resource('permissions', PermissionController::class);
+    Route::resource('users', AdminUserController::class);
+    Route::resource('roles', AdminRoleController::class);
+    Route::resource('permissions', AdminPermissionController::class);
 });
 
 require __DIR__ . '/auth.php';

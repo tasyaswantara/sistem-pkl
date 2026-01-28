@@ -13,7 +13,7 @@ use App\Models\Industri;
 use Illuminate\Validation\Rule;
 
 
-class UserController extends Controller
+class AdminUserController extends Controller
 {
     public function index(Request $request)
     {

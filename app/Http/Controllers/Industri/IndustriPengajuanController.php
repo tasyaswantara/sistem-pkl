@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PenempatanPKL;
 use Illuminate\Http\Request;
 
-class PengajuanController extends Controller
+class IndustriPengajuanController extends Controller
 {
     public function index(Request $request)
     {

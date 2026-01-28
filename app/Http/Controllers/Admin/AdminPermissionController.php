@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
 
-class PermissionController extends Controller
+class AdminPermissionController extends Controller
 {
     public function index()
     {

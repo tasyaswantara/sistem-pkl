@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
-class RoleController extends Controller
+class AdminRoleController extends Controller
 {
     // Display a listing of the roles
     public function index()

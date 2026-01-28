@@ -7,7 +7,7 @@ use App\Models\JadwalWawancara;
 use App\Models\PenempatanPKL;
 use Illuminate\Http\Request;
 
-class DataSiswaController extends Controller
+class IndustriDataSiswaController extends Controller
 {
     public function index(Request $request)
     {
