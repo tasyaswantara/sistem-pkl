@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'industri.approved' => \App\Http\Middleware\EnsureIndustriApproved::class,
         ]);
+         $middleware->redirectGuestsTo(fn () => route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
