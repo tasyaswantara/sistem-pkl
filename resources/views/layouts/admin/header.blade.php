@@ -32,7 +32,7 @@
                     if (this.poller) clearInterval(this.poller);
                     this.poller = null;
                 }
-            }" class="relative">
+            }" x-init="fetchNotifications(); startPolling()" class="relative">
             <button @click="notificationOpen = ! notificationOpen; notificationOpen ? startPolling() : stopPolling()"
                 class="relative flex mx-4 text-gray-600 focus:outline-none">
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

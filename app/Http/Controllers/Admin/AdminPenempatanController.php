@@ -213,6 +213,9 @@ class AdminPenempatanController extends Controller
 
         $status = $validated['mode'] === 'sekolah' ? 'diterima_industri' : 'proses_pengajuan';
 
+        $existingPenempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
+        $oldStatus = $existingPenempatan?->status;
+
         $penempatan = PenempatanPKL::updateOrCreate(
             ['siswa_id' => $siswa->id],
             [
@@ -226,6 +229,10 @@ class AdminPenempatanController extends Controller
                 'ditetapkan_at' => now(),
             ]
         );
+
+        if ($oldStatus !== null) {
+            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
+        }
 
         if ($status === 'proses_pengajuan' && !$industri->status_pengajuan) {
             $industri->update([
@@ -444,7 +451,9 @@ class AdminPenempatanController extends Controller
                         || in_array($existingPenempatan->status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true);
 
                     if ($shouldUpdate) {
-                        PenempatanPKL::updateOrCreate(
+                        $oldStatus = $existingPenempatan?->status;
+
+                        $penempatan = PenempatanPKL::updateOrCreate(
                             ['siswa_id' => $siswa->id],
                             [
                                 'industri_id' => null,
@@ -453,6 +462,10 @@ class AdminPenempatanController extends Controller
                                 'status' => 'belum_memilih',
                             ]
                         );
+
+                        if ($oldStatus !== null) {
+                            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
+                        }
                     }
                 }
 
@@ -524,7 +537,10 @@ class AdminPenempatanController extends Controller
             'status' => 'disetujui',
         ]);
 
-        PenempatanPKL::updateOrCreate(
+        $existingPenempatan = PenempatanPKL::where('siswa_id', $usulan->siswa_id)->first();
+        $oldStatus = $existingPenempatan?->status;
+
+        $penempatan = PenempatanPKL::updateOrCreate(
             ['siswa_id' => $usulan->siswa_id],
             [
                 'industri_id' => $industri->id,
@@ -533,6 +549,10 @@ class AdminPenempatanController extends Controller
                 'status' => 'proses_pengajuan',
             ]
         );
+
+        if ($oldStatus !== null) {
+            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
+        }
 
         return back()->with('success', 'Usulan industri disetujui dan akun industri dibuat.');
     }
@@ -547,14 +567,20 @@ class AdminPenempatanController extends Controller
             'status' => 'ditolak',
         ]);
 
-        PenempatanPKL::where('siswa_id', $usulan->siswa_id)
+        $penempatan = PenempatanPKL::where('siswa_id', $usulan->siswa_id)
             ->where('usulan_industri_id', $usulan->id)
-            ->update([
+            ->first();
+
+        if ($penempatan) {
+            $oldStatus = $penempatan->status;
+            $penempatan->update([
                 'industri_id' => null,
                 'usulan_industri_id' => null,
                 'pilihan_siswa' => null,
                 'status' => 'ditolak_sekolah',
             ]);
+            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
+        }
 
         return back()->with('success', 'Usulan industri ditolak. Siswa perlu memilih ulang.');
     }
@@ -577,9 +603,11 @@ class AdminPenempatanController extends Controller
                 'pengajuan_dijawab_at' => null,
             ]);
 
+            $oldStatus = $penempatan->status;
             $penempatan->update([
                 'status' => 'proses_pengajuan',
             ]);
+            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
             return back()->with('success', 'Pilihan siswa dikonfirmasi. Pengajuan ke industri dikirim.');
         }
@@ -624,10 +652,12 @@ class AdminPenempatanController extends Controller
                 'status' => 'disetujui',
             ]);
 
+            $oldStatus = $penempatan->status;
             $penempatan->update([
                 'industri_id' => $industri->id,
                 'status' => 'proses_pengajuan',
             ]);
+            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
             return back()->with('success', 'Usulan siswa dikonfirmasi. Akun industri dibuat dan pengajuan dikirim.');
         }
@@ -647,12 +677,14 @@ class AdminPenempatanController extends Controller
             ]);
         }
 
+        $oldStatus = $penempatan->status;
         $penempatan->update([
             'industri_id' => null,
             'usulan_industri_id' => null,
             'pilihan_siswa' => null,
             'status' => 'ditolak_sekolah',
         ]);
+        $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
         return back()->with('success', 'Pilihan siswa ditolak. Siswa dapat memilih ulang.');
     }

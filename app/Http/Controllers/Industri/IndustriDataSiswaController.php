@@ -61,9 +61,11 @@ class IndustriDataSiswaController extends Controller
             'status' => 'required|in:diterima_industri,tidak_lolos_industri',
         ]);
 
+        $oldStatus = $penempatan->status;
         $penempatan->update([
             'status' => $validated['status'],
         ]);
+        $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
         return back()->with('success', 'Status penerimaan berhasil diperbarui.');
     }
@@ -97,9 +99,11 @@ class IndustriDataSiswaController extends Controller
             ]
         );
 
+        $oldStatus = $penempatan->status;
         $penempatan->update([
             'status' => 'proses_wawancara',
         ]);
+        $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
         return back()->with('success', 'Jadwal wawancara berhasil disimpan.');
     }

@@ -90,7 +90,10 @@ class SiswaPenempatanController extends Controller
             return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
         }
 
-        PenempatanPKL::updateOrCreate(
+        $existingPenempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
+        $oldStatus = $existingPenempatan?->status;
+
+        $penempatan = PenempatanPKL::updateOrCreate(
             ['siswa_id' => $siswa->id],
             [
                 'industri_id' => $validated['industri_id'],
@@ -99,6 +102,10 @@ class SiswaPenempatanController extends Controller
                 'status' => 'menunggu_konfirmasi',
             ]
         );
+
+        if ($oldStatus !== null) {
+            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
+        }
 
         return back()->with('success', 'Pilihan rekomendasi berhasil dikirim.');
     }
@@ -143,7 +150,10 @@ class SiswaPenempatanController extends Controller
             'status' => 'menunggu',
         ]);
 
-        PenempatanPKL::updateOrCreate(
+        $existingPenempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
+        $oldStatus = $existingPenempatan?->status;
+
+        $penempatan = PenempatanPKL::updateOrCreate(
             ['siswa_id' => $siswa->id],
             [
                 'industri_id' => null,
@@ -152,6 +162,10 @@ class SiswaPenempatanController extends Controller
                 'status' => 'menunggu_konfirmasi',
             ]
         );
+
+        if ($oldStatus !== null) {
+            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
+        }
 
         return back()->with('success', 'Usulan industri berhasil dikirim.');
     }

@@ -4,9 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Notification;
-use App\Models\User;
-use App\Notifications\PenempatanStatusChanged;
 
 class PenempatanPKL extends Model
 {
@@ -59,26 +56,4 @@ class PenempatanPKL extends Model
         return $this->belongsTo(GuruPembimbing::class, 'guru_pembimbing_id');
     }
 
-    protected static function booted()
-    {
-        static::updating(function (PenempatanPKL $penempatan) {
-            if (!$penempatan->isDirty('status')) {
-                return;
-            }
-
-            $oldStatus = (string) $penempatan->getOriginal('status');
-            $newStatus = (string) $penempatan->status;
-
-            $admins = User::role('admin')->get();
-            if ($admins->isNotEmpty()) {
-                Notification::send($admins, new PenempatanStatusChanged($penempatan, $oldStatus, $newStatus));
-            }
-        });
-
-        static::updated(function (PenempatanPKL $penempatan) {
-            if ($penempatan->wasChanged('status') && $penempatan->status === 'diterima_industri') {
-                $penempatan->siswa?->update(['status_pkl' => 'berjalan']);
-            }
-        });
-    }
 }
