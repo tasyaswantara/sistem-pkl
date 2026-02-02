@@ -99,7 +99,7 @@ class AdminPenempatanController extends Controller
         $totalBobot = $bobotKriteria->sum('bobot');
         $isBobotValid = abs($totalBobot - 1) <= 0.02;
 
-        $penempatanQuery = PenempatanPKL::with([
+        $penempatanBaseQuery = PenempatanPKL::with([
             'siswa.user',
             'siswa.jurusan',
             'industri',
@@ -108,28 +108,36 @@ class AdminPenempatanController extends Controller
         ]);
 
         if ($selectedJurusan) {
-            $penempatanQuery->whereHas('siswa', function ($query) use ($selectedJurusan) {
+            $penempatanBaseQuery->whereHas('siswa', function ($query) use ($selectedJurusan) {
                 $query->where('jurusan_id', $selectedJurusan);
             });
         }
 
         if ($selectedTahun) {
-            $penempatanQuery->whereHas('siswa', function ($query) use ($selectedTahun) {
+            $penempatanBaseQuery->whereHas('siswa', function ($query) use ($selectedTahun) {
                 $query->where('tahun_ajaran', $selectedTahun);
             });
         }
 
         if ($selectedStatus && $selectedStatus !== 'all') {
-            $penempatanQuery->where('status', $selectedStatus);
+            $penempatanBaseQuery->where('status', $selectedStatus);
         }
 
         if ($search) {
-            $penempatanQuery->whereHas('siswa.user', function ($query) use ($search) {
+            $penempatanBaseQuery->whereHas('siswa.user', function ($query) use ($search) {
                 $query->where('name', 'like', '%' . $search . '%');
             });
         }
 
-        $penempatanData = $penempatanQuery->orderByDesc('id')->get();
+        $penempatanData = (clone $penempatanBaseQuery)
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $penempatanLangsung = (clone $penempatanBaseQuery)
+            ->where('jenis_penempatan', 'langsung')
+            ->orderByDesc('id')
+            ->get();
 
         $siswaOptions = Siswa::with('user', 'jurusan')
             ->orderBy('id')
@@ -147,9 +155,9 @@ class AdminPenempatanController extends Controller
             ->groupBy('jurusan_id');
 
         $statusCounts = [
-            'diterima_industri' => $penempatanData->where('status', 'diterima_industri')->count(),
-            'proses_pengajuan' => $penempatanData->where('status', 'proses_pengajuan')->count(),
-            'menunggu_konfirmasi' => $penempatanData->where('status', 'menunggu_konfirmasi')->count(),
+            'diterima_industri' => (clone $penempatanBaseQuery)->where('status', 'diterima_industri')->count(),
+            'proses_pengajuan' => (clone $penempatanBaseQuery)->where('status', 'proses_pengajuan')->count(),
+            'menunggu_konfirmasi' => (clone $penempatanBaseQuery)->where('status', 'menunggu_konfirmasi')->count(),
         ];
 
         $latestSawRun = null;
@@ -192,6 +200,7 @@ class AdminPenempatanController extends Controller
             'guruOptions' => $guruOptions,
             'siswaOptions' => $siswaOptions,
             'industriOptions' => $industriOptions,
+            'penempatanLangsung' => $penempatanLangsung,
         ]);
     }
 

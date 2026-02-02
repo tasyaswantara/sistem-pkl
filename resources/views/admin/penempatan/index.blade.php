@@ -469,7 +469,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse ($penempatanData->where('jenis_penempatan', 'langsung') as $row)
+                        @forelse ($penempatanLangsung as $row)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 text-sm text-gray-700">
                                 <div class="font-medium text-gray-900">{{ $row->siswa?->user?->name ?? '-' }}</div>
@@ -779,11 +779,16 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+        </div>
 
-            <div class="mt-4 text-sm text-gray-500">
-                Menampilkan {{ count($penempatanData) }} data penempatan
+        <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+            <div>
+                Menampilkan {{ $penempatanData->count() }} dari {{ $penempatanData->total() }} data penempatan
             </div>
+            <div>
+                {{ $penempatanData->links() }}
+            </div>
+        </div>
         </div>
         @endif
 
