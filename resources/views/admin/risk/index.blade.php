@@ -21,6 +21,44 @@
     </div>
     @endif
 
+    <form method="GET" action="{{ route('admin.risk') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ $filters['q'] ?? '' }}"
+                            placeholder="Nama siswa"
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Kategori Resiko</label>
+                    <select
+                        name="category"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        <option value="all" {{ ($filters['category'] ?? 'all') === 'all' ? 'selected' : '' }}>Semua</option>
+                        <option value="rendah" {{ ($filters['category'] ?? '') === 'rendah' ? 'selected' : '' }}>Rendah</option>
+                        <option value="sedang" {{ ($filters['category'] ?? '') === 'sedang' ? 'selected' : '' }}>Sedang</option>
+                        <option value="tinggi" {{ ($filters['category'] ?? '') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
+                    Terapkan
+                </button>
+                <a href="{{ route('admin.risk') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                    Reset
+                </a>
+            </div>
+        </div>
+    </form>
+
     <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6 mb-6">
         <h3 class="text-base font-semibold text-gray-900 mb-4">Menjalankan Deteksi Resiko PKL</h3>
 
@@ -130,6 +168,17 @@
             </table>
         </div>
     </div>
+
+    @if (method_exists($riskScores, 'total'))
+    <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+        <div>
+            Menampilkan {{ $riskScores->count() }} dari {{ $riskScores->total() }} data resiko
+        </div>
+        <div>
+            {{ $riskScores->links() }}
+        </div>
+    </div>
+    @endif
 
     {{-- Modal Detail --}}
     <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

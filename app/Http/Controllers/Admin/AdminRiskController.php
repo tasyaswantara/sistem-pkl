@@ -112,17 +112,35 @@ class AdminRiskController extends Controller
         $detailByRiskId = [];
         $weekStart = null;
         $weekEnd = null;
+        $filters = [
+            'q' => request()->input('q'),
+            'category' => request()->input('category', 'all'),
+        ];
 
         if ($latestWeekStart) {
             $weekStart = Carbon::parse($latestWeekStart);
             $weekEnd = RiskScore::where('week_start', $latestWeekStart)->max('week_end');
 
-            $riskScores = RiskScore::with(['siswa.user', 'siswa.jurusan'])
-                ->where('week_start', $latestWeekStart)
-                ->orderBy('score')
-                ->get();
+            $riskQuery = RiskScore::with(['siswa.user', 'siswa.jurusan'])
+                ->where('week_start', $latestWeekStart);
 
-            $siswaIds = $riskScores->pluck('siswa_id')->all();
+            if (!empty($filters['q'])) {
+                $riskQuery->whereHas('siswa.user', function ($query) use ($filters) {
+                    $query->where('name', 'like', '%' . $filters['q'] . '%');
+                });
+            }
+
+            if (!empty($filters['category']) && $filters['category'] !== 'all') {
+                $riskQuery->where('category', $filters['category']);
+            }
+
+            $riskScores = $riskQuery
+                ->orderBy('score')
+                ->paginate(15)
+                ->withQueryString();
+
+            $riskItems = $riskScores->getCollection();
+            $siswaIds = $riskItems->pluck('siswa_id')->all();
             $penempatanBySiswa = PenempatanPKL::whereIn('siswa_id', $siswaIds)
                 ->orderByDesc('id')
                 ->get()
@@ -154,7 +172,7 @@ class AdminRiskController extends Controller
                 'tidak_lolos_industri' => 0.2,
             ];
 
-            foreach ($riskScores as $row) {
+            foreach ($riskItems as $row) {
                 $logs = $logbooks->get($row->siswa_id, collect());
                 $totalLogs = $logs->count();
                 $lateLogs = $logs->filter(function ($log) {
@@ -191,6 +209,7 @@ class AdminRiskController extends Controller
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd ? Carbon::parse($weekEnd) : null,
             'detailByRiskId' => $detailByRiskId,
+            'filters' => $filters,
         ]);
     }
 }
