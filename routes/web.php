@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminLogbookController;
 use App\Http\Controllers\Admin\AdminPerizinanController;
 use App\Http\Controllers\Admin\AdminPenilaianController;
 use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\Admin\AdminRiskController;
 use App\Http\Controllers\Guru\GuruSiswaController;
 use App\Http\Controllers\Guru\GuruLogbookController;
 use App\Http\Controllers\Guru\GuruPerizinanController;
@@ -93,6 +94,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/penilaian/aspek', [AdminPenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
     Route::delete('/penilaian/aspek/{aspek}', [AdminPenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
+    Route::get('/risk', [AdminRiskController::class, 'index'])->name('admin.risk');
+    Route::post('/risk/calculate', [AdminRiskController::class, 'calculate'])->name('admin.risk.calculate');
 
     Route::get('/forms', function () {
         return view('admin.forms');

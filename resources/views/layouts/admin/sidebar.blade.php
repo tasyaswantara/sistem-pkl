@@ -104,6 +104,11 @@
         ],
         ],
         [
+        'label' => 'Resiko PKL',
+        'icon' => 'clipboard',
+        'route' => 'admin.risk',
+        ],
+        [
         'label' => 'E-Logbook',
         'icon' => 'book',
         'route' => 'admin.elogbook',
