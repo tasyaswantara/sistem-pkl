@@ -7,6 +7,7 @@ use App\Models\Logbook;
 use App\Models\PenempatanPKL;
 use App\Models\RiskScore;
 use App\Models\Siswa;
+use App\Models\Jurusan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -115,7 +116,10 @@ class AdminRiskController extends Controller
         $filters = [
             'q' => request()->input('q'),
             'category' => request()->input('category', 'all'),
+            'jurusan_id' => request()->input('jurusan_id'),
         ];
+
+        $jurusanOptions = Jurusan::orderBy('nama')->get();
 
         if ($latestWeekStart) {
             $weekStart = Carbon::parse($latestWeekStart);
@@ -132,6 +136,12 @@ class AdminRiskController extends Controller
 
             if (!empty($filters['category']) && $filters['category'] !== 'all') {
                 $riskQuery->where('category', $filters['category']);
+            }
+
+            if (!empty($filters['jurusan_id'])) {
+                $riskQuery->whereHas('siswa', function ($query) use ($filters) {
+                    $query->where('jurusan_id', $filters['jurusan_id']);
+                });
             }
 
             $riskScores = $riskQuery
@@ -210,6 +220,7 @@ class AdminRiskController extends Controller
             'weekEnd' => $weekEnd ? Carbon::parse($weekEnd) : null,
             'detailByRiskId' => $detailByRiskId,
             'filters' => $filters,
+            'jurusanOptions' => $jurusanOptions,
         ]);
     }
 }

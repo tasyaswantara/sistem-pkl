@@ -23,7 +23,7 @@
 
     <form method="GET" action="{{ route('admin.risk') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
                     <div class="relative">
@@ -47,9 +47,22 @@
                         <option value="tinggi" {{ ($filters['category'] ?? '') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
                     </select>
                 </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                    <select
+                        name="jurusan_id"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        <option value="">Semua</option>
+                        @foreach ($jurusanOptions as $jurusan)
+                        <option value="{{ $jurusan->id }}" {{ (string) ($filters['jurusan_id'] ?? '') === (string) $jurusan->id ? 'selected' : '' }}>
+                            {{ $jurusan->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div class="flex items-center gap-2">
-                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
+                <button type="submit" class="px-4 py-2 bg-emerald-600  text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
                     Terapkan
                 </button>
                 <a href="{{ route('admin.risk') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
@@ -88,7 +101,7 @@
 
         <form method="POST" action="{{ route('admin.risk.calculate') }}">
             @csrf
-            <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-medium">
+            <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600  text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-medium">
                 Hitung Resiko Mingguan
             </button>
         </form>
