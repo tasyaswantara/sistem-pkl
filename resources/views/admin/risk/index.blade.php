@@ -21,18 +21,36 @@
     </div>
     @endif
 
-    <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="text-sm text-gray-600">
-            @if ($weekStart && $weekEnd)
-            Periode terakhir: <span class="font-semibold text-gray-900">{{ $weekStart->format('d M Y') }}</span>
-            sampai <span class="font-semibold text-gray-900">{{ $weekEnd->format('d M Y') }}</span>
-            @else
-            Belum ada perhitungan resiko.
-            @endif
+    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6 mb-6">
+        <h3 class="text-base font-semibold text-gray-900 mb-4">Menjalankan Deteksi Resiko PKL</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                <div class="text-xs text-gray-500 mb-1">Periode Terakhir</div>
+                <div class="text-sm font-semibold text-gray-900">
+                    @if ($weekStart && $weekEnd)
+                    {{ $weekStart->format('d M Y') }} - {{ $weekEnd->format('d M Y') }}
+                    @else
+                    Belum ada perhitungan
+                    @endif
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                <div class="text-xs text-gray-500 mb-1">Status Perhitungan</div>
+                <div class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs {{ $weekStart ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                        {{ $weekStart ? 'Tersedia' : 'Belum ada' }}
+                    </span>
+                    <span class="{{ $weekStart ? 'text-green-700' : 'text-red-700' }}">
+                        {{ $weekStart ? 'Data periode terakhir siap' : 'Silakan jalankan perhitungan' }}
+                    </span>
+                </div>
+            </div>
         </div>
+
         <form method="POST" action="{{ route('admin.risk.calculate') }}">
             @csrf
-            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
+            <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-medium">
                 Hitung Resiko Mingguan
             </button>
         </form>
@@ -48,6 +66,7 @@
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Skor</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kategori</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -81,10 +100,28 @@
                                 Lihat Detail
                             </button>
                         </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                @if ($row->siswa?->user?->email)
+                                <a
+                                    href="mailto:{{ $row->siswa->user->email }}"
+                                    class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium">
+                                    Hubungi
+                                </a>
+                                @else
+                                <span class="text-xs text-gray-400 italic">Email kosong</span>
+                                @endif
+                                <a
+                                    href="{{ route('admin.penempatan', ['tab' => 'langsung']) }}"
+                                    class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-xs font-medium">
+                                    Penempatan Langsung
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">
+                        <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
                             Belum ada hasil resiko untuk periode ini.
                         </td>
                     </tr>
