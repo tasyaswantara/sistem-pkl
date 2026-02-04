@@ -2,7 +2,7 @@
 
 <x-admin-layout>
     <div>
-        <div class="mb-8">
+        <div class="mb-8 animate-fade-up">
             <div class="text-sm text-gray-500 mb-2">Dashboard → Perizinan</div>
             <h1 class="text-gray-900 text-2xl font-semibold mb-2">Perizinan</h1>
             <p class="text-gray-500 text-sm max-w-2xl">
@@ -10,7 +10,7 @@
             </p>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden animate-fade-up">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <div class="mt-4">
+        <div class="mt-4 animate-fade-up">
             {{ $perizinanList->links() }}
         </div>
     </div>

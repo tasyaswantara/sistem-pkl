@@ -2,7 +2,7 @@
 
 <x-admin-layout>
     <div x-data="berkasForm()">
-        <div class="mb-8">
+        <div class="mb-8 animate-fade-up">
             <div class="text-sm text-gray-500 mb-2">Dashboard → Berkas Siswa</div>
             <h1 class="text-gray-900 text-2xl font-semibold mb-2">Berkas Siswa</h1>
             <p class="text-gray-500 text-sm max-w-2xl">
@@ -11,13 +11,13 @@
         </div>
 
         @if (session('success'))
-        <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 animate-fade-up">
             {{ session('success') }}
         </div>
         @endif
 
         @if ($errors->any())
-        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 animate-fade-up">
             <div class="font-semibold mb-1">Terjadi kesalahan:</div>
             <ul class="list-disc list-inside space-y-0.5">
                 @foreach ($errors->all() as $error)
@@ -27,7 +27,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('siswa.berkas.update') }}" class="bg-white rounded-lg border border-gray-200 p-6" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('siswa.berkas.update') }}" class="bg-white rounded-lg border border-gray-200 p-6 animate-fade-up" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 

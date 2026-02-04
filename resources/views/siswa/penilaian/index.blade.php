@@ -2,7 +2,7 @@
 
 <x-admin-layout>
     <div x-data="{ detailOpen: false, detailIndustri: '', detailList: [], detailTotal: '' }">
-        <div class="mb-8">
+        <div class="mb-8 animate-fade-up">
             <div class="text-sm text-gray-500 mb-2">Dashboard → Penilaian</div>
             <h1 class="text-gray-900 text-2xl font-semibold mb-2">Penilaian</h1>
             <p class="text-gray-500 text-sm max-w-2xl">
@@ -10,7 +10,7 @@
             </p>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 animate-fade-up">
             <h3 class="text-base font-semibold text-gray-900 mb-3">Rubrik Penilaian (Global)</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 @foreach ($aspekList as $aspek)
@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden animate-fade-up">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -73,7 +73,7 @@
             </div>
         </div>
 
-        <div class="mt-4">
+        <div class="mt-4 animate-fade-up">
             {{ $penilaianList->links() }}
         </div>
 

@@ -42,11 +42,12 @@ class SiswaLogbookController extends Controller
         }
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)
+            ->where('status', 'diterima_industri')
             ->whereNotNull('industri_id')
             ->first();
 
         if (!$penempatan) {
-            return back()->withErrors(['logbook' => 'Belum ada industri yang ditetapkan untuk logbook.']);
+            return back()->withErrors(['logbook' => 'Logbook hanya bisa diisi setelah status penempatan diterima industri.']);
         }
 
         $validated = $request->validate([

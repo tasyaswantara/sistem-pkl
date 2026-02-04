@@ -2,7 +2,7 @@
 
 <x-admin-layout>
     <div>
-        <div class="mb-8">
+        <div class="mb-8 animate-fade-up">
             <div class="text-sm text-gray-500 mb-2">Dashboard → Penempatan PKL</div>
             <h1 class="text-gray-900 text-2xl font-semibold mb-2">Penempatan PKL</h1>
             <p class="text-gray-500 text-sm max-w-2xl">
@@ -11,13 +11,13 @@
         </div>
 
         @if (session('success'))
-        <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 animate-fade-up">
             {{ session('success') }}
         </div>
         @endif
 
         @if ($errors->any())
-        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 animate-fade-up">
             <div class="font-semibold mb-1">Terjadi kesalahan:</div>
             <ul class="list-disc list-inside space-y-0.5">
                 @foreach ($errors->all() as $error)
@@ -47,7 +47,7 @@
         $isLocked = !in_array($status, ['belum_memilih', 'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri'], true);
         @endphp
 
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 animate-fade-up">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Status Penempatan</h3>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
@@ -89,7 +89,7 @@
             @endif
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 animate-fade-up">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Jadwal Wawancara</h3>
                 <span class="text-xs text-gray-500">Pantau status penerimaan</span>
@@ -140,7 +140,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 animate-fade-up">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Rekomendasi Industri</h3>
                 <span class="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
@@ -194,7 +194,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 animate-fade-up">
             <h3 class="text-base font-semibold text-gray-900 mb-4">Usulkan Industri Lain</h3>
             <form method="POST" action="{{ route('siswa.penempatan.usulan') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @csrf
