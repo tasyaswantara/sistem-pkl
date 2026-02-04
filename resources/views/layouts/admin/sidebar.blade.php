@@ -92,11 +92,21 @@
         'params' => ['tab' => 'usulan'],
         ],
         [
+        'label' => 'Penempatan Langsung',
+        'route' => 'admin.penempatan',
+        'params' => ['tab' => 'langsung'],
+        ],
+        [
         'label' => 'Hasil Penempatan',
         'route' => 'admin.penempatan',
         'params' => ['tab' => 'hasil'],
         ],
         ],
+        ],
+        [
+        'label' => 'Resiko PKL',
+        'icon' => 'clipboard',
+        'route' => 'admin.risk',
         ],
         [
         'label' => 'E-Logbook',
@@ -143,7 +153,7 @@
 
         if ($isSiswa) {
         $menus = array_merge($menus, [
-        [
+            [
         'label' => 'Berkas Siswa',
         'icon' => 'file',
         'route' => 'siswa.berkas',
@@ -282,7 +292,9 @@
                 }
                 $isActiveChild = $child['route'] === 'admin.data-pengguna'
                 ? request()->routeIs('admin.data-pengguna') && request('role') === ($childParams['role'] ?? null)
-                : request()->routeIs($child['route']);
+                : ($child['route'] === 'admin.penempatan'
+                    ? request()->routeIs('admin.penempatan') && request('tab', 'konfigurasi') === ($childParams['tab'] ?? null)
+                    : request()->routeIs($child['route']));
                 @endphp
                 @if ($childHash)
                 <a
