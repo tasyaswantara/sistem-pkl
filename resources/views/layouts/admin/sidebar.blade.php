@@ -134,6 +134,11 @@
         'route' => 'guru.siswa',
         ],
         [
+        'label' => 'Resiko PKL',
+        'icon' => 'clipboard',
+        'route' => 'guru.risk',
+        ],
+        [
         'label' => 'E-Logbook',
         'icon' => 'book',
         'route' => 'guru.elogbook',

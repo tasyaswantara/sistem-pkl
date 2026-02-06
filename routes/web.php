@@ -15,6 +15,7 @@ use App\Http\Controllers\Guru\GuruSiswaController;
 use App\Http\Controllers\Guru\GuruLogbookController;
 use App\Http\Controllers\Guru\GuruPerizinanController;
 use App\Http\Controllers\Guru\GuruPenilaianController;
+use App\Http\Controllers\Guru\GuruRiskController;
 use App\Http\Controllers\Siswa\SiswaPenempatanController;
 use App\Http\Controllers\Siswa\SiswaLogbookController;
 use App\Http\Controllers\Siswa\SiswaPerizinanController;
@@ -116,6 +117,7 @@ Route::middleware(['auth', 'role:guru pembimbing'])->prefix('guru')->name('guru.
     Route::post('/elogbook/{logbook}/komentar', [GuruLogbookController::class, 'storeKomentar'])->name('elogbook.komentar');
     Route::get('/perizinan', [GuruPerizinanController::class, 'index'])->name('perizinan');
     Route::get('/penilaian', [GuruPenilaianController::class, 'index'])->name('penilaian');
+    Route::get('/risk', [GuruRiskController::class, 'index'])->name('risk');
 });
 
 Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
