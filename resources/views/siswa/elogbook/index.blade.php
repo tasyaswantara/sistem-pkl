@@ -121,76 +121,87 @@
                 <div class="text-xs text-slate-500">Total halaman: {{ $logbooks->lastPage() }}</div>
             </div>
 
-            @forelse ($logbooks as $logbook)
-            @php
-                $statusClass = match ($logbook->status_validasi) {
-                    'disetujui' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                    'ditolak' => 'bg-rose-50 text-rose-700 border border-rose-200',
-                    default => 'bg-amber-50 text-amber-700 border border-amber-200',
-                };
-            @endphp
-            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div class="space-y-3">
-                        <div class="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
-                                {{ ucfirst($logbook->status_validasi) }}
-                            </span>
-                            <span class="text-slate-400">•</span>
-                            <span>{{ $logbook->tanggal?->format('d/m/Y') ?? '-' }}</span>
-                            <span class="text-slate-400">•</span>
-                            <span class="text-slate-700 font-medium">{{ $logbook->industri?->nama_industri ?? '-' }}</span>
-                        </div>
-                        <div>
-                            <div class="text-xs uppercase tracking-widest text-slate-400 mb-1">Aktivitas</div>
-                            <div class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{{ $logbook->aktivitas }}</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button"
-                            class="px-3 py-2 text-xs border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50"
-                            @click="editOpen = true; editAction = @js(route('siswa.elogbook.update', $logbook->id)); editTanggal = @js($logbook->tanggal?->format('Y-m-d')); editAktivitas = @js($logbook->aktivitas);">
-                            Edit
-                        </button>
-                        <form method="POST" action="{{ route('siswa.elogbook.destroy', $logbook->id) }}"
-                            onsubmit="return confirm('Hapus logbook ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button class="px-3 py-2 text-xs border border-rose-200 text-rose-600 rounded-xl hover:bg-rose-50">
-                                Hapus
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
-                    <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-                        <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Catatan Industri</div>
-                        <div class="text-sm text-slate-600 whitespace-pre-line">
-                            {{ $logbook->catatan_industri ?? 'Belum ada catatan dari industri.' }}
-                        </div>
-                    </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-                        <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Pesan Guru</div>
-                        @if ($logbook->komentar->isNotEmpty())
-                        <div class="space-y-2">
-                            @foreach ($logbook->komentar as $komentar)
-                            <div class="text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-2">
-                                {{ $komentar->komentar }}
-                            </div>
-                            @endforeach
-                        </div>
-                        @else
-                        <div class="text-sm text-slate-500 italic">Belum ada pesan.</div>
-                        @endif
-                    </div>
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[1100px]">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Tanggal</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Industri</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Aktivitas</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Catatan Industri</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Pesan Guru</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            @forelse ($logbooks as $logbook)
+                            @php
+                                $statusClass = match ($logbook->status_validasi) {
+                                    'disetujui' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                                    'ditolak' => 'bg-rose-50 text-rose-700 border border-rose-200',
+                                    default => 'bg-amber-50 text-amber-700 border border-amber-200',
+                                };
+                            @endphp
+                            <tr class="hover:bg-slate-50 align-top">
+                                <td class="px-4 py-3 text-sm text-slate-700 w-[130px]">{{ $logbook->tanggal?->format('d/m/Y') ?? '-' }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700 w-[220px]">
+                                    <div class="font-medium text-slate-900">{{ $logbook->industri?->nama_industri ?? '-' }}</div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700 w-[360px]">
+                                    <div class="whitespace-pre-line">{{ $logbook->aktivitas }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
+                                        {{ ucfirst($logbook->status_validasi) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700 w-[260px]">
+                                    <div class="whitespace-pre-line text-slate-600">{{ $logbook->catatan_industri ?? '-' }}</div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700 w-[260px]">
+                                    @if ($logbook->komentar->isNotEmpty())
+                                    <div class="space-y-1">
+                                        @foreach ($logbook->komentar as $komentar)
+                                        <div class="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
+                                            {{ $komentar->komentar }}
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @else
+                                    <span class="text-slate-400 italic">Belum ada pesan.</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <button type="button"
+                                            class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                                            @click="editOpen = true; editAction = @js(route('siswa.elogbook.update', $logbook->id)); editTanggal = @js($logbook->tanggal?->format('Y-m-d')); editAktivitas = @js($logbook->aktivitas);">
+                                            Edit
+                                        </button>
+                                        <form method="POST" action="{{ route('siswa.elogbook.destroy', $logbook->id) }}"
+                                            onsubmit="return confirm('Hapus logbook ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="px-3 py-1.5 text-xs border border-rose-200 text-rose-600 rounded-lg hover:bg-rose-50">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td class="px-4 py-6 text-center text-sm text-slate-500" colspan="7">
+                                    Belum ada logbook.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            @empty
-            <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">
-                Belum ada logbook. Mulai isi aktivitas harian Anda agar progres terlihat.
-            </div>
-            @endforelse
         </div>
 
         <div class="mt-4">

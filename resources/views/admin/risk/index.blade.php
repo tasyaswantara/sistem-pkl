@@ -21,6 +21,12 @@
     </div>
     @endif
 
+    @if ($errors->has('week_end'))
+    <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {{ $errors->first('week_end') }}
+    </div>
+    @endif
+
     <form method="GET" action="{{ route('admin.risk') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -101,9 +107,29 @@
 
         <form method="POST" action="{{ route('admin.risk.calculate') }}">
             @csrf
-            <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600  text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-medium">
-                Hitung Resiko Mingguan
-            </button>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal Mulai</label>
+                    <input
+                        type="date"
+                        name="week_start"
+                        value="{{ old('week_start', $weekStart?->toDateString() ?? now()->subDays(6)->toDateString()) }}"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal Akhir</label>
+                    <input
+                        type="date"
+                        name="week_end"
+                        value="{{ old('week_end', $weekEnd?->toDateString() ?? now()->toDateString()) }}"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-medium">
+                        Hitung Resiko Mingguan
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -236,10 +262,10 @@
                 </div>
 
                 <div class="rounded-lg border border-gray-200 p-3 text-sm">
-                    <div class="text-xs text-gray-500">Status Penempatan</div>
+                    <div class="text-xs text-gray-500">Laporan Industri</div>
                     <div class="flex items-center justify-between mt-1">
-                        <span class="font-semibold text-gray-900" x-text="detailData.status ?? '-'"></span>
-                        <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700" x-text="detailData.status_score !== undefined ? Number(detailData.status_score).toFixed(2) : '-'"></span>
+                        <span class="font-semibold text-gray-900" x-text="detailData.laporan_status ?? '-'"></span>
+                        <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700" x-text="detailData.laporan_score !== undefined ? Number(detailData.laporan_score).toFixed(2) : '-'"></span>
                     </div>
                 </div>
             </div>

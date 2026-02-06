@@ -15,11 +15,28 @@ class AdminRiskController extends Controller
 {
     public function calculate(Request $request)
     {
-        $weekStart = $request->input('week_start')
-            ? Carbon::parse($request->input('week_start'))->startOfDay()
+        $weekStartInput = $request->input('week_start');
+        $weekEndInput = $request->input('week_end');
+        if ($weekStartInput && $weekEndInput) {
+            $weekStartCheck = Carbon::parse($weekStartInput);
+            $weekEndCheck = Carbon::parse($weekEndInput);
+            if ($weekEndCheck->lt($weekStartCheck)) {
+                return back()
+                    ->withErrors(['week_end' => 'Tanggal akhir harus sama atau setelah tanggal awal.'])
+                    ->withInput();
+            }
+            if ($weekEndCheck->gt(now()->endOfDay())) {
+                return back()
+                    ->withErrors(['week_end' => 'Tanggal akhir tidak boleh melewati tanggal hari ini.'])
+                    ->withInput();
+            }
+        }
+
+        $weekStart = $weekStartInput
+            ? Carbon::parse($weekStartInput)->startOfDay()
             : now()->subDays(6)->startOfDay();
-        $weekEnd = $request->input('week_end')
-            ? Carbon::parse($request->input('week_end'))->endOfDay()
+        $weekEnd = $weekEndInput
+            ? Carbon::parse($weekEndInput)->endOfDay()
             : now()->endOfDay();
 
         $targetLogbookPerWeek = 0;
@@ -32,22 +49,21 @@ class AdminRiskController extends Controller
             $cursor->addDay();
         }
         $weights = [
-            'logbook' => 0.5,
-            'status' => 0.4,
-            'late' => 0.1,
+            'logbook' => 0.45,
+            'late' => 0.35,
+            'laporan' => 0.2,
         ];
-        $statusScores = [
-            'diterima_industri' => 1.0,
-            'proses_wawancara' => 0.8,
-            'proses_pengajuan' => 0.8,
-            'menunggu_konfirmasi' => 0.8,
-            'belum_memilih' => 0.2,
-            'ditolak_sekolah' => 0.1,
-            'pengajuan_ditolak_industri' => 0.1,
-            'tidak_lolos_industri' => 0.1,
+        $laporanScores = [
+            'selesai' => 1.0,
+            'ditindak' => 0.5,
+            'menunggu' => 0.1,
         ];
 
-        $siswaList = Siswa::select('id')->get();
+        $siswaList = Siswa::whereHas('penempatanPkl', function ($query) {
+                $query->where('status', 'diterima_industri');
+            })
+            ->select('id')
+            ->get();
         $siswaIds = $siswaList->pluck('id')->all();
 
         $penempatanBySiswa = PenempatanPKL::whereIn('siswa_id', $siswaIds)
@@ -79,12 +95,12 @@ class AdminRiskController extends Controller
             $lateScore = $totalLogs > 0
                 ? 1 - min($lateLogs / $totalLogs, 1)
                 : 0;
-            $status = $penempatanBySiswa->get($siswa->id)?->status ?? 'belum_memilih';
-            $statusScore = $statusScores[$status] ?? 0.3;
+            $laporanStatus = $penempatanBySiswa->get($siswa->id)?->laporan_status ?? null;
+            $laporanScore = $laporanScores[$laporanStatus] ?? 0.6;
 
             $score = ($weights['logbook'] * $freqScore)
                 + ($weights['late'] * $lateScore)
-                + ($weights['status'] * $statusScore);
+                + ($weights['laporan'] * $laporanScore);
 
             $category = $score >= 0.7 ? 'rendah' : ($score >= 0.4 ? 'sedang' : 'tinggi');
 
@@ -108,7 +124,7 @@ class AdminRiskController extends Controller
 
     public function index()
     {
-        $latestWeekStart = RiskScore::max('week_start');
+        $latestWeekEnd = RiskScore::max('week_end');
         $riskScores = collect();
         $detailByRiskId = [];
         $weekStart = null;
@@ -121,12 +137,25 @@ class AdminRiskController extends Controller
 
         $jurusanOptions = Jurusan::orderBy('nama')->get();
 
-        if ($latestWeekStart) {
-            $weekStart = Carbon::parse($latestWeekStart);
-            $weekEnd = RiskScore::where('week_start', $latestWeekStart)->max('week_end');
+        if ($latestWeekEnd) {
+            $weekEnd = Carbon::parse($latestWeekEnd);
+            $latestWeekStart = RiskScore::where('week_end', $latestWeekEnd)->max('week_start');
+            $weekStart = $latestWeekStart ? Carbon::parse($latestWeekStart) : null;
+
+            if (!$weekStart) {
+                return view('admin.risk.index', [
+                    'riskScores' => $riskScores,
+                    'weekStart' => $weekStart,
+                    'weekEnd' => $weekEnd,
+                    'detailByRiskId' => $detailByRiskId,
+                    'filters' => $filters,
+                    'jurusanOptions' => $jurusanOptions,
+                ]);
+            }
 
             $riskQuery = RiskScore::with(['siswa.user', 'siswa.jurusan'])
-                ->where('week_start', $latestWeekStart);
+                ->where('week_start', $latestWeekStart)
+                ->where('week_end', $latestWeekEnd);
 
             if (!empty($filters['q'])) {
                 $riskQuery->whereHas('siswa.user', function ($query) use ($filters) {
@@ -157,13 +186,13 @@ class AdminRiskController extends Controller
                 ->groupBy('siswa_id')
                 ->map(fn ($rows) => $rows->first());
             $logbooks = Logbook::whereIn('siswa_id', $siswaIds)
-                ->whereBetween('tanggal', [$weekStart->toDateString(), Carbon::parse($weekEnd)->toDateString()])
+                ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
                 ->get()
                 ->groupBy('siswa_id');
 
             $targetLogbookPerWeek = 0;
             $cursor = $weekStart->copy()->startOfDay();
-            $endCursor = Carbon::parse($weekEnd)->startOfDay();
+            $endCursor = $weekEnd->copy()->startOfDay();
             while ($cursor->lessThanOrEqualTo($endCursor)) {
                 if (!$cursor->isWeekend()) {
                     $targetLogbookPerWeek++;
@@ -171,15 +200,10 @@ class AdminRiskController extends Controller
                 $cursor->addDay();
             }
 
-            $statusScores = [
-                'diterima_industri' => 1.0,
-                'proses_wawancara' => 0.7,
-                'proses_pengajuan' => 0.6,
-                'menunggu_konfirmasi' => 0.6,
-                'belum_memilih' => 0.3,
-                'ditolak_sekolah' => 0.2,
-                'pengajuan_ditolak_industri' => 0.2,
-                'tidak_lolos_industri' => 0.2,
+            $laporanScores = [
+                'selesai' => 1.0,
+                'ditindak' => 0.5,
+                'menunggu' => 0.1,
             ];
 
             foreach ($riskItems as $row) {
@@ -199,8 +223,8 @@ class AdminRiskController extends Controller
                 $lateScore = $totalLogs > 0
                     ? 1 - min($lateLogs / $totalLogs, 1)
                     : 0;
-                $status = $penempatanBySiswa->get($row->siswa_id)?->status ?? 'belum_memilih';
-                $statusScore = $statusScores[$status] ?? 0.3;
+                $laporanStatus = $penempatanBySiswa->get($row->siswa_id)?->laporan_status ?? null;
+                $laporanScore = $laporanScores[$laporanStatus] ?? 1;
 
                 $detailByRiskId[$row->id] = [
                     'total_logs' => $totalLogs,
@@ -208,8 +232,8 @@ class AdminRiskController extends Controller
                     'target_logs' => $targetLogbookPerWeek,
                     'freq_score' => $freqScore,
                     'late_score' => $lateScore,
-                    'status' => $status,
-                    'status_score' => $statusScore,
+                    'laporan_status' => $laporanStatus ?? 'belum ada',
+                    'laporan_score' => $laporanScore,
                 ];
             }
         }
