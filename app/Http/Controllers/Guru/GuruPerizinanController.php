@@ -25,7 +25,7 @@ class GuruPerizinanController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('guru.perizinan.index', [
+        return view('guru.perizinan.guru-perizinan', [
             'perizinanList' => $perizinanList,
         ]);
     }

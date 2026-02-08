@@ -42,7 +42,7 @@ class IndustriDataSiswaController extends Controller
             'tidak_lolos_industri' => 'Tidak lolos industri',
         ];
 
-        return view('industri.siswa.index', [
+        return view('industri.siswa.industri-siswa', [
             'penempatanList' => $penempatanList,
             'jadwalMap' => $jadwalMap,
             'statusLabels' => $statusLabels,

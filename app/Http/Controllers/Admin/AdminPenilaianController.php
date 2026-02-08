@@ -66,7 +66,7 @@ class AdminPenilaianController extends Controller
         $totalBobot = $aspekList->sum('bobot');
         $isBobotValid = abs($totalBobot - 1) <= 0.02;
 
-        return view('admin.penilaian.index', [
+        return view('admin.penilaian.admin-penilaian', [
             'jurusanOptions' => $jurusanOptions,
             'industriOptions' => $industriOptions,
             'tahunAjaranList' => $tahunAjaranList,

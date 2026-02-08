@@ -89,7 +89,7 @@ class GuruLogbookController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('guru.elogbook.index', [
+        return view('guru.elogbook.guru-elogbook', [
             'logbooks' => $logbooks,
             'filters' => $filters,
             'jurusanOptions' => $jurusanOptions,

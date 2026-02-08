@@ -179,7 +179,7 @@ class AdminPenempatanController extends Controller
             }
         }
 
-        return view('admin.penempatan.index', [
+        return view('admin.penempatan.admin-penempatan', [
             'tahunAjaranList' => $tahunAjaranList,
             'statusList' => $statusList,
             'statusLabels' => $statusLabels,

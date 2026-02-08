@@ -14,7 +14,7 @@ class AdminRoleController extends Controller
     public function index()
     {
         $roles = Role::with('permissions')->get();
-        return view('admin.roles.index', compact('roles'));
+        return view('admin.roles.admin-roles', compact('roles'));
     }
 
     // Show the form for creating a new role
@@ -46,7 +46,7 @@ class AdminRoleController extends Controller
             $role->syncPermissions($permissions);
         }
 
-        return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
+        return redirect()->route('admin.roles.admin-roles')->with('success', 'Role created successfully.');
     }
 
 
@@ -77,7 +77,7 @@ class AdminRoleController extends Controller
     //         $role->syncPermissions([]);
     //     }
 
-    //     return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
+    //     return redirect()->route('admin.roles.admin-roles')->with('success', 'Role updated successfully.');
     // }
     public function update(Request $request, Role $role)
     {
@@ -103,7 +103,7 @@ class AdminRoleController extends Controller
             $role->syncPermissions([]);
         }
 
-        return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
+        return redirect()->route('admin.roles.admin-roles')->with('success', 'Role updated successfully.');
     }
 
 
@@ -111,7 +111,7 @@ class AdminRoleController extends Controller
     public function destroy(Role $role)
     {
         $role->delete();
-        return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully.');
+        return redirect()->route('admin.roles.admin-roles')->with('success', 'Role deleted successfully.');
     }
 
     // Display the specified role

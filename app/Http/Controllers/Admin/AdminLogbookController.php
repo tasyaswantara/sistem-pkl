@@ -79,7 +79,7 @@ class AdminLogbookController extends Controller
             'ditolak' => 'Ditolak',
         ];
 
-        return view('admin.elogbook.index', [
+        return view('admin.elogbook.admin-elogbook', [
             'jurusanOptions' => $jurusanOptions,
             'industriOptions' => $industriOptions,
             'tahunAjaranList' => $tahunAjaranList,

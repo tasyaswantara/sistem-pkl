@@ -84,7 +84,7 @@ class GuruPenilaianController extends Controller
 
         $aspekList = AspekPenilaian::orderBy('nama_aspek')->get();
 
-        return view('guru.penilaian.index', [
+        return view('guru.penilaian.guru-penilaian', [
             'penilaianList' => $penilaianList,
             'aspekList' => $aspekList,
             'filters' => $filters,

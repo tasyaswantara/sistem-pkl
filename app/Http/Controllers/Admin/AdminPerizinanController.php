@@ -85,7 +85,7 @@ class AdminPerizinanController extends Controller
             'ditolak' => 'Ditolak',
         ];
 
-        return view('admin.perizinan.index', [
+        return view('admin.perizinan.admin-perizinan', [
             'jurusanOptions' => $jurusanOptions,
             'industriOptions' => $industriOptions,
             'siswaPenempatanOptions' => $siswaPenempatanOptions,

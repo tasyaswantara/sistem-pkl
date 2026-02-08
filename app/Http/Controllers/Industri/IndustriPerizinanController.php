@@ -21,7 +21,7 @@ class IndustriPerizinanController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('industri.perizinan.index', [
+        return view('industri.perizinan.industri-perizinan', [
             'perizinanList' => $perizinanList,
         ]);
     }

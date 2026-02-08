@@ -27,7 +27,7 @@ class SiswaLogbookController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('siswa.elogbook.index', [
+        return view('siswa.elogbook.siswa-elogbook', [
             'siswa' => $siswa,
             'penempatan' => $penempatan,
             'logbooks' => $logbooks,

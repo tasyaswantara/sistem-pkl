@@ -143,7 +143,7 @@ class AdminRiskController extends Controller
             $weekStart = $latestWeekStart ? Carbon::parse($latestWeekStart) : null;
 
             if (!$weekStart) {
-                return view('admin.risk.index', [
+                return view('admin.risk.admin-risk', [
                     'riskScores' => $riskScores,
                     'weekStart' => $weekStart,
                     'weekEnd' => $weekEnd,
@@ -238,7 +238,7 @@ class AdminRiskController extends Controller
             }
         }
 
-        return view('admin.risk.index', [
+        return view('admin.risk.admin-risk', [
             'riskScores' => $riskScores,
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd ? Carbon::parse($weekEnd) : null,

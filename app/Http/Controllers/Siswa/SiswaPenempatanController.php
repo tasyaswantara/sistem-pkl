@@ -57,7 +57,7 @@ class SiswaPenempatanController extends Controller
             'tidak_lolos_industri' => 'Tidak lolos industri',
         ];
 
-        return view('siswa.penempatan.index', [
+        return view('siswa.penempatan.siswa-penempatan', [
             'siswa' => $siswa,
             'penempatan' => $penempatan,
             'rekomendasi' => $rekomendasi,

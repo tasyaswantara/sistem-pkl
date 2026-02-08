@@ -25,7 +25,7 @@ class SiswaPenilaianController extends Controller
 
         $aspekList = AspekPenilaian::orderBy('nama_aspek')->get();
 
-        return view('siswa.penilaian.index', [
+        return view('siswa.penilaian.siswa-penilaian', [
             'penilaianList' => $penilaianList,
             'aspekList' => $aspekList,
         ]);

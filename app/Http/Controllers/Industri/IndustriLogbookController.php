@@ -22,7 +22,7 @@ class IndustriLogbookController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('industri.elogbook.index', [
+        return view('industri.elogbook.industri-elogbook', [
             'logbooks' => $logbooks,
         ]);
     }

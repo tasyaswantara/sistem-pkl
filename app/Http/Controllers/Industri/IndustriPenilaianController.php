@@ -33,7 +33,7 @@ class IndustriPenilaianController extends Controller
             ->get()
             ->keyBy('siswa_id');
 
-        return view('industri.penilaian.index', [
+        return view('industri.penilaian.industri-penilaian', [
             'penempatanList' => $penempatanList,
             'aspekList' => $aspekList,
             'penilaianMap' => $penilaianMap,

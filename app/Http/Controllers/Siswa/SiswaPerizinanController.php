@@ -21,7 +21,7 @@ class SiswaPerizinanController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('siswa.perizinan.index', [
+        return view('siswa.perizinan.siswa-perizinan', [
             'perizinanList' => $perizinanList,
         ]);
     }

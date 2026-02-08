@@ -74,7 +74,7 @@ class GuruSiswaController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        return view('guru.siswa.index', [
+        return view('guru.siswa.guru-siswa', [
             'penempatanList' => $penempatanList,
             'filters' => $filters,
             'jurusanOptions' => $jurusanOptions,

@@ -20,7 +20,7 @@ class IndustriPengajuanController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        return view('industri.pengajuan.index', [
+        return view('industri.pengajuan.industri-pengajuan', [
             'industri' => $industri,
             'penempatanList' => $penempatanList,
         ]);

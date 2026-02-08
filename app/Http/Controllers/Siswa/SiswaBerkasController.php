@@ -15,7 +15,7 @@ class SiswaBerkasController extends Controller
             abort(403, 'Akun siswa belum terhubung.');
         }
 
-        return view('siswa.berkas.index', [
+        return view('siswa.berkas.siswa-berkas', [
             'siswa' => $siswa,
         ]);
     }

@@ -46,7 +46,7 @@ class GuruRiskController extends Controller
             $weekStart = $latestWeekStart ? Carbon::parse($latestWeekStart) : null;
 
             if (!$weekStart) {
-                return view('guru.risk.index', [
+                return view('guru.risk.guru-risk', [
                     'riskScores' => $riskScores,
                     'weekStart' => $weekStart,
                     'weekEnd' => $weekEnd,
@@ -142,7 +142,7 @@ class GuruRiskController extends Controller
             }
         }
 
-        return view('guru.risk.index', [
+        return view('guru.risk.guru-risk', [
             'riskScores' => $riskScores,
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd ? Carbon::parse($weekEnd) : null,
