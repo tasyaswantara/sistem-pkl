@@ -96,7 +96,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/penilaian/aspek/{aspek}', [AdminPenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
     Route::get('/risk', [AdminRiskController::class, 'index'])->name('admin.risk');
-    Route::post('/risk/calculate', [AdminRiskController::class, 'calculate'])->name('admin.risk.calculate');
+    Route::post('/risk/run', [AdminRiskController::class, 'runRisk'])->name('admin.risk.run');
 
     Route::get('/forms', function () {
         return view('admin.forms');

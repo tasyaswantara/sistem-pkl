@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 class AdminRiskController extends Controller
 {
-    public function calculate(Request $request)
+    public function runRisk(Request $request)
     {
         $weekStartInput = $request->input('week_start');
         $weekEndInput = $request->input('week_end');
@@ -39,85 +39,13 @@ class AdminRiskController extends Controller
             ? Carbon::parse($weekEndInput)->endOfDay()
             : now()->endOfDay();
 
-        $targetLogbookPerWeek = 0;
-        $cursor = $weekStart->copy()->startOfDay();
-        $endCursor = $weekEnd->copy()->startOfDay();
-        while ($cursor->lessThanOrEqualTo($endCursor)) {
-            if (!$cursor->isWeekend()) {
-                $targetLogbookPerWeek++;
-            }
-            $cursor->addDay();
-        }
-        $weights = [
-            'logbook' => 0.45,
-            'late' => 0.35,
-            'laporan' => 0.2,
-        ];
-        $laporanScores = [
-            'selesai' => 1.0,
-            'ditindak' => 0.5,
-            'menunggu' => 0.1,
-        ];
-
         $siswaList = Siswa::whereHas('penempatanPkl', function ($query) {
                 $query->where('status', 'diterima_industri');
             })
             ->select('id')
             ->get();
-        $siswaIds = $siswaList->pluck('id')->all();
-
-        $penempatanBySiswa = PenempatanPKL::whereIn('siswa_id', $siswaIds)
-            ->orderByDesc('id')
-            ->get()
-            ->groupBy('siswa_id')
-            ->map(fn ($rows) => $rows->first());
-
-        $logbooks = Logbook::whereIn('siswa_id', $siswaIds)
-            ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
-            ->get()
-            ->groupBy('siswa_id');
-
-        $updatedCount = 0;
-        foreach ($siswaList as $siswa) {
-            $logs = $logbooks->get($siswa->id, collect());
-            $totalLogs = $logs->count();
-            $lateLogs = $logs->filter(function ($log) {
-                if (!$log->tanggal || !$log->created_at) {
-                    return false;
-                }
-
-                return $log->created_at->toDateString() > $log->tanggal->toDateString();
-            })->count();
-
-            $freqScore = ($totalLogs > 0 && $targetLogbookPerWeek > 0)
-                ? min($totalLogs / $targetLogbookPerWeek, 1)
-                : 0;
-            $lateScore = $totalLogs > 0
-                ? 1 - min($lateLogs / $totalLogs, 1)
-                : 0;
-            $laporanStatus = $penempatanBySiswa->get($siswa->id)?->laporan_status ?? null;
-            $laporanScore = $laporanScores[$laporanStatus] ?? 0.6;
-
-            $score = ($weights['logbook'] * $freqScore)
-                + ($weights['late'] * $lateScore)
-                + ($weights['laporan'] * $laporanScore);
-
-            $category = $score >= 0.7 ? 'rendah' : ($score >= 0.4 ? 'sedang' : 'tinggi');
-
-            RiskScore::updateOrCreate(
-                [
-                    'siswa_id' => $siswa->id,
-                    'week_start' => $weekStart->toDateString(),
-                ],
-                [
-                    'week_end' => $weekEnd->toDateString(),
-                    'score' => $score,
-                    'category' => $category,
-                ]
-            );
-
-            $updatedCount++;
-        }
+        $rows = $this->calculateRiskScores($siswaList, $weekStart, $weekEnd);
+        $updatedCount = $this->storeRiskScores($rows, $weekStart, $weekEnd);
 
         return back()->with('success', 'Risk score diperbarui untuk ' . $updatedCount . ' siswa.');
     }
@@ -246,5 +174,102 @@ class AdminRiskController extends Controller
             'filters' => $filters,
             'jurusanOptions' => $jurusanOptions,
         ]);
+    }
+
+    private function calculateRiskScores($siswaList, Carbon $weekStart, Carbon $weekEnd): array
+    {
+        $targetLogbookPerWeek = $this->countWeekdays($weekStart, $weekEnd);
+        $weights = [
+            'logbook' => 0.45,
+            'late' => 0.35,
+            'laporan' => 0.2,
+        ];
+        $laporanScores = [
+            'selesai' => 1.0,
+            'ditindak' => 0.5,
+            'menunggu' => 0.1,
+        ];
+
+        $siswaIds = $siswaList->pluck('id')->all();
+        $penempatanBySiswa = PenempatanPKL::whereIn('siswa_id', $siswaIds)
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('siswa_id')
+            ->map(fn ($rows) => $rows->first());
+
+        $logbooks = Logbook::whereIn('siswa_id', $siswaIds)
+            ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->get()
+            ->groupBy('siswa_id');
+
+        $rows = [];
+        foreach ($siswaList as $siswa) {
+            $logs = $logbooks->get($siswa->id, collect());
+            $totalLogs = $logs->count();
+            $lateLogs = $logs->filter(function ($log) {
+                if (!$log->tanggal || !$log->created_at) {
+                    return false;
+                }
+
+                return $log->created_at->toDateString() > $log->tanggal->toDateString();
+            })->count();
+
+            $freqScore = ($totalLogs > 0 && $targetLogbookPerWeek > 0)
+                ? min($totalLogs / $targetLogbookPerWeek, 1)
+                : 0;
+            $lateScore = $totalLogs > 0
+                ? 1 - min($lateLogs / $totalLogs, 1)
+                : 0;
+            $laporanStatus = $penempatanBySiswa->get($siswa->id)?->laporan_status ?? null;
+            $laporanScore = $laporanScores[$laporanStatus] ?? 1;
+
+            $score = ($weights['logbook'] * $freqScore)
+                + ($weights['late'] * $lateScore)
+                + ($weights['laporan'] * $laporanScore);
+
+            $rows[] = [
+                'siswa_id' => $siswa->id,
+                'score' => $score,
+                'category' => $score >= 0.7 ? 'rendah' : ($score >= 0.4 ? 'sedang' : 'tinggi'),
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function storeRiskScores(array $rows, Carbon $weekStart, Carbon $weekEnd): int
+    {
+        $updatedCount = 0;
+        foreach ($rows as $row) {
+            RiskScore::updateOrCreate(
+                [
+                    'siswa_id' => $row['siswa_id'],
+                    'week_start' => $weekStart->toDateString(),
+                ],
+                [
+                    'week_end' => $weekEnd->toDateString(),
+                    'score' => $row['score'],
+                    'category' => $row['category'],
+                ]
+            );
+            $updatedCount++;
+        }
+
+        return $updatedCount;
+    }
+
+    private function countWeekdays(Carbon $start, Carbon $end): int
+    {
+        $count = 0;
+        $cursor = $start->copy()->startOfDay();
+        $endCursor = $end->copy()->startOfDay();
+        while ($cursor->lessThanOrEqualTo($endCursor)) {
+            if (!$cursor->isWeekend()) {
+                $count++;
+            }
+            $cursor->addDay();
+        }
+
+        return $count;
     }
 }
