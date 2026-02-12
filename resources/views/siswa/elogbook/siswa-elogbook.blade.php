@@ -1,24 +1,31 @@
 @section('title', 'E-Logbook')
 
+@php
+    use App\Enums\PenempatanStatus;
+@endphp
+
 <x-admin-layout>
     @php
         $statusLabels = [
-            'belum_memilih' => 'Belum memilih',
-            'menunggu_konfirmasi' => 'Menunggu konfirmasi',
-            'ditolak_sekolah' => 'Ditolak sekolah',
-            'proses_pengajuan' => 'Proses pengajuan',
-            'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
-            'proses_wawancara' => 'Proses wawancara',
-            'diterima_industri' => 'Diterima industri',
-            'tidak_lolos_industri' => 'Tidak lolos industri',
+            PenempatanStatus::BELUM_MEMILIH->value => 'Belum memilih',
+            PenempatanStatus::MENUNGGU_KONFIRMASI->value => 'Menunggu konfirmasi',
+            PenempatanStatus::DITOLAK_SEKOLAH->value => 'Ditolak sekolah',
+            PenempatanStatus::PROSES_PENGAJUAN->value => 'Proses pengajuan',
+            PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value => 'Pengajuan ditolak industri',
+            PenempatanStatus::PROSES_WAWANCARA->value => 'Proses wawancara',
+            PenempatanStatus::DITERIMA_INDUSTRI->value => 'Diterima industri',
+            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'Tidak lolos industri',
         ];
         $penempatanStatus = $penempatan?->status;
         $penempatanStatusLabel = $statusLabels[$penempatanStatus] ?? 'Belum tersedia';
         $penempatanStatusClass = match ($penempatanStatus) {
-            'diterima_industri' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-            'proses_wawancara' => 'bg-sky-50 text-sky-700 border border-sky-200',
-            'proses_pengajuan', 'menunggu_konfirmasi' => 'bg-amber-50 text-amber-700 border border-amber-200',
-            'pengajuan_ditolak_industri', 'tidak_lolos_industri', 'ditolak_sekolah' => 'bg-rose-50 text-rose-700 border border-rose-200',
+            PenempatanStatus::DITERIMA_INDUSTRI->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+            PenempatanStatus::PROSES_WAWANCARA->value => 'bg-sky-50 text-sky-700 border border-sky-200',
+            PenempatanStatus::PROSES_PENGAJUAN->value,
+            PenempatanStatus::MENUNGGU_KONFIRMASI->value => 'bg-amber-50 text-amber-700 border border-amber-200',
+            PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
+            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
+            PenempatanStatus::DITOLAK_SEKOLAH->value => 'bg-rose-50 text-rose-700 border border-rose-200',
             default => 'bg-slate-50 text-slate-600 border border-slate-200',
         };
     @endphp
@@ -82,7 +89,7 @@
                 </div>
             </div>
 
-            @if (!$penempatan || $penempatan?->status !== 'diterima_industri')
+            @if (!$penempatan || $penempatan?->status !== PenempatanStatus::DITERIMA_INDUSTRI->value)
             <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                 Logbook hanya bisa diisi setelah penempatan diterima industri.
             </div>
@@ -108,7 +115,7 @@
                     </div>
                     <button type="submit"
                         class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 text-sm font-medium shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                        {{ $penempatan?->status === 'diterima_industri' ? '' : 'disabled' }}>
+                        {{ $penempatan?->status === PenempatanStatus::DITERIMA_INDUSTRI->value ? '' : 'disabled' }}>
                         Simpan Logbook
                     </button>
                 </div>
