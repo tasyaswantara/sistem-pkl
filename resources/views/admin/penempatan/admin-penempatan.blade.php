@@ -1,5 +1,12 @@
 @section('title', 'Penempatan PKL')
 
+@php
+    use App\Enums\LaporanStatus;
+    use App\Enums\PenempatanStatus;
+    use App\Enums\PilihanSiswa;
+    use App\Enums\UsulanStatus;
+@endphp
+
 <x-admin-layout>
     <div x-data="{
             detailOpen: false,
@@ -289,8 +296,8 @@
                         @forelse ($usulanList as $usulan)
                         @php
                         $usulanStatusClass = match ($usulan->status) {
-                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
-                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        UsulanStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
+                        UsulanStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
                         };
                         @endphp
@@ -313,7 +320,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                @if ($usulan->status === 'menunggu')
+                                @if ($usulan->status === UsulanStatus::MENUNGGU->value)
                                 <div class="flex items-center gap-2">
                                     <form method="POST" action="{{ route('admin.penempatan.usulan.approve', $usulan->id) }}">
                                         @csrf
@@ -549,15 +556,15 @@
                 <h3 class="text-base font-semibold text-gray-900">Hasil Penempatan Siswa</h3>
                 <div class="flex items-center gap-3 text-sm">
                     <div class="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
-                        <span class="text-blue-600 font-semibold">{{ $statusCounts['menunggu_konfirmasi'] ?? 0 }}</span>
+                        <span class="text-blue-600 font-semibold">{{ $statusCounts[PenempatanStatus::MENUNGGU_KONFIRMASI->value] ?? 0 }}</span>
                         <span class="text-blue-700 ml-1">Menunggu Konfirmasi</span>
                     </div>
                     <div class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <span class="text-yellow-600 font-semibold">{{ $statusCounts['proses_pengajuan'] ?? 0 }}</span>
+                        <span class="text-yellow-600 font-semibold">{{ $statusCounts[PenempatanStatus::PROSES_PENGAJUAN->value] ?? 0 }}</span>
                         <span class="text-yellow-700 ml-1">Proses Pengajuan</span>
                     </div>
                     <div class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                        <span class="text-green-600 font-semibold">{{ $statusCounts['diterima_industri'] ?? 0 }}</span>
+                        <span class="text-green-600 font-semibold">{{ $statusCounts[PenempatanStatus::DITERIMA_INDUSTRI->value] ?? 0 }}</span>
                         <span class="text-green-700 ml-1">Diterima</span>
                     </div>
                     <button class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium">
@@ -602,7 +609,7 @@
                             $displayStatus = $statusLabels[$status] ?? $status;
                             $pilihan = $row->pilihan_siswa;
                             $displayPilihan = $pilihanLabels[$pilihan] ?? null;
-                            $pilihanIndustri = $pilihan === 'usulan_lain'
+                            $pilihanIndustri = $pilihan === PilihanSiswa::USULAN_LAIN->value
                                 ? $usulanNama
                                 : $industriNama;
                             $bpjsUrl = $row->siswa?->bpjs_link
@@ -625,7 +632,7 @@
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ $jurusanNama }}</td>
                                 <td class="px-6 py-4">
                                     @if ($displayPilihan)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $pilihan === 'rekomendasi' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700' }}">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $pilihan === PilihanSiswa::REKOMENDASI->value ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700' }}">
                                         {{ $displayPilihan }}{{ $pilihanIndustri ? ' - ' . $pilihanIndustri : '' }}
                                     </span>
                                     @else
@@ -635,10 +642,13 @@
                                 <td class="px-6 py-4">
                                     @php
                                     $statusClass = match ($status) {
-                                    'diterima_industri' => 'bg-green-50 text-green-700 border border-green-200',
-                                    'proses_wawancara' => 'bg-blue-50 text-blue-700 border border-blue-200',
-                                    'proses_pengajuan', 'menunggu_konfirmasi' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-                                    'ditolak_sekolah', 'pengajuan_ditolak_industri', 'tidak_lolos_industri' => 'bg-red-50 text-red-700 border border-red-200',
+                                    PenempatanStatus::DITERIMA_INDUSTRI->value => 'bg-green-50 text-green-700 border border-green-200',
+                                    PenempatanStatus::PROSES_WAWANCARA->value => 'bg-blue-50 text-blue-700 border border-blue-200',
+                                    PenempatanStatus::PROSES_PENGAJUAN->value,
+                                    PenempatanStatus::MENUNGGU_KONFIRMASI->value => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                                    PenempatanStatus::DITOLAK_SEKOLAH->value,
+                                    PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
+                                    PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'bg-red-50 text-red-700 border border-red-200',
                                     default => 'bg-gray-50 text-gray-700 border border-gray-200',
                                     };
                                     @endphp
@@ -676,8 +686,12 @@
                                         @csrf
                                         <select name="laporan_status" onchange="this.form.submit()"
                                             class="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white">
-                                            @foreach (['menunggu' => 'Menunggu', 'ditindak' => 'Ditindak', 'selesai' => 'Selesai'] as $value => $label)
-                                            <option value="{{ $value }}" {{ ($row->laporan_status ?? 'menunggu') === $value ? 'selected' : '' }}>
+                                            @foreach ([
+                                                LaporanStatus::MENUNGGU->value => 'Menunggu',
+                                                LaporanStatus::DITINDAK->value => 'Ditindak',
+                                                LaporanStatus::SELESAI->value => 'Selesai',
+                                            ] as $value => $label)
+                                            <option value="{{ $value }}" {{ ($row->laporan_status ?? LaporanStatus::MENUNGGU->value) === $value ? 'selected' : '' }}>
                                                 {{ $label }}
                                             </option>
                                             @endforeach
@@ -691,7 +705,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if ($status === 'diterima_industri')
+                                    @if ($status === PenempatanStatus::DITERIMA_INDUSTRI->value)
                                     <div class="flex items-center gap-2">
                                         @if ($guruNama)
                                         <span>{{ $guruNama }}</span>
@@ -729,7 +743,7 @@
                                     </button>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if ($status === 'menunggu_konfirmasi')
+                                    @if ($status === PenempatanStatus::MENUNGGU_KONFIRMASI->value)
                                     <div class="flex items-center gap-2">
                                         <form method="POST" action="{{ route('admin.penempatan.confirm', $row->id) }}">
                                             @csrf
@@ -743,7 +757,7 @@
                                                 Tolak
                                             </button>
                                         </form>
-                                        @if ($pilihan === 'usulan_lain' && $row->usulanIndustri)
+                                        @if ($pilihan === PilihanSiswa::USULAN_LAIN->value && $row->usulanIndustri)
                                         <button
                                             type="button"
                                             class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
@@ -759,16 +773,20 @@
                                         </button>
                                         @endif
                                     </div>
-                                    @elseif ($status === 'proses_pengajuan')
+                                    @elseif ($status === PenempatanStatus::PROSES_PENGAJUAN->value)
                                     <div class="flex items-center gap-2 text-xs text-orange-600">
                                         <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
                                         <span class="italic">Menunggu konfirmasi industri</span>
                                     </div>
-                                    @elseif ($status === 'proses_wawancara')
+                                    @elseif ($status === PenempatanStatus::PROSES_WAWANCARA->value)
                                     <span class="text-xs text-blue-600 italic">Proses wawancara</span>
-                                    @elseif ($status === 'diterima_industri')
+                                    @elseif ($status === PenempatanStatus::DITERIMA_INDUSTRI->value)
                                     <span class="text-xs text-green-600 font-medium">Penempatan selesai</span>
-                                    @elseif (in_array($status, ['pengajuan_ditolak_industri', 'tidak_lolos_industri', 'ditolak_sekolah'], true))
+                                    @elseif (in_array($status, [
+                                        PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
+                                        PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
+                                        PenempatanStatus::DITOLAK_SEKOLAH->value,
+                                    ], true))
                                     <span class="text-xs text-red-600 italic">Perlu penempatan ulang</span>
                                     @else
                                     <span class="text-xs text-gray-400 italic">Menunggu pilihan siswa</span>
