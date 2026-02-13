@@ -1,6 +1,7 @@
 @section('title', 'Penempatan PKL')
 @php
     use App\Enums\JenisPenempatan;
+    use App\Enums\JadwalWawancaraStatus;
     use App\Enums\PenempatanStatus;
     use App\Enums\PilihanSiswa;
 @endphp
@@ -136,9 +137,9 @@
                         @forelse ($jadwalWawancara as $jadwal)
                             @php
                                 $jadwalStatusClass = match ($jadwal->status) {
-                                    'dijadwalkan' => 'bg-blue-50 text-blue-700 border border-blue-200',
-                                    'selesai' => 'bg-green-50 text-green-700 border border-green-200',
-                                    'dibatalkan' => 'bg-red-50 text-red-700 border border-red-200',
+                                    JadwalWawancaraStatus::DIJADWALKAN->value => 'bg-blue-50 text-blue-700 border border-blue-200',
+                                    JadwalWawancaraStatus::SELESAI->value => 'bg-green-50 text-green-700 border border-green-200',
+                                    JadwalWawancaraStatus::DIBATALKAN->value => 'bg-red-50 text-red-700 border border-red-200',
                                     default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
                                 };
                             @endphp

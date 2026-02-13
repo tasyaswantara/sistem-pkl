@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Industri;
 
+use App\Enums\JadwalWawancaraStatus;
 use App\Http\Controllers\Controller;
 use App\Models\JadwalWawancara;
 use App\Models\PenempatanPKL;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class IndustriDataSiswaController extends Controller
 {
@@ -82,7 +84,13 @@ class IndustriDataSiswaController extends Controller
             'waktu' => 'nullable|date_format:H:i',
             'lokasi' => 'nullable|string|max:255',
             'catatan' => 'nullable|string|max:500',
-            'status' => 'required|in:menunggu,dijadwalkan,selesai,dibatalkan',
+            'status' => [
+                'required',
+                Rule::in(array_map(
+                    static fn (JadwalWawancaraStatus $status) => $status->value,
+                    JadwalWawancaraStatus::cases()
+                )),
+            ],
         ]);
 
         JadwalWawancara::updateOrCreate(

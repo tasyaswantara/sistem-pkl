@@ -1,5 +1,9 @@
 @section('title', 'Data Siswa')
 
+@php
+    use App\Enums\JadwalWawancaraStatus;
+@endphp
+
 <x-admin-layout>
     <div x-data="{ openId: null, reportId: null }">
         <div class="mb-8">
@@ -172,9 +176,14 @@
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
                                         <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                            @foreach (['menunggu', 'dijadwalkan', 'selesai', 'dibatalkan'] as $st)
-                                            <option value="{{ $st }}" {{ ($jadwal?->status ?? 'menunggu') === $st ? 'selected' : '' }}>
-                                                {{ ucfirst($st) }}
+                                            @foreach ([
+                                                JadwalWawancaraStatus::MENUNGGU->value => 'Menunggu',
+                                                JadwalWawancaraStatus::DIJADWALKAN->value => 'Dijadwalkan',
+                                                JadwalWawancaraStatus::SELESAI->value => 'Selesai',
+                                                JadwalWawancaraStatus::DIBATALKAN->value => 'Dibatalkan',
+                                            ] as $st => $label)
+                                            <option value="{{ $st }}" {{ ($jadwal?->status ?? JadwalWawancaraStatus::MENUNGGU->value) === $st ? 'selected' : '' }}>
+                                                {{ $label }}
                                             </option>
                                             @endforeach
                                         </select>
