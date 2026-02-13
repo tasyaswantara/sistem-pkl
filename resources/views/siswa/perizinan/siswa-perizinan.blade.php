@@ -1,5 +1,9 @@
 @section('title', 'Perizinan')
 
+@php
+    use App\Enums\PerizinanStatus;
+@endphp
+
 <x-admin-layout>
     <div>
         <div class="mb-8 animate-fade-up">
@@ -26,8 +30,8 @@
                         @forelse ($perizinanList as $row)
                         @php
                         $statusClass = match ($row->status) {
-                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
-                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        PerizinanStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
+                        PerizinanStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
                         };
                         @endphp

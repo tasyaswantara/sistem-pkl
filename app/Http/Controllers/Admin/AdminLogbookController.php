@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\LogbookStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Industri;
 use App\Models\Jurusan;
@@ -56,9 +57,15 @@ class AdminLogbookController extends Controller
         }
 
         $statusCounts = [
-            'pending' => (clone $baseQuery)->where('status_validasi', 'pending')->count(),
-            'disetujui' => (clone $baseQuery)->where('status_validasi', 'disetujui')->count(),
-            'ditolak' => (clone $baseQuery)->where('status_validasi', 'ditolak')->count(),
+            LogbookStatus::PENDING->value => (clone $baseQuery)
+                ->where('status_validasi', LogbookStatus::PENDING->value)
+                ->count(),
+            LogbookStatus::DISETUJUI->value => (clone $baseQuery)
+                ->where('status_validasi', LogbookStatus::DISETUJUI->value)
+                ->count(),
+            LogbookStatus::DITOLAK->value => (clone $baseQuery)
+                ->where('status_validasi', LogbookStatus::DITOLAK->value)
+                ->count(),
         ];
 
         $logbookQuery = clone $baseQuery;
@@ -74,9 +81,9 @@ class AdminLogbookController extends Controller
 
         $statusLabels = [
             'all' => 'Semua Status',
-            'pending' => 'Pending',
-            'disetujui' => 'Disetujui',
-            'ditolak' => 'Ditolak',
+            LogbookStatus::PENDING->value => 'Pending',
+            LogbookStatus::DISETUJUI->value => 'Disetujui',
+            LogbookStatus::DITOLAK->value => 'Ditolak',
         ];
 
         return view('admin.elogbook.admin-elogbook', [

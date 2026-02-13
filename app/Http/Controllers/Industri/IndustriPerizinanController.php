@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Industri;
 
+use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Perizinan;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class IndustriPerizinanController extends Controller
 {
@@ -34,7 +36,13 @@ class IndustriPerizinanController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:menunggu,disetujui,ditolak',
+            'status' => [
+                'required',
+                Rule::in(array_map(
+                    static fn (PerizinanStatus $status) => $status->value,
+                    PerizinanStatus::cases()
+                )),
+            ],
             'catatan_industri' => 'nullable|string|max:1000',
         ]);
 

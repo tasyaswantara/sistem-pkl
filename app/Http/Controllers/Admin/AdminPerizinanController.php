@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\JenisIzin;
+use App\Enums\PenempatanStatus;
+use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Industri;
 use App\Models\Jurusan;
@@ -17,7 +20,7 @@ class AdminPerizinanController extends Controller
         $jurusanOptions = Jurusan::orderBy('nama')->get();
         $industriOptions = Industri::orderBy('nama_industri')->get();
         $siswaPenempatanOptions = PenempatanPKL::with(['siswa.user', 'siswa.jurusan', 'industri'])
-            ->where('status', 'diterima_industri')
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
             ->whereNotNull('industri_id')
             ->orderByDesc('id')
             ->get();
@@ -62,9 +65,15 @@ class AdminPerizinanController extends Controller
         }
 
         $statusCounts = [
-            'menunggu' => (clone $baseQuery)->where('status', 'menunggu')->count(),
-            'disetujui' => (clone $baseQuery)->where('status', 'disetujui')->count(),
-            'ditolak' => (clone $baseQuery)->where('status', 'ditolak')->count(),
+            PerizinanStatus::MENUNGGU->value => (clone $baseQuery)
+                ->where('status', PerizinanStatus::MENUNGGU->value)
+                ->count(),
+            PerizinanStatus::DISETUJUI->value => (clone $baseQuery)
+                ->where('status', PerizinanStatus::DISETUJUI->value)
+                ->count(),
+            PerizinanStatus::DITOLAK->value => (clone $baseQuery)
+                ->where('status', PerizinanStatus::DITOLAK->value)
+                ->count(),
         ];
 
         $perizinanQuery = clone $baseQuery;
@@ -80,9 +89,9 @@ class AdminPerizinanController extends Controller
 
         $statusLabels = [
             'all' => 'Semua Status',
-            'menunggu' => 'Menunggu',
-            'disetujui' => 'Disetujui',
-            'ditolak' => 'Ditolak',
+            PerizinanStatus::MENUNGGU->value => 'Menunggu',
+            PerizinanStatus::DISETUJUI->value => 'Disetujui',
+            PerizinanStatus::DITOLAK->value => 'Ditolak',
         ];
 
         return view('admin.perizinan.admin-perizinan', [
@@ -112,7 +121,7 @@ class AdminPerizinanController extends Controller
         }
 
         $penempatanQuery = PenempatanPKL::query()
-            ->where('status', 'diterima_industri')
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
             ->whereNotNull('industri_id');
 
         if ($validated['scope'] === 'selected') {
@@ -127,10 +136,10 @@ class AdminPerizinanController extends Controller
                 'siswa_id' => $penempatan->siswa_id,
                 'industri_id' => $penempatan->industri_id,
                 'created_by' => $request->user()->id,
-                'jenis_izin' => 'Izin Kegiatan Sekolah',
+                'jenis_izin' => JenisIzin::IZIN_KEGIATAN_SEKOLAH->value,
                 'tanggal_mulai' => $validated['tanggal_mulai'],
                 'tanggal_selesai' => $validated['tanggal_selesai'],
-                'status' => 'menunggu',
+                'status' => PerizinanStatus::MENUNGGU->value,
             ]);
             $created++;
         }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Industri;
 
 use App\Enums\JadwalWawancaraStatus;
+use App\Enums\LaporanStatus;
+use App\Enums\PenempatanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\JadwalWawancara;
 use App\Models\PenempatanPKL;
@@ -37,11 +39,11 @@ class IndustriDataSiswaController extends Controller
 
         $statusLabels = [
             'all' => 'Semua',
-            'proses_pengajuan' => 'Proses pengajuan',
-            'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
-            'proses_wawancara' => 'Proses wawancara',
-            'diterima_industri' => 'Diterima industri',
-            'tidak_lolos_industri' => 'Tidak lolos industri',
+            PenempatanStatus::PROSES_PENGAJUAN->value => 'Proses pengajuan',
+            PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value => 'Pengajuan ditolak industri',
+            PenempatanStatus::PROSES_WAWANCARA->value => 'Proses wawancara',
+            PenempatanStatus::DITERIMA_INDUSTRI->value => 'Diterima industri',
+            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'Tidak lolos industri',
         ];
 
         return view('industri.siswa.industri-siswa', [
@@ -60,7 +62,13 @@ class IndustriDataSiswaController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:diterima_industri,tidak_lolos_industri',
+            'status' => [
+                'required',
+                Rule::in([
+                    PenempatanStatus::DITERIMA_INDUSTRI->value,
+                    PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
+                ]),
+            ],
         ]);
 
         $oldStatus = $penempatan->status;
@@ -109,7 +117,7 @@ class IndustriDataSiswaController extends Controller
 
         $oldStatus = $penempatan->status;
         $penempatan->update([
-            'status' => 'proses_wawancara',
+            'status' => PenempatanStatus::PROSES_WAWANCARA->value,
         ]);
         $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
@@ -129,7 +137,7 @@ class IndustriDataSiswaController extends Controller
 
         $penempatan->update([
             'laporan_industri' => $validated['laporan'],
-            'laporan_status' => 'menunggu',
+            'laporan_status' => LaporanStatus::MENUNGGU->value,
             'laporan_at' => now(),
         ]);
 

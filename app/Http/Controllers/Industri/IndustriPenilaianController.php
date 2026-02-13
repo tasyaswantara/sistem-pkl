@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Industri;
 
+use App\Enums\PenempatanStatus;
+use App\Enums\StatusPKL;
 use App\Http\Controllers\Controller;
 use App\Models\AspekPenilaian;
 use App\Models\DetailPenilaian;
@@ -21,7 +23,7 @@ class IndustriPenilaianController extends Controller
 
         $penempatanList = PenempatanPKL::with(['siswa.user', 'siswa.jurusan'])
             ->where('industri_id', $industri->id)
-            ->where('status', 'diterima_industri')
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
             ->orderByDesc('id')
             ->get();
 
@@ -83,7 +85,7 @@ class IndustriPenilaianController extends Controller
                 ]);
             }
 
-            $penempatan->siswa?->update(['status_pkl' => 'selesai']);
+            $penempatan->siswa?->update(['status_pkl' => StatusPKL::SELESAI->value]);
         });
 
         return back()->with('success', 'Penilaian berhasil disimpan.');

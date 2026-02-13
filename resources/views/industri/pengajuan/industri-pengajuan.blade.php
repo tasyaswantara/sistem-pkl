@@ -1,5 +1,10 @@
 @section('title', 'Pengajuan Industri')
 
+@php
+    use App\Enums\PenempatanStatus;
+    use App\Enums\PengajuanStatus;
+@endphp
+
 <x-admin-layout>
     <div>
         <div class="mb-8">
@@ -23,10 +28,10 @@
         @endif
 
         @php
-        $status = $industri->status_pengajuan ?? 'menunggu';
+        $status = $industri->status_pengajuan ?? PengajuanStatus::MENUNGGU->value;
         $statusClass = match ($status) {
-        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
-        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+        PengajuanStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
+        PengajuanStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
         default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
         };
         @endphp
@@ -49,14 +54,14 @@
                 </div>
             </div>
 
-            @if ($status === 'menunggu')
+            @if ($status === PengajuanStatus::MENUNGGU->value)
             <form method="POST" action="{{ route('industri.pengajuan.konfirmasi') }}" class="flex items-center gap-3">
                 @csrf
-                <button name="status_pengajuan" value="disetujui"
+                <button name="status_pengajuan" value="{{ PengajuanStatus::DISETUJUI->value }}"
                     class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
                     Terima Pengajuan
                 </button>
-                <button name="status_pengajuan" value="ditolak"
+                <button name="status_pengajuan" value="{{ PengajuanStatus::DITOLAK->value }}"
                     class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium">
                     Tolak Pengajuan
                 </button>
@@ -68,14 +73,14 @@
 
         @php
         $statusLabels = [
-        'belum_memilih' => 'Belum memilih',
-        'menunggu_konfirmasi' => 'Menunggu konfirmasi',
-        'ditolak_sekolah' => 'Ditolak sekolah',
-        'proses_pengajuan' => 'Proses pengajuan',
-        'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
-        'proses_wawancara' => 'Proses wawancara',
-        'diterima_industri' => 'Diterima industri',
-        'tidak_lolos_industri' => 'Tidak lolos industri',
+        PenempatanStatus::BELUM_MEMILIH->value => 'Belum memilih',
+        PenempatanStatus::MENUNGGU_KONFIRMASI->value => 'Menunggu konfirmasi',
+        PenempatanStatus::DITOLAK_SEKOLAH->value => 'Ditolak sekolah',
+        PenempatanStatus::PROSES_PENGAJUAN->value => 'Proses pengajuan',
+        PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value => 'Pengajuan ditolak industri',
+        PenempatanStatus::PROSES_WAWANCARA->value => 'Proses wawancara',
+        PenempatanStatus::DITERIMA_INDUSTRI->value => 'Diterima industri',
+        PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'Tidak lolos industri',
         ];
         @endphp
 

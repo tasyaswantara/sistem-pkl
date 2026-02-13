@@ -6,6 +6,7 @@ use App\Enums\JenisPenempatan;
 use App\Enums\PenempatanStatus;
 use App\Enums\PengajuanStatus;
 use App\Enums\PilihanSiswa;
+use App\Enums\StatusPKL;
 use App\Models\Industri;
 use App\Models\PenempatanPKL;
 use App\Models\Siswa;
@@ -63,7 +64,7 @@ class PenempatanLangsungService
         }
 
         if ($status === PenempatanStatus::DITERIMA_INDUSTRI->value) {
-            $siswa->update(['status_pkl' => 'berjalan']);
+            $siswa->update(['status_pkl' => StatusPKL::BERJALAN->value]);
         }
 
         $siswa->user?->notify(new PenempatanLangsungAssigned($penempatan));

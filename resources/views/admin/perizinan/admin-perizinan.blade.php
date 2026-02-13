@@ -1,5 +1,9 @@
 @section('title', 'Perizinan')
 
+@php
+    use App\Enums\PerizinanStatus;
+@endphp
+
 <x-admin-layout>
     <div x-data="{ editId: null }">
         <div class="mb-8">
@@ -82,15 +86,15 @@
                 <h3 class="text-base font-semibold text-gray-900">Filter Perizinan</h3>
                 <div class="flex items-center gap-3 text-sm">
                     <div class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <span class="text-yellow-600 font-semibold">{{ $statusCounts['menunggu'] ?? 0 }}</span>
+                        <span class="text-yellow-600 font-semibold">{{ $statusCounts[PerizinanStatus::MENUNGGU->value] ?? 0 }}</span>
                         <span class="text-yellow-700 ml-1">Menunggu</span>
                     </div>
                     <div class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                        <span class="text-green-600 font-semibold">{{ $statusCounts['disetujui'] ?? 0 }}</span>
+                        <span class="text-green-600 font-semibold">{{ $statusCounts[PerizinanStatus::DISETUJUI->value] ?? 0 }}</span>
                         <span class="text-green-700 ml-1">Disetujui</span>
                     </div>
                     <div class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
-                        <span class="text-red-600 font-semibold">{{ $statusCounts['ditolak'] ?? 0 }}</span>
+                        <span class="text-red-600 font-semibold">{{ $statusCounts[PerizinanStatus::DITOLAK->value] ?? 0 }}</span>
                         <span class="text-red-700 ml-1">Ditolak</span>
                     </div>
                 </div>
@@ -181,8 +185,8 @@
                         @forelse ($perizinanList as $row)
                         @php
                         $statusClass = match ($row->status) {
-                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
-                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        PerizinanStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
+                        PerizinanStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
                         };
                         @endphp

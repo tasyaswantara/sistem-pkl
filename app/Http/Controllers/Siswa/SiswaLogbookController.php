@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Enums\LogbookStatus;
+use App\Enums\PenempatanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Logbook;
 use App\Models\PenempatanPKL;
@@ -42,7 +44,7 @@ class SiswaLogbookController extends Controller
         }
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)
-            ->where('status', 'diterima_industri')
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
             ->whereNotNull('industri_id')
             ->first();
 
@@ -60,7 +62,7 @@ class SiswaLogbookController extends Controller
             'industri_id' => $penempatan->industri_id,
             'tanggal' => $validated['tanggal'],
             'aktivitas' => $validated['aktivitas'],
-            'status_validasi' => 'pending',
+            'status_validasi' => LogbookStatus::PENDING->value,
         ]);
 
         return back()->with('success', 'Logbook berhasil ditambahkan.');

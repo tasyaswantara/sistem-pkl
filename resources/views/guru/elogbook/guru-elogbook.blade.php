@@ -1,5 +1,9 @@
 @section('title', 'E-Logbook Bimbingan')
 
+@php
+    use App\Enums\LogbookStatus;
+@endphp
+
 <x-admin-layout>
     <div>
         <div class="mb-8">
@@ -94,8 +98,8 @@
                         @forelse ($logbooks as $logbook)
                         @php
                         $statusClass = match ($logbook->status_validasi) {
-                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
-                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        LogbookStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
+                        LogbookStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
                         };
                         @endphp
@@ -116,7 +120,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
-                                    {{ ucfirst($logbook->status_validasi ?? 'pending') }}
+                                    {{ ucfirst($logbook->status_validasi ?? LogbookStatus::PENDING->value) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-700">

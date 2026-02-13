@@ -1,5 +1,6 @@
 <x-admin-layout>
     @php
+    use App\Enums\StatusPKL;
     $siswa = $user->siswa;
     $guru = $user->gurupembimbing;
     $industri = $user->industri;
@@ -157,9 +158,9 @@
                         <label class="block text-xs font-medium text-gray-600 mb-1">Status PKL</label>
                         <select name="status_pkl" class="input-text">
                             <option value="">-- Status PKL --</option>
-                            <option value="belum" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'belum' ? 'selected' : '' }}>Belum</option>
-                            <option value="berjalan" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'berjalan' ? 'selected' : '' }}>Berjalan</option>
-                            <option value="selesai" {{ old('status_pkl', $siswa->status_pkl ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            <option value="{{ StatusPKL::BELUM->value }}" {{ old('status_pkl', $siswa->status_pkl ?? '') == StatusPKL::BELUM->value ? 'selected' : '' }}>Belum</option>
+                            <option value="{{ StatusPKL::BERJALAN->value }}" {{ old('status_pkl', $siswa->status_pkl ?? '') == StatusPKL::BERJALAN->value ? 'selected' : '' }}>Berjalan</option>
+                            <option value="{{ StatusPKL::SELESAI->value }}" {{ old('status_pkl', $siswa->status_pkl ?? '') == StatusPKL::SELESAI->value ? 'selected' : '' }}>Selesai</option>
                         </select>
                     </div>
                     <div>

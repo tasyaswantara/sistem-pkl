@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru;
 
+use App\Enums\LogbookStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Industri;
 use App\Models\Jurusan;
@@ -49,9 +50,9 @@ class GuruLogbookController extends Controller
 
         $statusLabels = [
             '' => 'Semua Status',
-            'pending' => 'Pending',
-            'disetujui' => 'Disetujui',
-            'ditolak' => 'Ditolak',
+            LogbookStatus::PENDING->value => 'Pending',
+            LogbookStatus::DISETUJUI->value => 'Disetujui',
+            LogbookStatus::DITOLAK->value => 'Ditolak',
         ];
 
         $logbooks = Logbook::with(['siswa.user', 'siswa.jurusan', 'industri', 'komentar.guruPembimbing.user'])

@@ -2,6 +2,8 @@
 
 @php
     use App\Enums\JadwalWawancaraStatus;
+    use App\Enums\LaporanStatus;
+    use App\Enums\PenempatanStatus;
 @endphp
 
 <x-admin-layout>
@@ -65,10 +67,13 @@
                         $cvUrl = $row->siswa?->cv_link;
                         $portofolioLinks = collect($row->siswa?->portofolio_links ?? []);
                         $statusClass = match ($row->status) {
-                        'diterima_industri' => 'bg-green-50 text-green-700 border border-green-200',
-                        'proses_wawancara' => 'bg-blue-50 text-blue-700 border border-blue-200',
-                        'proses_pengajuan', 'menunggu_konfirmasi' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-                        'pengajuan_ditolak_industri', 'tidak_lolos_industri', 'ditolak_sekolah' => 'bg-red-50 text-red-700 border border-red-200',
+                        PenempatanStatus::DITERIMA_INDUSTRI->value => 'bg-green-50 text-green-700 border border-green-200',
+                        PenempatanStatus::PROSES_WAWANCARA->value => 'bg-blue-50 text-blue-700 border border-blue-200',
+                        PenempatanStatus::PROSES_PENGAJUAN->value,
+                        PenempatanStatus::MENUNGGU_KONFIRMASI->value => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+                        PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
+                        PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
+                        PenempatanStatus::DITOLAK_SEKOLAH->value => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-gray-50 text-gray-700 border border-gray-200',
                         };
                         @endphp
@@ -120,7 +125,9 @@
                             <td class="px-4 py-3 text-sm text-gray-700">
                                 @if ($row->laporan_industri)
                                 <div class="text-xs text-gray-500">{{ \Illuminate\Support\Str::limit($row->laporan_industri, 80) }}</div>
-                                <div class="text-xs text-emerald-600 mt-1">Status: {{ ucfirst($row->laporan_status ?? 'menunggu') }}</div>
+                                <div class="text-xs text-emerald-600 mt-1">
+                                    Status: {{ ucfirst($row->laporan_status ?? LaporanStatus::MENUNGGU->value) }}
+                                </div>
                                 @else
                                 <span class="text-gray-400 italic text-xs">Belum ada</span>
                                 @endif
@@ -142,8 +149,8 @@
                                         <select name="status" onchange="this.form.submit()"
                                             class="px-3 py-1.5 text-xs border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg font-semibold">
                                             @foreach ([
-                                            'diterima_industri' => 'Diterima',
-                                            'tidak_lolos_industri' => 'Tidak Lolos',
+                                            PenempatanStatus::DITERIMA_INDUSTRI->value => 'Diterima',
+                                            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'Tidak Lolos',
                                             ] as $value => $label)
                                             <option value="{{ $value }}" {{ $row->status === $value ? 'selected' : '' }}>
                                                 {{ $label }}

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\PenempatanStatus;
+use App\Enums\StatusPKL;
 use App\Models\PenempatanPKL;
 use App\Models\User;
 use App\Notifications\PenempatanStatusChanged;
@@ -27,7 +28,7 @@ class PenempatanStatusService
         }
 
         if ($newStatus === PenempatanStatus::DITERIMA_INDUSTRI->value) {
-            $penempatan->siswa?->update(['status_pkl' => 'berjalan']);
+            $penempatan->siswa?->update(['status_pkl' => StatusPKL::BERJALAN->value]);
         }
     }
 }

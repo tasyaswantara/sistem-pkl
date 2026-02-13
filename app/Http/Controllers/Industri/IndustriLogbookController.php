@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Industri;
 
+use App\Enums\LogbookStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Logbook;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class IndustriLogbookController extends Controller
 {
@@ -35,14 +37,20 @@ class IndustriLogbookController extends Controller
         }
 
         $validated = $request->validate([
-            'status_validasi' => 'required|in:pending,disetujui,ditolak',
+            'status_validasi' => [
+                'required',
+                Rule::in(array_map(
+                    static fn (LogbookStatus $status) => $status->value,
+                    LogbookStatus::cases()
+                )),
+            ],
             'catatan_industri' => 'nullable|string|max:1000',
         ]);
 
         $logbook->update([
             'status_validasi' => $validated['status_validasi'],
             'catatan_industri' => $validated['catatan_industri'],
-            'validated_at' => $validated['status_validasi'] === 'pending' ? null : now(),
+            'validated_at' => $validated['status_validasi'] === LogbookStatus::PENDING->value ? null : now(),
         ]);
 
         return back()->with('success', 'Logbook berhasil divalidasi.');

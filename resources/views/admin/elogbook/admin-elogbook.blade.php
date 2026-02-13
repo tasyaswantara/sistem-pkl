@@ -1,5 +1,9 @@
 @section('title', 'E-Logbook')
 
+@php
+    use App\Enums\LogbookStatus;
+@endphp
+
 <x-admin-layout>
     <div>
         <div class="mb-8">
@@ -15,15 +19,15 @@
                 <h3 class="text-base font-semibold text-gray-900">Filter E-Logbook</h3>
                 <div class="flex items-center gap-3 text-sm">
                     <div class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <span class="text-yellow-600 font-semibold">{{ $statusCounts['pending'] ?? 0 }}</span>
+                        <span class="text-yellow-600 font-semibold">{{ $statusCounts[LogbookStatus::PENDING->value] ?? 0 }}</span>
                         <span class="text-yellow-700 ml-1">Pending</span>
                     </div>
                     <div class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                        <span class="text-green-600 font-semibold">{{ $statusCounts['disetujui'] ?? 0 }}</span>
+                        <span class="text-green-600 font-semibold">{{ $statusCounts[LogbookStatus::DISETUJUI->value] ?? 0 }}</span>
                         <span class="text-green-700 ml-1">Disetujui</span>
                     </div>
                     <div class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
-                        <span class="text-red-600 font-semibold">{{ $statusCounts['ditolak'] ?? 0 }}</span>
+                        <span class="text-red-600 font-semibold">{{ $statusCounts[LogbookStatus::DITOLAK->value] ?? 0 }}</span>
                         <span class="text-red-700 ml-1">Ditolak</span>
                     </div>
                 </div>
@@ -114,8 +118,8 @@
                         @forelse ($logbooks as $row)
                         @php
                         $statusClass = match ($row->status_validasi) {
-                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
-                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        LogbookStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
+                        LogbookStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
                         };
                         @endphp

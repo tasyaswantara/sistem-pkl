@@ -1,5 +1,9 @@
 @section('title', 'Perizinan Industri')
 
+@php
+    use App\Enums\PerizinanStatus;
+@endphp
+
 <x-admin-layout>
     <div>
         <div class="mb-8">
@@ -32,8 +36,8 @@
                         @forelse ($perizinanList as $row)
                         @php
                         $statusClass = match ($row->status) {
-                        'disetujui' => 'bg-green-50 text-green-700 border border-green-200',
-                        'ditolak' => 'bg-red-50 text-red-700 border border-red-200',
+                        PerizinanStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
+                        PerizinanStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
                         default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
                         };
                         @endphp
@@ -55,7 +59,11 @@
                                 <form method="POST" action="{{ route('industri.perizinan.update', $row->id) }}" class="space-y-2">
                                     @csrf
                                     <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                        @foreach (['menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak'] as $value => $label)
+                                        @foreach ([
+                                            PerizinanStatus::MENUNGGU->value => 'Menunggu',
+                                            PerizinanStatus::DISETUJUI->value => 'Disetujui',
+                                            PerizinanStatus::DITOLAK->value => 'Ditolak',
+                                        ] as $value => $label)
                                         <option value="{{ $value }}" {{ $row->status === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>

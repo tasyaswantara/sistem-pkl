@@ -1,6 +1,7 @@
 @section('title', 'E-Logbook')
 
 @php
+    use App\Enums\LogbookStatus;
     use App\Enums\PenempatanStatus;
 @endphp
 
@@ -146,8 +147,8 @@
                             @forelse ($logbooks as $logbook)
                             @php
                                 $statusClass = match ($logbook->status_validasi) {
-                                    'disetujui' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                                    'ditolak' => 'bg-rose-50 text-rose-700 border border-rose-200',
+                                    LogbookStatus::DISETUJUI->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                                    LogbookStatus::DITOLAK->value => 'bg-rose-50 text-rose-700 border border-rose-200',
                                     default => 'bg-amber-50 text-amber-700 border border-amber-200',
                                 };
                             @endphp

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\StatusPKL;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -110,7 +111,13 @@ class AdminUserController extends Controller
                     'kelas' => 'required|string|max:50',
                     'nilai_akademik' => 'required|integer|min:0',
                     'perangkat' => 'required|integer|min:1|max:5',
-                    'status_pkl' => 'required|in:belum,berjalan,selesai',
+                    'status_pkl' => [
+                        'required',
+                        Rule::in(array_map(
+                            static fn (StatusPKL $status) => $status->value,
+                            StatusPKL::cases()
+                        )),
+                    ],
                     'tahun_ajaran' => 'required|string|max:20',
                 ]);
                 break;
@@ -226,7 +233,13 @@ class AdminUserController extends Controller
                     'kelas' => 'required|string|max:50',
                     'nilai_akademik' => 'required|integer|min:0',
                     'perangkat' => 'required|integer|min:1|max:5',
-                    'status_pkl' => 'required|in:belum,berjalan,selesai',
+                    'status_pkl' => [
+                        'required',
+                        Rule::in(array_map(
+                            static fn (StatusPKL $status) => $status->value,
+                            StatusPKL::cases()
+                        )),
+                    ],
                     'tahun_ajaran' => 'required|string|max:20',
                 ]);
                 break;

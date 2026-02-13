@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru;
 
+use App\Enums\PenempatanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Jurusan;
 use App\Models\PenempatanPKL;
@@ -81,14 +82,14 @@ class GuruSiswaController extends Controller
             'kelasOptions' => $kelasOptions,
             'tahunAjaranOptions' => $tahunAjaranOptions,
             'statusLabels' => [
-                'belum_memilih' => 'Belum memilih',
-                'menunggu_konfirmasi' => 'Menunggu konfirmasi',
-                'ditolak_sekolah' => 'Ditolak sekolah',
-                'proses_pengajuan' => 'Proses pengajuan',
-                'pengajuan_ditolak_industri' => 'Pengajuan ditolak industri',
-                'proses_wawancara' => 'Proses wawancara',
-                'diterima_industri' => 'Diterima industri',
-                'tidak_lolos_industri' => 'Tidak lolos industri',
+                PenempatanStatus::BELUM_MEMILIH->value => 'Belum memilih',
+                PenempatanStatus::MENUNGGU_KONFIRMASI->value => 'Menunggu konfirmasi',
+                PenempatanStatus::DITOLAK_SEKOLAH->value => 'Ditolak sekolah',
+                PenempatanStatus::PROSES_PENGAJUAN->value => 'Proses pengajuan',
+                PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value => 'Pengajuan ditolak industri',
+                PenempatanStatus::PROSES_WAWANCARA->value => 'Proses wawancara',
+                PenempatanStatus::DITERIMA_INDUSTRI->value => 'Diterima industri',
+                PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'Tidak lolos industri',
             ],
         ]);
     }
