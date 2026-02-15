@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers\Siswa;
 
-use App\Enums\LogbookStatus;
-use App\Enums\PenempatanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Logbook;
 use App\Models\PenempatanPKL;
+use App\Services\SiswaLogbookService;
 use Illuminate\Http\Request;
 
 class SiswaLogbookController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, SiswaLogbookService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
@@ -22,12 +21,7 @@ class SiswaLogbookController extends Controller
             ->where('siswa_id', $siswa->id)
             ->first();
 
-        $logbooks = Logbook::with(['industri', 'komentar.guruPembimbing.user'])
-            ->where('siswa_id', $siswa->id)
-            ->orderByDesc('tanggal')
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
+        $logbooks = $service->getLogbooksForSiswa($siswa);
 
         return view('siswa.elogbook.siswa-elogbook', [
             'siswa' => $siswa,
@@ -36,17 +30,14 @@ class SiswaLogbookController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, SiswaLogbookService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
             abort(403, 'Akun siswa belum terhubung.');
         }
 
-        $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)
-            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
-            ->whereNotNull('industri_id')
-            ->first();
+        $penempatan = $service->getActivePenempatan($siswa);
 
         if (!$penempatan) {
             return back()->withErrors(['logbook' => 'Logbook hanya bisa diisi setelah status penempatan diterima industri.']);
@@ -57,13 +48,7 @@ class SiswaLogbookController extends Controller
             'aktivitas' => 'required|string|max:2000',
         ]);
 
-        Logbook::create([
-            'siswa_id' => $siswa->id,
-            'industri_id' => $penempatan->industri_id,
-            'tanggal' => $validated['tanggal'],
-            'aktivitas' => $validated['aktivitas'],
-            'status_validasi' => LogbookStatus::PENDING->value,
-        ]);
+        $service->createLogbook($siswa, $penempatan, $validated);
 
         return back()->with('success', 'Logbook berhasil ditambahkan.');
     }
