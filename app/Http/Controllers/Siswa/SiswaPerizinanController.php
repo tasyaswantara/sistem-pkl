@@ -3,23 +3,19 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
-use App\Models\Perizinan;
+use App\Services\SiswaPerizinanService;
 use Illuminate\Http\Request;
 
 class SiswaPerizinanController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, SiswaPerizinanService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
             abort(403, 'Akun siswa belum terhubung.');
         }
 
-        $perizinanList = Perizinan::with('industri')
-            ->where('siswa_id', $siswa->id)
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
+        $perizinanList = $service->getPerizinanForSiswa($siswa);
 
         return view('siswa.perizinan.siswa-perizinan', [
             'perizinanList' => $perizinanList,
