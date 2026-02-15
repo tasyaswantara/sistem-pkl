@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers\Siswa;
 
-use App\Enums\JenisPenempatan;
 use App\Enums\JadwalWawancaraStatus;
 use App\Enums\PenempatanStatus;
-use App\Enums\PilihanSiswa;
-use App\Enums\UsulanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\HasilRekomendasi;
 use App\Models\JadwalWawancara;
 use App\Models\PenempatanPKL;
-use App\Models\UsulanIndustri;
+use App\Services\SiswaPenempatanService;
 use Illuminate\Http\Request;
 
 class SiswaPenempatanController extends Controller
@@ -72,14 +69,14 @@ class SiswaPenempatanController extends Controller
         ]);
     }
 
-    public function pilihRekomendasi(Request $request)
+    public function pilihRekomendasi(Request $request, SiswaPenempatanService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
             abort(403, 'Akun siswa belum terhubung.');
         }
 
-        if (!$this->berkasLengkap($siswa)) {
+        if (!$service->berkasLengkap($siswa)) {
             return back()->withErrors(['berkas' => 'Lengkapi berkas siswa terlebih dahulu sebelum memilih industri.']);
         }
 
@@ -88,30 +85,12 @@ class SiswaPenempatanController extends Controller
         ]);
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
-        if ($penempatan && $penempatan->jenis_penempatan === JenisPenempatan::LANGSUNG->value) {
-            return back()->withErrors(['pilihan' => 'Penempatan langsung sudah ditetapkan oleh admin.']);
-        }
-        if ($penempatan && !in_array($penempatan->status, [
-            PenempatanStatus::BELUM_MEMILIH->value,
-            PenempatanStatus::DITOLAK_SEKOLAH->value,
-            PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
-            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
-        ], true)) {
+        if (!$service->canUpdatePilihan($penempatan)) {
             return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
         }
 
-        $existingPenempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
-        $oldStatus = $existingPenempatan?->status;
-
-        $penempatan = PenempatanPKL::updateOrCreate(
-            ['siswa_id' => $siswa->id],
-            [
-                'industri_id' => $validated['industri_id'],
-                'usulan_industri_id' => null,
-                'pilihan_siswa' => PilihanSiswa::REKOMENDASI->value,
-                'status' => PenempatanStatus::MENUNGGU_KONFIRMASI->value,
-            ]
-        );
+        $oldStatus = $penempatan?->status;
+        $penempatan = $service->handlePilihanRekomendasi($siswa, (int) $validated['industri_id']);
 
         if ($oldStatus !== null) {
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
@@ -120,28 +99,15 @@ class SiswaPenempatanController extends Controller
         return back()->with('success', 'Pilihan rekomendasi berhasil dikirim.');
     }
 
-    public function usulkanIndustri(Request $request)
+    public function usulkanIndustri(Request $request, SiswaPenempatanService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
             abort(403, 'Akun siswa belum terhubung.');
         }
 
-        if (!$this->berkasLengkap($siswa)) {
+        if (!$service->berkasLengkap($siswa)) {
             return back()->withErrors(['berkas' => 'Lengkapi berkas siswa terlebih dahulu sebelum mengajukan industri.']);
-        }
-
-        $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
-        if ($penempatan && $penempatan->jenis_penempatan === JenisPenempatan::LANGSUNG->value) {
-            return back()->withErrors(['pilihan' => 'Penempatan langsung sudah ditetapkan oleh admin.']);
-        }
-        if ($penempatan && !in_array($penempatan->status, [
-            PenempatanStatus::BELUM_MEMILIH->value,
-            PenempatanStatus::DITOLAK_SEKOLAH->value,
-            PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
-            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
-        ], true)) {
-            return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
         }
 
         $validated = $request->validate([
@@ -153,46 +119,18 @@ class SiswaPenempatanController extends Controller
             'keterangan' => 'nullable|string|max:500',
         ]);
 
-        $usulan = UsulanIndustri::create([
-            'siswa_id' => $siswa->id,
-            'jurusan_id' => $siswa->jurusan_id,
-            'nama_industri' => $validated['nama_industri'],
-            'email' => $validated['email'],
-            'kapasitas' => $validated['kapasitas'],
-            'alamat' => $validated['alamat'],
-            'kontak' => $validated['kontak'] ?? null,
-            'keterangan' => $validated['keterangan'] ?? null,
-            'status' => UsulanStatus::MENUNGGU->value,
-        ]);
+        $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
+        if (!$service->canUpdatePilihan($penempatan)) {
+            return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
+        }
 
-        $existingPenempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
-        $oldStatus = $existingPenempatan?->status;
-
-        $penempatan = PenempatanPKL::updateOrCreate(
-            ['siswa_id' => $siswa->id],
-            [
-                'industri_id' => null,
-                'usulan_industri_id' => $usulan->id,
-                'pilihan_siswa' => PilihanSiswa::USULAN_LAIN->value,
-                'status' => PenempatanStatus::MENUNGGU_KONFIRMASI->value,
-            ]
-        );
+        $oldStatus = $penempatan?->status;
+        [, $penempatan] = $service->handleUsulanIndustri($siswa, $validated);
 
         if ($oldStatus !== null) {
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
         }
 
         return back()->with('success', 'Usulan industri berhasil dikirim.');
-    }
-
-    private function berkasLengkap($siswa): bool
-    {
-        $hasBpjs = !empty($siswa->bpjs_link);
-        $hasKartu = !empty($siswa->kartu_pelajar_link);
-        $hasCv = !empty($siswa->cv_link);
-        $portofolio = is_array($siswa->portofolio_links) ? $siswa->portofolio_links : [];
-        $hasPortofolio = count($portofolio) > 0;
-
-        return $hasBpjs && $hasKartu && $hasCv && $hasPortofolio;
     }
 }
