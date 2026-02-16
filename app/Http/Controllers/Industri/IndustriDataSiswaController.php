@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\Industri;
 
 use App\Enums\JadwalWawancaraStatus;
-use App\Enums\LaporanStatus;
 use App\Enums\PenempatanStatus;
 use App\Http\Controllers\Controller;
-use App\Models\JadwalWawancara;
 use App\Models\PenempatanPKL;
+use App\Services\IndustriDataSiswaService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class IndustriDataSiswaController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, IndustriDataSiswaService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri) {
@@ -22,20 +21,8 @@ class IndustriDataSiswaController extends Controller
 
         $statusFilter = $request->input('status', 'all');
 
-        $penempatanQuery = PenempatanPKL::with(['siswa.user', 'siswa.jurusan'])
-            ->where('industri_id', $industri->id);
-
-        if ($statusFilter !== 'all') {
-            $penempatanQuery->where('status', $statusFilter);
-        }
-
-        $penempatanList = $penempatanQuery
-            ->orderByDesc('id')
-            ->get();
-
-        $jadwalMap = JadwalWawancara::where('industri_id', $industri->id)
-            ->get()
-            ->keyBy('siswa_id');
+        $penempatanList = $service->getPenempatanList($industri, $statusFilter);
+        $jadwalMap = $service->getJadwalMap($industri);
 
         $statusLabels = [
             'all' => 'Semua',
@@ -54,7 +41,7 @@ class IndustriDataSiswaController extends Controller
         ]);
     }
 
-    public function setStatus(Request $request, PenempatanPKL $penempatan)
+    public function setStatus(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
@@ -71,16 +58,13 @@ class IndustriDataSiswaController extends Controller
             ],
         ]);
 
-        $oldStatus = $penempatan->status;
-        $penempatan->update([
-            'status' => $validated['status'],
-        ]);
+        $oldStatus = $service->updatePenempatanStatus($penempatan, $validated['status']);
         $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
         return back()->with('success', 'Status penerimaan berhasil diperbarui.');
     }
 
-    public function storeJadwal(Request $request, PenempatanPKL $penempatan)
+    public function storeJadwal(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
@@ -101,30 +85,13 @@ class IndustriDataSiswaController extends Controller
             ],
         ]);
 
-        JadwalWawancara::updateOrCreate(
-            [
-                'siswa_id' => $penempatan->siswa_id,
-                'industri_id' => $industri->id,
-            ],
-            [
-                'tanggal' => $validated['tanggal'],
-                'waktu' => $validated['waktu'] ?? null,
-                'lokasi' => $validated['lokasi'] ?? null,
-                'catatan' => $validated['catatan'] ?? null,
-                'status' => $validated['status'],
-            ]
-        );
-
-        $oldStatus = $penempatan->status;
-        $penempatan->update([
-            'status' => PenempatanStatus::PROSES_WAWANCARA->value,
-        ]);
+        $oldStatus = $service->saveJadwal($industri, $penempatan, $validated);
         $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
         return back()->with('success', 'Jadwal wawancara berhasil disimpan.');
     }
 
-    public function storeLaporan(Request $request, PenempatanPKL $penempatan)
+    public function storeLaporan(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
@@ -135,11 +102,7 @@ class IndustriDataSiswaController extends Controller
             'laporan' => 'required|string|max:1000',
         ]);
 
-        $penempatan->update([
-            'laporan_industri' => $validated['laporan'],
-            'laporan_status' => LaporanStatus::MENUNGGU->value,
-            'laporan_at' => now(),
-        ]);
+        $service->saveLaporan($penempatan, $validated);
 
         return back()->with('success', 'Laporan berhasil dikirim ke admin.');
     }

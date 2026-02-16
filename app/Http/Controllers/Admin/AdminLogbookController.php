@@ -4,25 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\LogbookStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Industri;
-use App\Models\Jurusan;
-use App\Models\Logbook;
-use App\Models\Siswa;
+use App\Services\AdminLogbookService;
 use Illuminate\Http\Request;
 
 class AdminLogbookController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AdminLogbookService $service)
     {
-        $jurusanOptions = Jurusan::orderBy('nama')->get();
-        $industriOptions = Industri::orderBy('nama_industri')->get();
-
-        $tahunAjaranList = Siswa::query()
-            ->select('tahun_ajaran')
-            ->distinct()
-            ->orderBy('tahun_ajaran', 'desc')
-            ->pluck('tahun_ajaran');
-
         $filters = [
             'tahun_ajaran' => $request->input('tahun_ajaran'),
             'jurusan_id' => $request->input('jurusan_id'),
@@ -31,53 +19,8 @@ class AdminLogbookController extends Controller
             'q' => $request->input('q', ''),
         ];
 
-        $baseQuery = Logbook::query()
-            ->with(['siswa.user', 'siswa.jurusan', 'industri', 'komentar']);
-
-        if ($filters['tahun_ajaran']) {
-            $baseQuery->whereHas('siswa', function ($query) use ($filters) {
-                $query->where('tahun_ajaran', $filters['tahun_ajaran']);
-            });
-        }
-
-        if ($filters['jurusan_id']) {
-            $baseQuery->whereHas('siswa', function ($query) use ($filters) {
-                $query->where('jurusan_id', $filters['jurusan_id']);
-            });
-        }
-
-        if ($filters['industri_id']) {
-            $baseQuery->where('industri_id', $filters['industri_id']);
-        }
-
-        if ($filters['q']) {
-            $baseQuery->whereHas('siswa.user', function ($query) use ($filters) {
-                $query->where('name', 'like', '%' . $filters['q'] . '%');
-            });
-        }
-
-        $statusCounts = [
-            LogbookStatus::PENDING->value => (clone $baseQuery)
-                ->where('status_validasi', LogbookStatus::PENDING->value)
-                ->count(),
-            LogbookStatus::DISETUJUI->value => (clone $baseQuery)
-                ->where('status_validasi', LogbookStatus::DISETUJUI->value)
-                ->count(),
-            LogbookStatus::DITOLAK->value => (clone $baseQuery)
-                ->where('status_validasi', LogbookStatus::DITOLAK->value)
-                ->count(),
-        ];
-
-        $logbookQuery = clone $baseQuery;
-        if ($filters['status'] !== 'all') {
-            $logbookQuery->where('status_validasi', $filters['status']);
-        }
-
-        $logbooks = $logbookQuery
-            ->orderByDesc('tanggal')
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
+        $options = $service->getOptions();
+        $data = $service->getLogbookData($filters);
 
         $statusLabels = [
             'all' => 'Semua Status',
@@ -87,13 +30,13 @@ class AdminLogbookController extends Controller
         ];
 
         return view('admin.elogbook.admin-elogbook', [
-            'jurusanOptions' => $jurusanOptions,
-            'industriOptions' => $industriOptions,
-            'tahunAjaranList' => $tahunAjaranList,
+            'jurusanOptions' => $options['jurusanOptions'],
+            'industriOptions' => $options['industriOptions'],
+            'tahunAjaranList' => $options['tahunAjaranList'],
             'filters' => $filters,
-            'statusCounts' => $statusCounts,
+            'statusCounts' => $data['statusCounts'],
             'statusLabels' => $statusLabels,
-            'logbooks' => $logbooks,
+            'logbooks' => $data['logbooks'],
         ]);
     }
 }

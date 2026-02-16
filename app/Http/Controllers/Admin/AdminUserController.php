@@ -2,192 +2,51 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\StatusPKL;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use App\Models\Jurusan;
-use App\Models\Siswa;
 use App\Models\Industri;
-use Illuminate\Validation\Rule;
+use App\Services\AdminUserService;
 
 
 class AdminUserController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AdminUserService $service)
     {
-        $role = $request->role;
-        $search = $request->search;
-        $jurusanId = $request->jurusan_id;
-        $kelas = $request->kelas;
-        $grade = $request->grade;
+        $filters = [
+            'role' => $request->role,
+            'search' => $request->search,
+            'jurusan_id' => $request->jurusan_id,
+            'kelas' => $request->kelas,
+            'grade' => $request->grade,
+        ];
 
-        $users = User::with([
-            'roles',
-            'siswa.jurusan',
-            'gurupembimbing.jurusan',
-            'gurupembimbing.penempatanPkl.siswa.user',
-            'industri'
-        ])
-            ->when($role && $role !== 'Semua Pengguna', function ($q) use ($role) {
-                $q->whereHas('roles', function ($r) use ($role) {
-                    $r->where('name', strtolower($role));
-                });
-            })
-            ->when($jurusanId && $role === 'Siswa', function ($q) use ($jurusanId) {
-                $q->whereHas('siswa', function ($sq) use ($jurusanId) {
-                    $sq->where('jurusan_id', $jurusanId);
-                });
-            })
-            ->when($jurusanId && $role === 'Perwakilan Industri', function ($q) use ($jurusanId) {
-                $q->whereHas('industri', function ($iq) use ($jurusanId) {
-                    $iq->where('jurusan_id', $jurusanId);
-                });
-            })
-            ->when($kelas && $role === 'Siswa', function ($q) use ($kelas) {
-                $q->whereHas('siswa', function ($sq) use ($kelas) {
-                    $sq->where('kelas', $kelas);
-                });
-            })
-            ->when($grade && $role === 'Perwakilan Industri', function ($q) use ($grade) {
-                $q->whereHas('industri', function ($iq) use ($grade) {
-                    $iq->where('grade', $grade);
-                });
-            })
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($qq) use ($search) {
-                    $qq->where('name', 'like', "%$search%")
-                        ->orWhere('email', 'like', "%$search%");
-                });
-            })
-            ->paginate(10)
-            ->withQueryString();
-
-        $jurusanOptions = Jurusan::orderBy('nama')->get();
-        $kelasOptions = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        $users = $service->getUsers($filters);
+        $jurusanOptions = $service->getJurusanOptions();
+        $kelasOptions = $service->getKelasOptions();
 
         return view('admin.data-pengguna', compact('users', 'jurusanOptions', 'kelasOptions'));
     }
 
 
 
-    public function create(Request $request)
+    public function create(Request $request, AdminUserService $service)
     {
         $roles = Role::all();
-        $jurusan = Jurusan::all();
         $rawRole = $request->input('role');
-        $prefillRole = null;
-
-        if ($rawRole && strtolower($rawRole) !== 'semua pengguna') {
-            $normalized = strtolower($rawRole);
-            $map = [
-                'siswa' => 'siswa',
-                'guru pembimbing' => 'guru pembimbing',
-                'perwakilan industri' => 'perwakilan industri',
-                'admin' => 'admin',
-            ];
-            $prefillRole = $map[$normalized] ?? null;
-        }
+        $prefillRole = $service->getPrefillRole($rawRole);
+        $jurusan = $service->getJurusanOptions();
 
         return view('admin.users.create', compact('roles', 'jurusan', 'prefillRole'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AdminUserService $service)
     {
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:8',
-            'role' => 'required',
-        ];
+        $rules = $service->getStoreRules($request->role);
+        $validated = $request->validate($rules);
 
-        switch ($request->role) {
-            case 'siswa':
-                $rules = array_merge($rules, [
-                    'nis' => 'required|string|unique:siswa,nis',
-                    'jurusan_id' => 'required|exists:jurusan,id',
-                    'kelas' => 'required|string|max:50',
-                    'nilai_akademik' => 'required|integer|min:0',
-                    'perangkat' => 'required|integer|min:1|max:5',
-                    'status_pkl' => [
-                        'required',
-                        Rule::in(array_map(
-                            static fn (StatusPKL $status) => $status->value,
-                            StatusPKL::cases()
-                        )),
-                    ],
-                    'tahun_ajaran' => 'required|string|max:20',
-                ]);
-                break;
-
-            case 'guru pembimbing':
-                $rules = array_merge($rules, [
-                    'nip' => 'required|string|unique:guru_pembimbing,nip',
-                    'jurusan_id' => 'required|exists:jurusan,id',
-                ]);
-                break;
-
-            case 'perwakilan industri':
-                $rules = array_merge($rules, [
-                    'nama_industri' => 'required|string|max:255|unique:industri,nama_industri',
-                    'kapasitas' => 'required|integer|min:1',
-                    'alamat' => 'required|string',
-                    'grade' => 'required|in:A,B,C',
-                    'jurusan_id' => 'required|exists:jurusan,id',
-                ]);
-                break;
-        }
-
-        $request->validate($rules);
-
-        // 1. CREATE USER
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
-
-        // 2. ASSIGN ROLE (SPATIE)
-        $user->assignRole($request->role);
-
-        // 3. SIMPAN DATA BERDASARKAN ROLE
-        switch ($request->role) {
-
-            case 'siswa':
-                $user->siswa()->create([
-                    'nis' => $request->nis,
-                    'jurusan_id' => $request->jurusan_id,
-                    'kelas' => $request->kelas,
-                    'nilai_akademik' => $request->nilai_akademik,
-                    'perangkat' => $request->perangkat,
-                    'status_pkl' => $request->status_pkl,
-                    'tahun_ajaran' => $request->tahun_ajaran,
-                ]);
-                break;
-
-            case 'guru pembimbing':
-                $user->gurupembimbing()->create([
-                    'nip' => $request->nip,
-                    'jurusan_id' => $request->jurusan_id,
-                ]);
-                break;
-
-            case 'perwakilan industri':
-                $user->industri()->create([
-                    'nama_industri' => $request->nama_industri,
-                    'kapasitas' => $request->kapasitas,
-                    'alamat' => $request->alamat,
-                    'grade' => $request->grade,
-                    'jurusan_id' => $request->jurusan_id,
-                ]);
-                break;
-
-            case 'admin':
-                // tidak ada tabel turunan
-                break;
-        }
+        $service->createUser($validated);
 
         return redirect()
             ->route('admin.data-pengguna')
@@ -210,120 +69,13 @@ class AdminUserController extends Controller
         return view('admin.users.edit', compact('user', 'roles', 'assignedRoles', 'jurusan', 'roleName'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user, AdminUserService $service)
     {
         $role = $request->role ?? ($user->roles->first()->name ?? 'admin');
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required',
-        ];
+        $rules = $service->getUpdateRules($role, $user);
+        $validated = $request->validate($rules);
 
-        switch ($role) {
-            case 'siswa':
-                $siswaId = optional($user->siswa)->id;
-                $rules = array_merge($rules, [
-                    'nis' => [
-                        'required',
-                        'string',
-                        Rule::unique('siswa', 'nis')->ignore($siswaId),
-                    ],
-                    'jurusan_id' => 'required|exists:jurusan,id',
-                    'kelas' => 'required|string|max:50',
-                    'nilai_akademik' => 'required|integer|min:0',
-                    'perangkat' => 'required|integer|min:1|max:5',
-                    'status_pkl' => [
-                        'required',
-                        Rule::in(array_map(
-                            static fn (StatusPKL $status) => $status->value,
-                            StatusPKL::cases()
-                        )),
-                    ],
-                    'tahun_ajaran' => 'required|string|max:20',
-                ]);
-                break;
-
-            case 'guru pembimbing':
-                $guruId = optional($user->gurupembimbing)->id;
-                $rules = array_merge($rules, [
-                    'nip' => [
-                        'required',
-                        'string',
-                        Rule::unique('guru_pembimbing', 'nip')->ignore($guruId),
-                    ],
-                    'jurusan_id' => 'required|exists:jurusan,id',
-                ]);
-                break;
-
-            case 'perwakilan industri':
-                $rules = array_merge($rules, [
-                    'nama_industri' => [
-                        'required',
-                        'string',
-                        'max:255',
-                        Rule::unique('industri', 'nama_industri')->ignore($user->industri?->id),
-                    ],
-                    'kapasitas' => 'required|integer|min:1',
-                    'alamat' => 'required|string',
-                    'grade' => 'required|in:A,B,C',
-                    'jurusan_id' => 'required|exists:jurusan,id',
-                ]);
-                break;
-        }
-
-        $request->validate($rules);
-
-        // Update user details
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password ? bcrypt($request->password) : $user->password,
-        ]);
-
-        if ($role) {
-            $user->syncRoles([$role]);
-        }
-
-        switch ($role) {
-            case 'siswa':
-                $user->siswa()->updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'nis' => $request->nis,
-                        'jurusan_id' => $request->jurusan_id,
-                        'kelas' => $request->kelas,
-                        'nilai_akademik' => $request->nilai_akademik,
-                        'perangkat' => $request->perangkat,
-                        'status_pkl' => $request->status_pkl,
-                        'tahun_ajaran' => $request->tahun_ajaran,
-                    ]
-                );
-                break;
-
-            case 'guru pembimbing':
-                $user->gurupembimbing()->updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'nip' => $request->nip,
-                        'jurusan_id' => $request->jurusan_id,
-                    ]
-                );
-                break;
-
-            case 'perwakilan industri':
-                $user->industri()->updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'nama_industri' => $request->nama_industri,
-                        'kapasitas' => $request->kapasitas,
-                        'alamat' => $request->alamat,
-                        'grade' => $request->grade,
-                        'jurusan_id' => $request->jurusan_id,
-                    ]
-                );
-                break;
-        }
+        $service->updateUser($user, $validated, $role);
 
         return redirect()
             ->route('admin.data-pengguna', request()->query())
@@ -340,19 +92,14 @@ class AdminUserController extends Controller
             ->with('success', 'User deleted successfully.');
     }
 
-    public function kirimPengajuanIndustri(Industri $industri)
+    public function kirimPengajuanIndustri(Industri $industri, AdminUserService $service)
     {
-        if (!$industri->status_pengajuan) {
-            $industri->update([
-                'status_pengajuan' => 'menunggu',
-                'pengajuan_dikirim_at' => now(),
-            ]);
-        }
+        $status = $service->ensurePengajuanIndustri($industri);
 
         if (request()->wantsJson()) {
             return response()->json([
-                'status' => $industri->status_pengajuan,
-                'label' => ucfirst($industri->status_pengajuan),
+                'status' => $status,
+                'label' => ucfirst($status),
             ]);
         }
 

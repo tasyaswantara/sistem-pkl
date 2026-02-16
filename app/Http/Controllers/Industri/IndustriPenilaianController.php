@@ -2,38 +2,23 @@
 
 namespace App\Http\Controllers\Industri;
 
-use App\Enums\PenempatanStatus;
-use App\Enums\StatusPKL;
 use App\Http\Controllers\Controller;
-use App\Models\AspekPenilaian;
-use App\Models\DetailPenilaian;
 use App\Models\PenempatanPKL;
-use App\Models\Penilaian;
+use App\Services\IndustriPenilaianService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class IndustriPenilaianController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, IndustriPenilaianService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri) {
             abort(403, 'Akun industri belum terhubung.');
         }
 
-        $penempatanList = PenempatanPKL::with(['siswa.user', 'siswa.jurusan'])
-            ->where('industri_id', $industri->id)
-            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
-            ->orderByDesc('id')
-            ->get();
-
-        $aspekList = AspekPenilaian::orderBy('nama_aspek')->get();
-
-        $penilaianMap = Penilaian::with('detailPenilaian')
-            ->where('industri_id', $industri->id)
-            ->whereIn('siswa_id', $penempatanList->pluck('siswa_id'))
-            ->get()
-            ->keyBy('siswa_id');
+        $penempatanList = $service->getPenempatanList($industri);
+        $aspekList = $service->getAspekList();
+        $penilaianMap = $service->getPenilaianMap($industri, $penempatanList);
 
         return view('industri.penilaian.industri-penilaian', [
             'penempatanList' => $penempatanList,
@@ -42,7 +27,7 @@ class IndustriPenilaianController extends Controller
         ]);
     }
 
-    public function store(Request $request, PenempatanPKL $penempatan)
+    public function store(Request $request, PenempatanPKL $penempatan, IndustriPenilaianService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
@@ -54,39 +39,7 @@ class IndustriPenilaianController extends Controller
             'nilai.*' => 'required|numeric|min:0|max:100',
         ]);
 
-        $aspekList = AspekPenilaian::orderBy('nama_aspek')->get();
-
-        DB::transaction(function () use ($aspekList, $validated, $penempatan, $industri) {
-            $total = 0;
-            foreach ($aspekList as $aspek) {
-                $nilai = (float) ($validated['nilai'][$aspek->id] ?? 0);
-                $total += $nilai * (float) $aspek->bobot;
-            }
-
-            $penilaian = Penilaian::updateOrCreate(
-                [
-                    'siswa_id' => $penempatan->siswa_id,
-                    'industri_id' => $industri->id,
-                ],
-                [
-                    'tanggal_penilaian' => now()->toDateString(),
-                    'total_nilai' => round($total, 2),
-                ]
-            );
-
-            DetailPenilaian::where('penilaian_id', $penilaian->id)->delete();
-
-            foreach ($aspekList as $aspek) {
-                $nilai = (float) ($validated['nilai'][$aspek->id] ?? 0);
-                DetailPenilaian::create([
-                    'penilaian_id' => $penilaian->id,
-                    'aspek_penilaian_id' => $aspek->id,
-                    'nilai' => $nilai,
-                ]);
-            }
-
-            $penempatan->siswa?->update(['status_pkl' => StatusPKL::SELESAI->value]);
-        });
+        $service->savePenilaian($industri, $penempatan, $validated);
 
         return back()->with('success', 'Penilaian berhasil disimpan.');
     }

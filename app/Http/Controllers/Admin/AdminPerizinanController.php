@@ -2,35 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\JenisIzin;
-use App\Enums\PenempatanStatus;
 use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Industri;
-use App\Models\Jurusan;
 use App\Models\Perizinan;
-use App\Models\PenempatanPKL;
-use App\Models\Siswa;
+use App\Services\AdminPerizinanService;
 use Illuminate\Http\Request;
 
 class AdminPerizinanController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AdminPerizinanService $service)
     {
-        $jurusanOptions = Jurusan::orderBy('nama')->get();
-        $industriOptions = Industri::orderBy('nama_industri')->get();
-        $siswaPenempatanOptions = PenempatanPKL::with(['siswa.user', 'siswa.jurusan', 'industri'])
-            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
-            ->whereNotNull('industri_id')
-            ->orderByDesc('id')
-            ->get();
-
-        $tahunAjaranList = Siswa::query()
-            ->select('tahun_ajaran')
-            ->distinct()
-            ->orderBy('tahun_ajaran', 'desc')
-            ->pluck('tahun_ajaran');
-
         $filters = [
             'tahun_ajaran' => $request->input('tahun_ajaran'),
             'jurusan_id' => $request->input('jurusan_id'),
@@ -39,53 +20,8 @@ class AdminPerizinanController extends Controller
             'q' => $request->input('q', ''),
         ];
 
-        $baseQuery = Perizinan::query()
-            ->with(['siswa.user', 'siswa.jurusan', 'industri', 'pembuat']);
-
-        if ($filters['tahun_ajaran']) {
-            $baseQuery->whereHas('siswa', function ($query) use ($filters) {
-                $query->where('tahun_ajaran', $filters['tahun_ajaran']);
-            });
-        }
-
-        if ($filters['jurusan_id']) {
-            $baseQuery->whereHas('siswa', function ($query) use ($filters) {
-                $query->where('jurusan_id', $filters['jurusan_id']);
-            });
-        }
-
-        if ($filters['industri_id']) {
-            $baseQuery->where('industri_id', $filters['industri_id']);
-        }
-
-        if ($filters['q']) {
-            $baseQuery->whereHas('siswa.user', function ($query) use ($filters) {
-                $query->where('name', 'like', '%' . $filters['q'] . '%');
-            });
-        }
-
-        $statusCounts = [
-            PerizinanStatus::MENUNGGU->value => (clone $baseQuery)
-                ->where('status', PerizinanStatus::MENUNGGU->value)
-                ->count(),
-            PerizinanStatus::DISETUJUI->value => (clone $baseQuery)
-                ->where('status', PerizinanStatus::DISETUJUI->value)
-                ->count(),
-            PerizinanStatus::DITOLAK->value => (clone $baseQuery)
-                ->where('status', PerizinanStatus::DITOLAK->value)
-                ->count(),
-        ];
-
-        $perizinanQuery = clone $baseQuery;
-        if ($filters['status'] !== 'all') {
-            $perizinanQuery->where('status', $filters['status']);
-        }
-
-        $perizinanList = $perizinanQuery
-            ->orderByDesc('tanggal_mulai')
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
+        $options = $service->getOptions();
+        $data = $service->getPerizinanData($filters);
 
         $statusLabels = [
             'all' => 'Semua Status',
@@ -95,18 +31,18 @@ class AdminPerizinanController extends Controller
         ];
 
         return view('admin.perizinan.admin-perizinan', [
-            'jurusanOptions' => $jurusanOptions,
-            'industriOptions' => $industriOptions,
-            'siswaPenempatanOptions' => $siswaPenempatanOptions,
-            'tahunAjaranList' => $tahunAjaranList,
+            'jurusanOptions' => $options['jurusanOptions'],
+            'industriOptions' => $options['industriOptions'],
+            'siswaPenempatanOptions' => $options['siswaPenempatanOptions'],
+            'tahunAjaranList' => $options['tahunAjaranList'],
             'filters' => $filters,
-            'statusCounts' => $statusCounts,
+            'statusCounts' => $data['statusCounts'],
             'statusLabels' => $statusLabels,
-            'perizinanList' => $perizinanList,
+            'perizinanList' => $data['perizinanList'],
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AdminPerizinanService $service)
     {
         $validated = $request->validate([
             'scope' => 'required|in:all,selected',
@@ -120,29 +56,7 @@ class AdminPerizinanController extends Controller
             return back()->withErrors(['siswa_ids' => 'Pilih minimal satu siswa.'])->withInput();
         }
 
-        $penempatanQuery = PenempatanPKL::query()
-            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
-            ->whereNotNull('industri_id');
-
-        if ($validated['scope'] === 'selected') {
-            $penempatanQuery->whereIn('siswa_id', $validated['siswa_ids']);
-        }
-
-        $penempatanList = $penempatanQuery->get();
-
-        $created = 0;
-        foreach ($penempatanList as $penempatan) {
-            Perizinan::create([
-                'siswa_id' => $penempatan->siswa_id,
-                'industri_id' => $penempatan->industri_id,
-                'created_by' => $request->user()->id,
-                'jenis_izin' => JenisIzin::IZIN_KEGIATAN_SEKOLAH->value,
-                'tanggal_mulai' => $validated['tanggal_mulai'],
-                'tanggal_selesai' => $validated['tanggal_selesai'],
-                'status' => PerizinanStatus::MENUNGGU->value,
-            ]);
-            $created++;
-        }
+        $created = $service->createBulkPerizinan($request->user()->id, $validated);
 
         if ($created === 0) {
             return back()->withErrors(['siswa_ids' => 'Tidak ada siswa dengan penempatan aktif untuk dikirim.'])->withInput();
@@ -151,24 +65,21 @@ class AdminPerizinanController extends Controller
         return back()->with('success', "Perizinan berhasil dikirim ke {$created} siswa.");
     }
 
-    public function update(Request $request, Perizinan $perizinan)
+    public function update(Request $request, Perizinan $perizinan, AdminPerizinanService $service)
     {
         $validated = $request->validate([
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
 
-        $perizinan->update([
-            'tanggal_mulai' => $validated['tanggal_mulai'],
-            'tanggal_selesai' => $validated['tanggal_selesai'],
-        ]);
+        $service->updatePerizinan($perizinan, $validated);
 
         return back()->with('success', 'Perizinan berhasil diperbarui.');
     }
 
-    public function destroy(Perizinan $perizinan)
+    public function destroy(Perizinan $perizinan, AdminPerizinanService $service)
     {
-        $perizinan->delete();
+        $service->deletePerizinan($perizinan);
 
         return back()->with('success', 'Perizinan berhasil dihapus.');
     }
