@@ -26,7 +26,7 @@ class AdminUserController extends Controller
         $jurusanOptions = $service->getJurusanOptions();
         $kelasOptions = $service->getKelasOptions();
 
-        return view('admin.data-pengguna', compact('users', 'jurusanOptions', 'kelasOptions'));
+        return view('admin.data-pengguna.data-pengguna', compact('users', 'jurusanOptions', 'kelasOptions'));
     }
 
 
