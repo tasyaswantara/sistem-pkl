@@ -31,7 +31,7 @@ class SawRunService
             return [
                 'ok' => false,
                 'error_field' => 'bobot',
-                'error_key' => 'penempatan.errors.criteria_weight_missing',
+                'error_key' => 'penempatan.errors.kriteria',
             ];
         }
 
@@ -40,7 +40,7 @@ class SawRunService
             return [
                 'ok' => false,
                 'error_field' => 'bobot',
-                'error_key' => 'penempatan.errors.total_weight_before_saw',
+                'error_key' => 'penempatan.errors.bobot_saw',
             ];
         }
 
@@ -54,7 +54,7 @@ class SawRunService
             return [
                 'ok' => false,
                 'error_field' => 'saw',
-                'error_key' => 'penempatan.errors.data_incomplete',
+                'error_key' => 'penempatan.errors.data_kurang',
             ];
         }
 
@@ -75,7 +75,7 @@ class SawRunService
             return [
                 'ok' => false,
                 'error_field' => 'saw',
-                'error_key' => 'penempatan.errors.criteria_not_linked',
+                'error_key' => 'penempatan.errors.kriteria_link',
             ];
         }
 

@@ -28,7 +28,7 @@ class PenempatanLangsungService
         $industri = Industri::find($data['industri_id']);
 
         if (!$siswa || !$industri) {
-            return ['ok' => false, 'error_key' => 'penempatan.errors.invalid_data'];
+            return ['ok' => false, 'error_key' => 'penempatan.errors.data'];
         }
 
         $status = $data['mode'] === 'sekolah'

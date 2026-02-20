@@ -53,9 +53,9 @@ class AdminPenempatanController extends Controller
             $selectedTahun = $tahunAjaranList->first();
         }
 
-        $statusList = Lang::get('penempatan.status_list');
-        $statusLabels = Lang::get('penempatan.status_labels');
-        $pilihanLabels = Lang::get('penempatan.pilihan_labels');
+        $statusList = Lang::get('penempatan.list');
+        $statusLabels = Lang::get('penempatan.label');
+        $pilihanLabels = Lang::get('penempatan.pilih');
 
         $selectedStatus = $request->input('status', 'all');
         $search = $request->input('q', '');
@@ -205,10 +205,10 @@ class AdminPenempatanController extends Controller
         $result = $service->assign($validated, (int) $request->user()->id);
 
         if (!$result['ok']) {
-            return back()->withErrors(['penempatan' => __($result['error_key'] ?? 'penempatan.errors.invalid_data')]);
+            return back()->withErrors(['penempatan' => __($result['error_key'] ?? 'penempatan.errors.data')]);
         }
 
-        return back()->with('success', __('penempatan.success.direct_assigned'));
+        return back()->with('success', __('penempatan.success.langsung'));
     }
 
     public function storeBobot(Request $request)
@@ -225,7 +225,7 @@ class AdminPenempatanController extends Controller
         }
 
         if (abs($totalBobot - 100) > 0.01) {
-            return back()->withErrors(['bobot' => __('penempatan.errors.total_weight_100')])->withInput();
+            return back()->withErrors(['bobot' => __('penempatan.errors.bobot')])->withInput();
         }
 
         $jurusanId = $validated['jurusan_id'];
@@ -248,7 +248,7 @@ class AdminPenempatanController extends Controller
             }
         });
 
-        return back()->with('success', __('penempatan.success.weights_saved'));
+        return back()->with('success', __('penempatan.success.bobot'));
     }
 
     public function runSaw(Request $request, SawRunService $service)
@@ -266,25 +266,25 @@ class AdminPenempatanController extends Controller
 
         if (!$result['ok']) {
             return back()->withErrors([
-                $result['error_field'] ?? 'saw' => __($result['error_key'] ?? 'penempatan.errors.data_incomplete'),
+                $result['error_field'] ?? 'saw' => __($result['error_key'] ?? 'penempatan.errors.data_kurang'),
             ]);
         }
 
-        return back()->with('success', __('penempatan.success.saw_run', ['count' => $result['rows_count'] ?? 0]));
+        return back()->with('success', __('penempatan.success.saw', ['count' => $result['rows_count'] ?? 0]));
     }
 
     public function approveUsulanIndustri(Request $request, UsulanIndustri $usulan)
     {
         if ($usulan->status !== UsulanStatus::MENUNGGU->value) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.proposal_already_processed')]);
+            return back()->withErrors(['usulan' => __('penempatan.errors.usulan_proses')]);
         }
 
         if (User::where('email', $usulan->email)->exists()) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.industry_email_used')]);
+            return back()->withErrors(['usulan' => __('penempatan.errors.email')]);
         }
 
         if (Industri::where('nama_industri', $usulan->nama_industri)->exists()) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.industry_name_used')]);
+            return back()->withErrors(['usulan' => __('penempatan.errors.nama')]);
         }
 
         $user = User::create([
@@ -326,13 +326,13 @@ class AdminPenempatanController extends Controller
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
         }
 
-        return back()->with('success', __('penempatan.success.proposal_approved'));
+        return back()->with('success', __('penempatan.success.usul_ok'));
     }
 
     public function rejectUsulanIndustri(Request $request, UsulanIndustri $usulan)
     {
         if ($usulan->status !== UsulanStatus::MENUNGGU->value) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.proposal_already_processed')]);
+            return back()->withErrors(['usulan' => __('penempatan.errors.usulan_proses')]);
         }
 
         $usulan->update([
@@ -354,19 +354,19 @@ class AdminPenempatanController extends Controller
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
         }
 
-        return back()->with('success', __('penempatan.success.proposal_rejected'));
+        return back()->with('success', __('penempatan.success.usul_tolak'));
     }
 
     public function confirmPilihan(PenempatanPKL $penempatan)
     {
         if ($penempatan->status !== PenempatanStatus::MENUNGGU_KONFIRMASI->value) {
-            return back()->withErrors(['penempatan' => __('penempatan.errors.not_waiting_confirmation')]);
+            return back()->withErrors(['penempatan' => __('penempatan.errors.tunggu')]);
         }
 
         if ($penempatan->pilihan_siswa === PilihanSiswa::REKOMENDASI->value) {
             $industri = $penempatan->industri;
             if (!$industri) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.recommendation_missing')]);
+                return back()->withErrors(['penempatan' => __('penempatan.errors.rekom')]);
             }
 
             $industri->update([
@@ -381,25 +381,25 @@ class AdminPenempatanController extends Controller
             ]);
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
-            return back()->with('success', __('penempatan.success.choice_confirmed'));
+            return back()->with('success', __('penempatan.success.pilih_ok'));
         }
 
         if ($penempatan->pilihan_siswa === PilihanSiswa::USULAN_LAIN->value) {
             $usulan = $penempatan->usulanIndustri;
             if (!$usulan) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.proposal_not_found')]);
+                return back()->withErrors(['penempatan' => __('penempatan.errors.usul_tidak')]);
             }
 
             if ($usulan->status !== UsulanStatus::MENUNGGU->value) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.proposal_already_processed')]);
+                return back()->withErrors(['penempatan' => __('penempatan.errors.usulan_proses')]);
             }
 
             if (User::where('email', $usulan->email)->exists()) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.industry_email_used')]);
+                return back()->withErrors(['penempatan' => __('penempatan.errors.email')]);
             }
 
             if (Industri::where('nama_industri', $usulan->nama_industri)->exists()) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.industry_name_used')]);
+                return back()->withErrors(['penempatan' => __('penempatan.errors.nama')]);
             }
 
             $user = User::create([
@@ -431,16 +431,16 @@ class AdminPenempatanController extends Controller
             ]);
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
-            return back()->with('success', __('penempatan.success.student_proposal_confirmed'));
+            return back()->with('success', __('penempatan.success.usul_siswa'));
         }
 
-        return back()->withErrors(['penempatan' => __('penempatan.errors.choice_missing')]);
+        return back()->withErrors(['penempatan' => __('penempatan.errors.pilihan')]);
     }
 
     public function rejectPilihan(PenempatanPKL $penempatan)
     {
         if ($penempatan->status !== PenempatanStatus::MENUNGGU_KONFIRMASI->value) {
-            return back()->withErrors(['penempatan' => __('penempatan.errors.not_waiting_confirmation')]);
+            return back()->withErrors(['penempatan' => __('penempatan.errors.tunggu')]);
         }
 
         if ($penempatan->pilihan_siswa === PilihanSiswa::USULAN_LAIN->value && $penempatan->usulanIndustri) {
@@ -458,7 +458,7 @@ class AdminPenempatanController extends Controller
         ]);
         $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
-        return back()->with('success', __('penempatan.success.choice_rejected'));
+        return back()->with('success', __('penempatan.success.pilih_tolak'));
     }
 
     public function setGuruPembimbing(Request $request, PenempatanPKL $penempatan)
@@ -468,14 +468,14 @@ class AdminPenempatanController extends Controller
         ]);
 
         if ($penempatan->status !== PenempatanStatus::DITERIMA_INDUSTRI->value) {
-            return back()->withErrors(['guru_pembimbing_id' => __('penempatan.errors.mentor_only_after_accepted')]);
+            return back()->withErrors(['guru_pembimbing_id' => __('penempatan.errors.guru')]);
         }
 
         $penempatan->update([
             'guru_pembimbing_id' => $validated['guru_pembimbing_id'],
         ]);
 
-        return back()->with('success', __('penempatan.success.mentor_set'));
+        return back()->with('success', __('penempatan.success.guru'));
     }
 
     public function updateLaporanStatus(Request $request, PenempatanPKL $penempatan)
@@ -491,7 +491,7 @@ class AdminPenempatanController extends Controller
             'laporan_status' => $validated['laporan_status'],
         ]);
 
-        return back()->with('success', __('penempatan.success.report_status_updated'));
+        return back()->with('success', __('penempatan.success.laporan'));
     }
 
 }

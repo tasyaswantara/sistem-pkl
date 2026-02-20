@@ -19,12 +19,12 @@ class AdminRiskController extends Controller
             $weekEndCheck = Carbon::parse($weekEndInput);
             if ($weekEndCheck->lt($weekStartCheck)) {
                 return back()
-                    ->withErrors(['week_end' => __('risk.end_date_after_start')])
+                    ->withErrors(['week_end' => __('risk.akhir')])
                     ->withInput();
             }
             if ($weekEndCheck->gt(now()->endOfDay())) {
                 return back()
-                    ->withErrors(['week_end' => __('risk.end_date_not_future')])
+                    ->withErrors(['week_end' => __('risk.batas')])
                     ->withInput();
             }
         }
@@ -39,7 +39,7 @@ class AdminRiskController extends Controller
         $updatedCount = $service->runRisk($weekStart, $weekEnd);
 
         // return kembali dan menampilkan pesan sukses dalam bahasa indo
-        return back()->with('success', __('risk.updated', ['count' => $updatedCount]));
+        return back()->with('success', __('risk.update', ['count' => $updatedCount]));
     }
 
     public function index(AdminRiskService $service)
