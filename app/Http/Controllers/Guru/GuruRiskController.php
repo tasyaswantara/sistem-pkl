@@ -17,7 +17,7 @@ class GuruRiskController extends Controller
     {
         $guru = $request->user()->guruPembimbing;
         if (!$guru) {
-            abort(403, 'Akun guru belum terhubung.');
+            abort(403, __('guru_risk.errors.akun'));
         }
 
         $filters = [

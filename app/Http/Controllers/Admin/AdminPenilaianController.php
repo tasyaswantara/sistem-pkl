@@ -91,7 +91,7 @@ class AdminPenilaianController extends Controller
         }
 
         if (abs($total - 100) > 0.01) {
-            return back()->withErrors(['bobot' => 'Total bobot rubrik harus 100%.'])->withInput();
+            return back()->withErrors(['bobot' => __('admin_penilaian.errors.bobot')])->withInput();
         }
 
         $aspekIds = AspekPenilaian::whereIn('id', array_keys($validated['bobot']))->pluck('id');
@@ -109,11 +109,11 @@ class AdminPenilaianController extends Controller
             return response()->json([
                 'total' => $total,
                 'is_valid' => abs($total - 100) <= 0.01,
-                'message' => 'Rubrik penilaian berhasil diperbarui.',
+                'message' => __('admin_penilaian.success.rubrik'),
             ]);
         }
 
-        return back()->with('success', 'Rubrik penilaian berhasil diperbarui.');
+        return back()->with('success', __('admin_penilaian.success.rubrik'));
     }
 
     public function storeAspek(Request $request)
@@ -127,13 +127,13 @@ class AdminPenilaianController extends Controller
             'bobot' => 0,
         ]);
 
-        return back()->with('success', 'Aspek penilaian berhasil ditambahkan.');
+        return back()->with('success', __('admin_penilaian.success.tambah'));
     }
 
     public function destroyAspek(AspekPenilaian $aspek)
     {
         $aspek->delete();
 
-        return back()->with('success', 'Aspek penilaian berhasil dihapus.');
+        return back()->with('success', __('admin_penilaian.success.hapus'));
     }
 }

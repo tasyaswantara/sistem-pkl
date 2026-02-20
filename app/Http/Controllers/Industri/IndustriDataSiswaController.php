@@ -16,7 +16,7 @@ class IndustriDataSiswaController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri) {
-            abort(403, 'Akun industri belum terhubung.');
+            abort(403, __('industri_data_siswa.errors.akun'));
         }
 
         $statusFilter = $request->input('status', 'all');
@@ -45,7 +45,7 @@ class IndustriDataSiswaController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
-            abort(403, 'Aksi tidak diizinkan.');
+            abort(403, __('industri_data_siswa.errors.akses'));
         }
 
         $validated = $request->validate([
@@ -61,14 +61,14 @@ class IndustriDataSiswaController extends Controller
         $oldStatus = $service->updatePenempatanStatus($penempatan, $validated['status']);
         $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
-        return back()->with('success', 'Status penerimaan berhasil diperbarui.');
+        return back()->with('success', __('industri_data_siswa.success.status'));
     }
 
     public function storeJadwal(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
-            abort(403, 'Aksi tidak diizinkan.');
+            abort(403, __('industri_data_siswa.errors.akses'));
         }
 
         $validated = $request->validate([
@@ -88,14 +88,14 @@ class IndustriDataSiswaController extends Controller
         $oldStatus = $service->saveJadwal($industri, $penempatan, $validated);
         $this->handlePenempatanStatusChange($penempatan, $oldStatus);
 
-        return back()->with('success', 'Jadwal wawancara berhasil disimpan.');
+        return back()->with('success', __('industri_data_siswa.success.jadwal'));
     }
 
     public function storeLaporan(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
-            abort(403, 'Aksi tidak diizinkan.');
+            abort(403, __('industri_data_siswa.errors.akses'));
         }
 
         $validated = $request->validate([
@@ -104,6 +104,6 @@ class IndustriDataSiswaController extends Controller
 
         $service->saveLaporan($penempatan, $validated);
 
-        return back()->with('success', 'Laporan berhasil dikirim ke admin.');
+        return back()->with('success', __('industri_data_siswa.success.laporan'));
     }
 }

@@ -12,7 +12,7 @@ class SiswaPerizinanController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_perizinan.errors.akun'));
         }
 
         $perizinanList = $service->getPerizinanForSiswa($siswa);

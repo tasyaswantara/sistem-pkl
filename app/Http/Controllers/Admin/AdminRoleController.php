@@ -46,7 +46,7 @@ class AdminRoleController extends Controller
             $role->syncPermissions($permissions);
         }
 
-        return redirect()->route('admin.roles.admin-roles')->with('success', 'Role created successfully.');
+        return redirect()->route('admin.roles.admin-roles')->with('success', __('admin_role.success.tambah'));
     }
 
 
@@ -103,7 +103,7 @@ class AdminRoleController extends Controller
             $role->syncPermissions([]);
         }
 
-        return redirect()->route('admin.roles.admin-roles')->with('success', 'Role updated successfully.');
+        return redirect()->route('admin.roles.admin-roles')->with('success', __('admin_role.success.ubah'));
     }
 
 
@@ -111,7 +111,7 @@ class AdminRoleController extends Controller
     public function destroy(Role $role)
     {
         $role->delete();
-        return redirect()->route('admin.roles.admin-roles')->with('success', 'Role deleted successfully.');
+        return redirect()->route('admin.roles.admin-roles')->with('success', __('admin_role.success.hapus'));
     }
 
     // Display the specified role

@@ -14,7 +14,7 @@ class IndustriPerizinanController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri) {
-            abort(403, 'Akun industri belum terhubung.');
+            abort(403, __('industri_perizinan.errors.akun'));
         }
 
         $perizinanList = Perizinan::with('siswa.user')
@@ -32,7 +32,7 @@ class IndustriPerizinanController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri || $perizinan->industri_id !== $industri->id) {
-            abort(403, 'Aksi tidak diizinkan.');
+            abort(403, __('industri_perizinan.errors.akses'));
         }
 
         $validated = $request->validate([
@@ -51,6 +51,6 @@ class IndustriPerizinanController extends Controller
             'catatan_industri' => $validated['catatan_industri'],
         ]);
 
-        return back()->with('success', 'Perizinan berhasil diperbarui.');
+        return back()->with('success', __('industri_perizinan.success.ubah'));
     }
 }

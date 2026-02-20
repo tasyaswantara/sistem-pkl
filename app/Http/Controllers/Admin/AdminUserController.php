@@ -50,7 +50,7 @@ class AdminUserController extends Controller
 
         return redirect()
             ->route('admin.data-pengguna')
-            ->with('success', 'User berhasil ditambahkan');
+            ->with('success', __('admin_user.success.tambah'));
     }
 
 
@@ -79,7 +79,7 @@ class AdminUserController extends Controller
 
         return redirect()
             ->route('admin.data-pengguna', request()->query())
-            ->with('success', 'User berhasil diperbarui');
+            ->with('success', __('admin_user.success.ubah'));
     }
 
 
@@ -89,7 +89,7 @@ class AdminUserController extends Controller
 
         return redirect()
             ->route('admin.data-pengguna', request()->query())
-            ->with('success', 'User deleted successfully.');
+            ->with('success', __('admin_user.success.hapus'));
     }
 
     public function kirimPengajuanIndustri(Industri $industri, AdminUserService $service)
@@ -105,6 +105,6 @@ class AdminUserController extends Controller
 
         return redirect()
             ->route('admin.data-pengguna', request()->query())
-            ->with('success', 'Pengajuan berhasil dikirim ke industri.');
+            ->with('success', __('admin_user.success.pengajuan'));
     }
 }

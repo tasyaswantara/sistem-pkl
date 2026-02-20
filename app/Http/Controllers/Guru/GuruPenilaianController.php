@@ -17,7 +17,7 @@ class GuruPenilaianController extends Controller
     {
         $guru = $request->user()->guruPembimbing;
         if (!$guru) {
-            abort(403, 'Akun guru belum terhubung.');
+            abort(403, __('guru_penilaian.errors.akun'));
         }
 
         $siswaIds = PenempatanPKL::where('guru_pembimbing_id', $guru->id)->pluck('siswa_id');

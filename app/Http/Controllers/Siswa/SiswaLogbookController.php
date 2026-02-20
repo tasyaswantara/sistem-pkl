@@ -14,7 +14,7 @@ class SiswaLogbookController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_logbook.errors.akun'));
         }
 
         $penempatan = PenempatanPKL::with('industri')
@@ -34,13 +34,13 @@ class SiswaLogbookController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_logbook.errors.akun'));
         }
 
         $penempatan = $service->getActivePenempatan($siswa);
 
         if (!$penempatan) {
-            return back()->withErrors(['logbook' => 'Logbook hanya bisa diisi setelah status penempatan diterima industri.']);
+            return back()->withErrors(['logbook' => __('siswa_logbook.errors.terima')]);
         }
 
         $validated = $request->validate([
@@ -50,14 +50,14 @@ class SiswaLogbookController extends Controller
 
         $service->createLogbook($siswa, $penempatan, $validated);
 
-        return back()->with('success', 'Logbook berhasil ditambahkan.');
+        return back()->with('success', __('siswa_logbook.success.tambah'));
     }
 
     public function update(Request $request, Logbook $logbook)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa || $logbook->siswa_id !== $siswa->id) {
-            abort(403, 'Logbook bukan milik Anda.');
+            abort(403, __('siswa_logbook.errors.milik'));
         }
 
         $validated = $request->validate([
@@ -70,18 +70,18 @@ class SiswaLogbookController extends Controller
             'aktivitas' => $validated['aktivitas'],
         ]);
 
-        return back()->with('success', 'Logbook berhasil diperbarui.');
+        return back()->with('success', __('siswa_logbook.success.ubah'));
     }
 
     public function destroy(Request $request, Logbook $logbook)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa || $logbook->siswa_id !== $siswa->id) {
-            abort(403, 'Logbook bukan milik Anda.');
+            abort(403, __('siswa_logbook.errors.milik'));
         }
 
         $logbook->delete();
 
-        return back()->with('success', 'Logbook berhasil dihapus.');
+        return back()->with('success', __('siswa_logbook.success.hapus'));
     }
 }

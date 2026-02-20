@@ -12,7 +12,7 @@ class SiswaBerkasController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_berkas.errors.akun'));
         }
 
         return view('siswa.berkas.siswa-berkas', [
@@ -24,7 +24,7 @@ class SiswaBerkasController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_berkas.errors.akun'));
         }
 
         $validated = $request->validate([
@@ -42,7 +42,7 @@ class SiswaBerkasController extends Controller
 
         if (count($portofolioLinks) === 0) {
             return back()
-                ->withErrors(['portofolio_links' => 'Link portofolio wajib diisi minimal satu.'])
+                ->withErrors(['portofolio_links' => __('siswa_berkas.errors.porto')])
                 ->withInput();
         }
 
@@ -67,6 +67,6 @@ class SiswaBerkasController extends Controller
 
         $siswa->update($updates);
 
-        return back()->with('success', 'Berkas siswa berhasil diperbarui.');
+        return back()->with('success', __('siswa_berkas.success.ubah'));
     }
 }

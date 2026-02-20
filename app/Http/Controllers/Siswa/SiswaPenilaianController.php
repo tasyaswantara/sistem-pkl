@@ -13,7 +13,7 @@ class SiswaPenilaianController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_penilaian.errors.akun'));
         }
 
         $penilaianList = Penilaian::with(['industri', 'detailPenilaian.aspekPenilaian'])

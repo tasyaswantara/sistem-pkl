@@ -14,7 +14,7 @@ class GuruLogbookController extends Controller
     {
         $guru = $request->user()->guruPembimbing;
         if (!$guru) {
-            abort(403, 'Akun guru belum terhubung.');
+            abort(403, __('guru_logbook.errors.akun'));
         }
 
         $filters = [
@@ -50,11 +50,11 @@ class GuruLogbookController extends Controller
     {
         $guru = $request->user()->guruPembimbing;
         if (!$guru) {
-            abort(403, 'Akun guru belum terhubung.');
+            abort(403, __('guru_logbook.errors.akun'));
         }
 
         if (!$service->isBimbingan($guru, $logbook)) {
-            abort(403, 'Logbook bukan siswa bimbingan.');
+            abort(403, __('guru_logbook.errors.bimbingan'));
         }
 
         $validated = $request->validate([
@@ -63,6 +63,6 @@ class GuruLogbookController extends Controller
 
         $service->createKomentar($guru, $logbook, $validated);
 
-        return back()->with('success', 'Komentar berhasil ditambahkan.');
+        return back()->with('success', __('guru_logbook.success.komentar'));
     }
 }

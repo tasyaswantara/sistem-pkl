@@ -12,7 +12,7 @@ class IndustriPengajuanController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri) {
-            abort(403, 'Akun industri belum terhubung.');
+            abort(403, __('industri_pengajuan.errors.akun'));
         }
 
         $penempatanList = $service->getPenempatanList($industri);
@@ -27,7 +27,7 @@ class IndustriPengajuanController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri) {
-            abort(403, 'Akun industri belum terhubung.');
+            abort(403, __('industri_pengajuan.errors.akun'));
         }
 
         $validated = $request->validate([
@@ -36,6 +36,6 @@ class IndustriPengajuanController extends Controller
 
         $service->updateStatusPengajuan($industri, $validated['status_pengajuan']);
 
-        return back()->with('success', 'Status pengajuan berhasil diperbarui.');
+        return back()->with('success', __('industri_pengajuan.success.status'));
     }
 }

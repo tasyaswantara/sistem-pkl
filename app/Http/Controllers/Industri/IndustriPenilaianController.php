@@ -13,7 +13,7 @@ class IndustriPenilaianController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri) {
-            abort(403, 'Akun industri belum terhubung.');
+            abort(403, __('industri_penilaian.errors.akun'));
         }
 
         $penempatanList = $service->getPenempatanList($industri);
@@ -31,7 +31,7 @@ class IndustriPenilaianController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
-            abort(403, 'Aksi tidak diizinkan.');
+            abort(403, __('industri_penilaian.errors.akses'));
         }
 
         $validated = $request->validate([
@@ -41,6 +41,6 @@ class IndustriPenilaianController extends Controller
 
         $service->savePenilaian($industri, $penempatan, $validated);
 
-        return back()->with('success', 'Penilaian berhasil disimpan.');
+        return back()->with('success', __('industri_penilaian.success.simpan'));
     }
 }

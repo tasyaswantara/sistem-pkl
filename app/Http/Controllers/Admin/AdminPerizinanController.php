@@ -53,16 +53,16 @@ class AdminPerizinanController extends Controller
         ]);
 
         if ($validated['scope'] === 'selected' && empty($validated['siswa_ids'])) {
-            return back()->withErrors(['siswa_ids' => 'Pilih minimal satu siswa.'])->withInput();
+            return back()->withErrors(['siswa_ids' => __('admin_perizinan.errors.min')])->withInput();
         }
 
         $created = $service->createBulkPerizinan($request->user()->id, $validated);
 
         if ($created === 0) {
-            return back()->withErrors(['siswa_ids' => 'Tidak ada siswa dengan penempatan aktif untuk dikirim.'])->withInput();
+            return back()->withErrors(['siswa_ids' => __('admin_perizinan.errors.aktif')])->withInput();
         }
 
-        return back()->with('success', "Perizinan berhasil dikirim ke {$created} siswa.");
+        return back()->with('success', __('admin_perizinan.success.kirim', ['count' => $created]));
     }
 
     public function update(Request $request, Perizinan $perizinan, AdminPerizinanService $service)
@@ -74,13 +74,13 @@ class AdminPerizinanController extends Controller
 
         $service->updatePerizinan($perizinan, $validated);
 
-        return back()->with('success', 'Perizinan berhasil diperbarui.');
+        return back()->with('success', __('admin_perizinan.success.ubah'));
     }
 
     public function destroy(Perizinan $perizinan, AdminPerizinanService $service)
     {
         $service->deletePerizinan($perizinan);
 
-        return back()->with('success', 'Perizinan berhasil dihapus.');
+        return back()->with('success', __('admin_perizinan.success.hapus'));
     }
 }

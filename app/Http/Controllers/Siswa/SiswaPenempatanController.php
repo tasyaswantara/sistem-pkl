@@ -17,7 +17,7 @@ class SiswaPenempatanController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_penempatan.errors.akun'));
         }
 
         $penempatan = PenempatanPKL::with(['industri', 'usulanIndustri', 'guruPembimbing.user', 'guruPembimbing.jurusan'])
@@ -73,11 +73,11 @@ class SiswaPenempatanController extends Controller
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_penempatan.errors.akun'));
         }
 
         if (!$service->berkasLengkap($siswa)) {
-            return back()->withErrors(['berkas' => 'Lengkapi berkas siswa terlebih dahulu sebelum memilih industri.']);
+            return back()->withErrors(['berkas' => __('siswa_penempatan.errors.berkas_pilih')]);
         }
 
         $validated = $request->validate([
@@ -86,7 +86,7 @@ class SiswaPenempatanController extends Controller
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
         if (!$service->canUpdatePilihan($penempatan)) {
-            return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
+            return back()->withErrors(['pilihan' => __('siswa_penempatan.errors.pilihan')]);
         }
 
         $oldStatus = $penempatan?->status;
@@ -96,18 +96,18 @@ class SiswaPenempatanController extends Controller
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
         }
 
-        return back()->with('success', 'Pilihan rekomendasi berhasil dikirim.');
+        return back()->with('success', __('siswa_penempatan.success.rekom'));
     }
 
     public function usulkanIndustri(Request $request, SiswaPenempatanService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, 'Akun siswa belum terhubung.');
+            abort(403, __('siswa_penempatan.errors.akun'));
         }
 
         if (!$service->berkasLengkap($siswa)) {
-            return back()->withErrors(['berkas' => 'Lengkapi berkas siswa terlebih dahulu sebelum mengajukan industri.']);
+            return back()->withErrors(['berkas' => __('siswa_penempatan.errors.berkas_usul')]);
         }
 
         $validated = $request->validate([
@@ -121,7 +121,7 @@ class SiswaPenempatanController extends Controller
 
         $penempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
         if (!$service->canUpdatePilihan($penempatan)) {
-            return back()->withErrors(['pilihan' => 'Pilihan tidak dapat diubah pada status saat ini.']);
+            return back()->withErrors(['pilihan' => __('siswa_penempatan.errors.pilihan')]);
         }
 
         $oldStatus = $penempatan?->status;
@@ -131,6 +131,6 @@ class SiswaPenempatanController extends Controller
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
         }
 
-        return back()->with('success', 'Usulan industri berhasil dikirim.');
+        return back()->with('success', __('siswa_penempatan.success.usul'));
     }
 }

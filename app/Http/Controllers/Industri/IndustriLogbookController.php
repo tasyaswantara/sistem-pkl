@@ -14,7 +14,7 @@ class IndustriLogbookController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri) {
-            abort(403, 'Akun industri belum terhubung.');
+            abort(403, __('industri_logbook.errors.akun'));
         }
 
         $logbooks = Logbook::with(['siswa.user', 'siswa.jurusan'])
@@ -33,7 +33,7 @@ class IndustriLogbookController extends Controller
     {
         $industri = $request->user()->industri;
         if (!$industri || $logbook->industri_id !== $industri->id) {
-            abort(403, 'Aksi tidak diizinkan.');
+            abort(403, __('industri_logbook.errors.akses'));
         }
 
         $validated = $request->validate([
@@ -53,6 +53,6 @@ class IndustriLogbookController extends Controller
             'validated_at' => $validated['status_validasi'] === LogbookStatus::PENDING->value ? null : now(),
         ]);
 
-        return back()->with('success', 'Logbook berhasil divalidasi.');
+        return back()->with('success', __('industri_logbook.success.valid'));
     }
 }
