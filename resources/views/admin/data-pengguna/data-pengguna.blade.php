@@ -2,16 +2,15 @@
 
 <x-admin-layout>
     <div x-data="{
-        toastOpen: {{ session('success') ? 'true' : 'false' }},
         siswaOpen: false,
         siswaGuruName: '',
         siswaList: [],
-    }" x-init="if (toastOpen) { setTimeout(() => { toastOpen = false }, 3000) }">
+    }">
 
         {{-- Toast --}}
         @if (session('success'))
             <template x-teleport="body">
-                <div x-show="toastOpen" x-transition
+                <div x-data="{ open: true }" x-show="open" x-transition x-init="setTimeout(() => { open = false }, 4500)"
                     class="fixed top-20 right-6 z-[9999] max-w-sm w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <div class="flex">
                         <div class="flex justify-center items-center w-12 bg-green-500">
@@ -29,7 +28,7 @@
                             </div>
                         </div>
 
-                        <button type="button" @click="toastOpen = false" class="px-4 text-gray-400 hover:text-gray-600">
+                        <button type="button" @click="open = false" class="px-4 text-gray-400 hover:text-gray-600">
                             ✕
                         </button>
                     </div>

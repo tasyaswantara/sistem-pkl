@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\NewUserCredentialsMail;
 use App\Enums\StatusPKL;
 use App\Models\Industri;
 use App\Models\Jurusan;
@@ -10,6 +11,8 @@ use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class AdminUserService
@@ -209,10 +212,12 @@ class AdminUserService
 
     public function createUser(array $data): User
     {
+        $plainPassword = $data['password'];
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($plainPassword),
         ]);
 
         $user->assignRole($data['role']);
@@ -246,6 +251,18 @@ class AdminUserService
                     'jurusan_id' => $data['jurusan_id'],
                 ]);
                 break;
+        }
+
+        try {
+            Mail::to($user->email)->send(
+                new NewUserCredentialsMail($user->name, $user->email, $plainPassword)
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mengirim email kredensial user baru', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return $user;
