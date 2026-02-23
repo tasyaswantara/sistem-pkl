@@ -8,7 +8,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use App\Models\Industri;
 use App\Services\AdminUserService;
-
+use App\Models\Jurusan;
 
 class AdminUserController extends Controller
 {
