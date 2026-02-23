@@ -32,10 +32,23 @@ class AdminPenempatanController extends Controller
 {
     public function index(Request $request)
     {
+        $tab = $request->input('tab', 'konfigurasi');
         $jurusanOptions = Jurusan::orderBy('nama')->get();
         $selectedJurusan = $request->input('jurusan_id');
+        $selectedTahun = $request->input('tahun_ajaran');
 
-        if (!$selectedJurusan && $jurusanOptions->isNotEmpty()) {
+        if ($tab === 'hasil' && (!$selectedJurusan || !$selectedTahun)) {
+            $latestRunContext = SawRun::query()
+                ->latest('run_at')
+                ->first();
+
+            if ($latestRunContext) {
+                $selectedJurusan = $selectedJurusan ?: $latestRunContext->jurusan_id;
+                $selectedTahun = $selectedTahun ?: $latestRunContext->tahun_ajaran;
+            }
+        }
+
+        if (!$selectedJurusan && $jurusanOptions->isNotEmpty() && $tab !== 'hasil') {
             $selectedJurusan = $jurusanOptions->first()->id;
         }
 
@@ -48,8 +61,7 @@ class AdminPenempatanController extends Controller
             ->orderBy('tahun_ajaran', 'desc')
             ->pluck('tahun_ajaran');
 
-        $selectedTahun = $request->input('tahun_ajaran');
-        if (!$selectedTahun && $tahunAjaranList->isNotEmpty()) {
+        if (!$selectedTahun && $tahunAjaranList->isNotEmpty() && $tab !== 'hasil') {
             $selectedTahun = $tahunAjaranList->first();
         }
 
@@ -151,8 +163,107 @@ class AdminPenempatanController extends Controller
 
         $latestSawRun = null;
         $rekomendasiBySiswa = collect();
+        $penempatanBySiswa = collect();
 
-        if ($selectedJurusan && $selectedTahun) {
+        if ($tab === 'hasil') {
+            $latestRunIds = SawRun::query()
+                ->orderByDesc('run_at')
+                ->orderByDesc('id')
+                ->get()
+                ->unique('jurusan_id')
+                ->pluck('id')
+                ->values();
+
+            if ($latestRunIds->isNotEmpty()) {
+                $allRekomendasi = HasilRekomendasi::with('industri')
+                    ->whereIn('saw_run_id', $latestRunIds)
+                    ->orderBy('peringkat')
+                    ->get();
+
+                $rekomendasiBySiswa = $allRekomendasi->groupBy(function ($item) {
+                    return $item->saw_run_id . '-' . $item->siswa_id;
+                });
+
+                $hasilBaseQuery = HasilRekomendasi::with([
+                    'siswa.user',
+                    'siswa.jurusan',
+                    'industri',
+                ])
+                    ->whereIn('saw_run_id', $latestRunIds)
+                    ->where('peringkat', 1);
+
+                if ($selectedStatus && $selectedStatus !== 'all') {
+                    $siswaIdsByStatus = PenempatanPKL::query()
+                        ->where('status', $selectedStatus)
+                        ->pluck('siswa_id');
+
+                    $hasilBaseQuery->whereIn('siswa_id', $siswaIdsByStatus);
+                }
+
+                if ($search) {
+                    $hasilBaseQuery->whereHas('siswa.user', function ($query) use ($search) {
+                        $query->where('name', 'like', '%' . $search . '%');
+                    });
+                }
+
+                $penempatanData = $hasilBaseQuery
+                    ->orderByDesc('saw_run_id')
+                    ->orderBy('siswa_id')
+                    ->paginate(10)
+                    ->withQueryString();
+
+                $latestRunSiswaIds = HasilRekomendasi::query()
+                    ->whereIn('saw_run_id', $latestRunIds)
+                    ->where('peringkat', 1)
+                    ->pluck('siswa_id')
+                    ->unique()
+                    ->values();
+
+                $statusCounts = [
+                    PenempatanStatus::DITERIMA_INDUSTRI->value => PenempatanPKL::query()
+                        ->whereIn('siswa_id', $latestRunSiswaIds)
+                        ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
+                        ->count(),
+                    PenempatanStatus::PROSES_PENGAJUAN->value => PenempatanPKL::query()
+                        ->whereIn('siswa_id', $latestRunSiswaIds)
+                        ->where('status', PenempatanStatus::PROSES_PENGAJUAN->value)
+                        ->count(),
+                    PenempatanStatus::MENUNGGU_KONFIRMASI->value => PenempatanPKL::query()
+                        ->whereIn('siswa_id', $latestRunSiswaIds)
+                        ->where('status', PenempatanStatus::MENUNGGU_KONFIRMASI->value)
+                        ->count(),
+                ];
+
+                $currentSiswaIds = $penempatanData->getCollection()
+                    ->pluck('siswa_id')
+                    ->filter()
+                    ->values();
+
+                if ($currentSiswaIds->isNotEmpty()) {
+                    $penempatanBySiswa = PenempatanPKL::with([
+                        'siswa.user',
+                        'siswa.jurusan',
+                        'industri',
+                        'usulanIndustri',
+                        'guruPembimbing.user',
+                    ])
+                        ->whereIn('siswa_id', $currentSiswaIds)
+                        ->orderByDesc('id')
+                        ->get()
+                        ->unique('siswa_id')
+                        ->keyBy('siswa_id');
+                }
+            } else {
+                $penempatanData = HasilRekomendasi::with([
+                    'siswa.user',
+                    'siswa.jurusan',
+                    'industri',
+                ])
+                    ->whereRaw('1 = 0')
+                    ->paginate(10)
+                    ->withQueryString();
+            }
+        } elseif ($selectedJurusan && $selectedTahun) {
             $latestSawRun = SawRun::query()
                 ->where('jurusan_id', $selectedJurusan)
                 ->where('tahun_ajaran', $selectedTahun)
@@ -164,7 +275,56 @@ class AdminPenempatanController extends Controller
                     ->where('saw_run_id', $latestSawRun->id)
                     ->orderBy('peringkat')
                     ->get()
-                    ->groupBy('siswa_id');
+                    ->groupBy(function ($item) {
+                        return $item->saw_run_id . '-' . $item->siswa_id;
+                    });
+
+                $hasilBaseQuery = HasilRekomendasi::with([
+                    'siswa.user',
+                    'siswa.jurusan',
+                    'industri',
+                ])
+                    ->where('saw_run_id', $latestSawRun->id)
+                    ->where('peringkat', 1);
+
+                if ($selectedStatus && $selectedStatus !== 'all') {
+                    $siswaIdsByStatus = PenempatanPKL::query()
+                        ->where('status', $selectedStatus)
+                        ->pluck('siswa_id');
+
+                    $hasilBaseQuery->whereIn('siswa_id', $siswaIdsByStatus);
+                }
+
+                if ($search) {
+                    $hasilBaseQuery->whereHas('siswa.user', function ($query) use ($search) {
+                        $query->where('name', 'like', '%' . $search . '%');
+                    });
+                }
+
+                $penempatanData = $hasilBaseQuery
+                    ->orderBy('siswa_id')
+                    ->paginate(10)
+                    ->withQueryString();
+
+                $currentSiswaIds = $penempatanData->getCollection()
+                    ->pluck('siswa_id')
+                    ->filter()
+                    ->values();
+
+                if ($currentSiswaIds->isNotEmpty()) {
+                    $penempatanBySiswa = PenempatanPKL::with([
+                        'siswa.user',
+                        'siswa.jurusan',
+                        'industri',
+                        'usulanIndustri',
+                        'guruPembimbing.user',
+                    ])
+                        ->whereIn('siswa_id', $currentSiswaIds)
+                        ->orderByDesc('id')
+                        ->get()
+                        ->unique('siswa_id')
+                        ->keyBy('siswa_id');
+                }
             }
         }
 
@@ -183,6 +343,7 @@ class AdminPenempatanController extends Controller
             'statusCounts' => $statusCounts,
             'latestSawRun' => $latestSawRun,
             'rekomendasiBySiswa' => $rekomendasiBySiswa,
+            'penempatanBySiswa' => $penempatanBySiswa,
             'usulanList' => $usulanList,
             'totalBobot' => $totalBobot,
             'isBobotValid' => $isBobotValid,

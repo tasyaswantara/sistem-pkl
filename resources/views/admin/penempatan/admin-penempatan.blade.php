@@ -517,6 +517,7 @@
                 Filter ini hanya memengaruhi data tabel penempatan.
             </p>
             <input type="hidden" name="jurusan_id" value="{{ $selectedJurusan }}">
+            <input type="hidden" name="tahun_ajaran" value="{{ $selectedTahun }}">
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
@@ -543,7 +544,7 @@
                     </div>
                 </div>
                 <div class="flex items-end">
-                    <a href="{{ route('admin.penempatan', ['tab' => 'hasil']) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                    <a href="{{ route('admin.penempatan', ['tab' => 'hasil', 'jurusan_id' => $selectedJurusan, 'tahun_ajaran' => $selectedTahun]) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
                         Reset Filter
                     </a>
                 </div>
@@ -592,12 +593,15 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach ($penempatanData as $row)
                             @php
+                            $penempatan = $penempatanBySiswa->get($row->siswa_id);
+                            $penempatanId = $penempatan?->id;
                             $namaSiswa = $row->siswa?->user?->name ?? '-';
                             $jurusanNama = $row->siswa?->jurusan?->nama ?? '-';
                             $industriNama = $row->industri?->nama_industri ?? null;
-                            $usulanNama = $row->usulanIndustri?->nama_industri ?? null;
-                            $guruNama = $row->guruPembimbing?->user?->name ?? null;
-                            $rekomList = $rekomendasiBySiswa->get($row->siswa_id, collect());
+                            $usulanNama = $penempatan?->usulanIndustri?->nama_industri ?? null;
+                            $guruNama = $penempatan?->guruPembimbing?->user?->name ?? null;
+                            $rekomKey = ($row->saw_run_id ?? '0') . '-' . $row->siswa_id;
+                            $rekomList = $rekomendasiBySiswa->get($rekomKey, collect());
                             $detailItems = $rekomList->map(function ($item) {
                                 return [
                                     'industri' => $item->industri?->nama_industri ?? '-',
@@ -605,9 +609,9 @@
                                     'rank' => $item->peringkat,
                                 ];
                             })->values();
-                            $status = $row->status;
+                            $status = $penempatan?->status ?? PenempatanStatus::BELUM_MEMILIH->value;
                             $displayStatus = $statusLabels[$status] ?? $status;
-                            $pilihan = $row->pilihan_siswa;
+                            $pilihan = $penempatan?->pilihan_siswa;
                             $displayPilihan = $pilihanLabels[$pilihan] ?? null;
                             $pilihanIndustri = $pilihan === PilihanSiswa::USULAN_LAIN->value
                                 ? $usulanNama
@@ -680,9 +684,9 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if ($row->laporan_industri)
-                                    <div class="text-xs text-gray-600">{{ \Illuminate\Support\Str::limit($row->laporan_industri, 80) }}</div>
-                                    <form method="POST" action="{{ route('admin.penempatan.laporan', $row->id) }}" class="mt-2">
+                                    @if ($penempatan?->laporan_industri && $penempatanId)
+                                    <div class="text-xs text-gray-600">{{ \Illuminate\Support\Str::limit($penempatan->laporan_industri, 80) }}</div>
+                                    <form method="POST" action="{{ route('admin.penempatan.laporan', $penempatanId) }}" class="mt-2">
                                         @csrf
                                         <select name="laporan_status" onchange="this.form.submit()"
                                             class="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white">
@@ -691,14 +695,14 @@
                                                 LaporanStatus::DITINDAK->value => 'Ditindak',
                                                 LaporanStatus::SELESAI->value => 'Selesai',
                                             ] as $value => $label)
-                                            <option value="{{ $value }}" {{ ($row->laporan_status ?? LaporanStatus::MENUNGGU->value) === $value ? 'selected' : '' }}>
+                                            <option value="{{ $value }}" {{ (($penempatan->laporan_status ?? LaporanStatus::MENUNGGU->value) === $value) ? 'selected' : '' }}>
                                                 {{ $label }}
                                             </option>
                                             @endforeach
                                         </select>
                                     </form>
-                                    @if ($row->laporan_at)
-                                    <div class="text-xs text-gray-500">{{ $row->laporan_at->format('d/m/Y H:i') }}</div>
+                                    @if ($penempatan?->laporan_at)
+                                    <div class="text-xs text-gray-500">{{ $penempatan->laporan_at->format('d/m/Y H:i') }}</div>
                                     @endif
                                     @else
                                     <span class="text-gray-400 italic text-xs">Tidak ada laporan</span>
@@ -710,12 +714,13 @@
                                         @if ($guruNama)
                                         <span>{{ $guruNama }}</span>
                                         @endif
+                                    @if ($penempatanId)
                                     <button
                                         type="button"
                                         class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
                                         @click="
                                             guruOpen = true;
-                                            guruTargetId = {{ $row->id }};
+                                            guruTargetId = {{ $penempatanId }};
                                             guruTargetName = @js($row->siswa?->user?->name ?? '-');
                                             guruList = @js(
                                                 ($guruOptions[$row->siswa?->jurusan_id] ?? collect())->map(function ($guru) {
@@ -729,6 +734,7 @@
                                         ">
                                         {{ $guruNama ? 'Ubah Guru' : 'Pilih Guru' }}
                                     </button>
+                                    @endif
                                     </div>
                                     @else
                                     <span class="text-gray-400 italic">Belum ditentukan</span>
@@ -743,31 +749,31 @@
                                     </button>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if ($status === PenempatanStatus::MENUNGGU_KONFIRMASI->value)
+                                    @if ($status === PenempatanStatus::MENUNGGU_KONFIRMASI->value && $penempatanId)
                                     <div class="flex items-center gap-2">
-                                        <form method="POST" action="{{ route('admin.penempatan.confirm', $row->id) }}">
+                                        <form method="POST" action="{{ route('admin.penempatan.confirm', $penempatanId) }}">
                                             @csrf
                                             <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-xs font-medium">
                                                 Konfirmasi
                                             </button>
                                         </form>
-                                        <form method="POST" action="{{ route('admin.penempatan.reject', $row->id) }}">
+                                        <form method="POST" action="{{ route('admin.penempatan.reject', $penempatanId) }}">
                                             @csrf
                                             <button class="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all text-xs font-medium">
                                                 Tolak
                                             </button>
                                         </form>
-                                        @if ($pilihan === PilihanSiswa::USULAN_LAIN->value && $row->usulanIndustri)
+                                        @if ($pilihan === PilihanSiswa::USULAN_LAIN->value && $penempatan?->usulanIndustri)
                                         <button
                                             type="button"
                                             class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium"
                                             @click="usulanOpen = true; usulanDetail = @js([
-                                                'nama' => $row->usulanIndustri->nama_industri,
-                                                'email' => $row->usulanIndustri->email ?? '-',
-                                                'kapasitas' => $row->usulanIndustri->kapasitas ?? '-',
-                                                'alamat' => $row->usulanIndustri->alamat,
-                                                'kontak' => $row->usulanIndustri->kontak ?? '-',
-                                                'keterangan' => $row->usulanIndustri->keterangan ?? '-',
+                                                'nama' => $penempatan->usulanIndustri->nama_industri,
+                                                'email' => $penempatan->usulanIndustri->email ?? '-',
+                                                'kapasitas' => $penempatan->usulanIndustri->kapasitas ?? '-',
+                                                'alamat' => $penempatan->usulanIndustri->alamat,
+                                                'kontak' => $penempatan->usulanIndustri->kontak ?? '-',
+                                                'keterangan' => $penempatan->usulanIndustri->keterangan ?? '-',
                                             ]);">
                                             Usulan
                                         </button>
