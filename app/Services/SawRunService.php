@@ -9,6 +9,7 @@ use App\Models\Industri;
 use App\Models\PenempatanPKL;
 use App\Models\SawRun;
 use App\Models\Siswa;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -35,8 +36,7 @@ class SawRunService
             ];
         }
 
-        $totalBobot = $bobotKriteria->sum('bobot');
-        if (abs($totalBobot - 1) > 0.02) {
+        if (!$this->isTotalBobotValid($bobotKriteria)) {
             return [
                 'ok' => false,
                 'error_field' => 'bobot',
@@ -47,7 +47,6 @@ class SawRunService
         $siswaList = Siswa::where('jurusan_id', $jurusanId)
             ->where('tahun_ajaran', $tahunAjaran)
             ->get();
-
         $industriList = Industri::where('jurusan_id', $jurusanId)->get();
 
         if ($siswaList->isEmpty() || $industriList->isEmpty()) {
@@ -58,7 +57,51 @@ class SawRunService
             ];
         }
 
-        $kriteriaEntries = $bobotKriteria->map(function ($item) {
+        $kriteriaEntries = $this->buildKriteriaEntries($bobotKriteria);
+        if ($kriteriaEntries->isEmpty()) {
+            return [
+                'ok' => false,
+                'error_field' => 'saw',
+                'error_key' => 'penempatan.errors.kriteria_link',
+            ];
+        }
+
+        $normalisasiSiswa = $this->buildNormalisasiSiswa($kriteriaEntries, $siswaList);
+        $industriesByGrade = $industriList->groupBy('grade');
+        $normalisasiIndustriByGrade = $this->buildNormalisasiIndustriByGrade($kriteriaEntries, $industriesByGrade);
+        $rowsCount = $this->persistSawRun(
+            $jurusanId,
+            $tahunAjaran,
+            $actorId,
+            $siswaList,
+            $industriList,
+            $industriesByGrade,
+            $kriteriaEntries,
+            $normalisasiSiswa,
+            $normalisasiIndustriByGrade
+        );
+
+        Log::info('SAW run completed', [
+            'jurusan_id' => $jurusanId,
+            'tahun_ajaran' => $tahunAjaran,
+            'siswa' => $siswaList->count(),
+            'industri' => $industriList->count(),
+            'rows_inserted' => $rowsCount,
+        ]);
+
+        return ['ok' => true, 'rows_count' => $rowsCount];
+    }
+
+    private function isTotalBobotValid(Collection $bobotKriteria): bool
+    {
+        $totalBobot = $bobotKriteria->sum('bobot');
+
+        return abs($totalBobot - 1) <= 0.02;
+    }
+
+    private function buildKriteriaEntries(Collection $bobotKriteria): Collection
+    {
+        return $bobotKriteria->map(function ($item) {
             $map = $this->resolveKriteriaMap($item->kriteria->nama_kriteria);
 
             return [
@@ -70,15 +113,15 @@ class SawRunService
         })->filter(function ($entry) {
             return $entry['source'] !== null;
         })->values();
+    }
 
-        if ($kriteriaEntries->isEmpty()) {
-            return [
-                'ok' => false,
-                'error_field' => 'saw',
-                'error_key' => 'penempatan.errors.kriteria_link',
-            ];
-        }
-
+    /**
+     * @param Collection<int, array{source:string,field:string}> $kriteriaEntries
+     * @param Collection<int, Siswa> $siswaList
+     * @return array<string, array{max:float|int,min:float|int}>
+     */
+    private function buildNormalisasiSiswa(Collection $kriteriaEntries, Collection $siswaList): array
+    {
         $normalisasiSiswa = [];
         foreach ($kriteriaEntries as $entry) {
             if ($entry['source'] !== 'siswa') {
@@ -95,7 +138,16 @@ class SawRunService
             ];
         }
 
-        $industriesByGrade = $industriList->groupBy('grade');
+        return $normalisasiSiswa;
+    }
+
+    /**
+     * @param Collection<int, array{source:string,field:string}> $kriteriaEntries
+     * @param Collection<string, Collection<int, Industri>> $industriesByGrade
+     * @return array<string, array<string, array{max:float|int,min:float|int}>>
+     */
+    private function buildNormalisasiIndustriByGrade(Collection $kriteriaEntries, Collection $industriesByGrade): array
+    {
         $normalisasiIndustriByGrade = [];
         foreach ($industriesByGrade as $grade => $list) {
             foreach ($kriteriaEntries as $entry) {
@@ -114,21 +166,41 @@ class SawRunService
             }
         }
 
-        $now = now();
-        $rowsCount = 0;
+        return $normalisasiIndustriByGrade;
+    }
 
-        DB::transaction(function () use (
+    /**
+     * @param Collection<int, Siswa> $siswaList
+     * @param Collection<int, Industri> $industriList
+     * @param Collection<string, Collection<int, Industri>> $industriesByGrade
+     * @param Collection<int, array{bobot:float|int,tipe:string,source:string,field:string}> $kriteriaEntries
+     * @param array<string, array{max:float|int,min:float|int}> $normalisasiSiswa
+     * @param array<string, array<string, array{max:float|int,min:float|int}>> $normalisasiIndustriByGrade
+     */
+    private function persistSawRun(
+        int $jurusanId,
+        string $tahunAjaran,
+        ?int $actorId,
+        Collection $siswaList,
+        Collection $industriList,
+        Collection $industriesByGrade,
+        Collection $kriteriaEntries,
+        array $normalisasiSiswa,
+        array $normalisasiIndustriByGrade
+    ): int {
+        $now = now();
+
+        return DB::transaction(function () use (
             $jurusanId,
             $tahunAjaran,
+            $actorId,
+            $siswaList,
+            $industriList,
+            $industriesByGrade,
             $kriteriaEntries,
             $normalisasiSiswa,
             $normalisasiIndustriByGrade,
-            $industriesByGrade,
-            $siswaList,
-            $industriList,
-            $now,
-            $actorId,
-            &$rowsCount
+            $now
         ) {
             $run = SawRun::create([
                 'jurusan_id' => $jurusanId,
@@ -139,82 +211,16 @@ class SawRunService
 
             $rows = [];
             foreach ($siswaList as $siswa) {
-                $grade = $this->resolveSiswaGrade((float) $siswa->nilai_akademik);
-                $poolIndustri = $industriesByGrade->get($grade, collect());
-                if ($poolIndustri->isEmpty()) {
-                    $poolIndustri = $industriList;
-                }
+                $scores = $this->calculateScoresForSiswa(
+                    $siswa,
+                    $industriList,
+                    $industriesByGrade,
+                    $kriteriaEntries,
+                    $normalisasiSiswa,
+                    $normalisasiIndustriByGrade
+                );
 
-                $normalisasiIndustri = $normalisasiIndustriByGrade[$grade] ?? [];
-                $scores = [];
-                foreach ($poolIndustri as $industri) {
-                    $score = 0;
-                    foreach ($kriteriaEntries as $entry) {
-                        $value = $entry['source'] === 'siswa'
-                            ? (float) ($siswa->{$entry['field']} ?? 0)
-                            : (float) ($industri->{$entry['field']} ?? 0);
-
-                        if ($entry['source'] === 'siswa') {
-                            $max = $normalisasiSiswa[$entry['field']]['max'] ?? 0;
-                            $min = $normalisasiSiswa[$entry['field']]['min'] ?? 0;
-                        } else {
-                            $max = $normalisasiIndustri[$entry['field']]['max'] ?? 0;
-                            $min = $normalisasiIndustri[$entry['field']]['min'] ?? 0;
-                        }
-
-                        if ($max <= 0) {
-                            $normalized = 0;
-                        } elseif ($entry['tipe'] === 'cost') {
-                            $normalized = $value > 0 ? ($min / $value) : 0;
-                        } else {
-                            $normalized = $value / $max;
-                        }
-
-                        $score += $normalized * $entry['bobot'];
-                    }
-
-                    $scores[] = [
-                        'industri_id' => $industri->id,
-                        'nilai_preferensi' => $score,
-                    ];
-                }
-
-                usort($scores, function ($a, $b) {
-                    return $b['nilai_preferensi'] <=> $a['nilai_preferensi'];
-                });
-
-                $topChoice = $scores[0] ?? null;
-                if ($topChoice) {
-                    $existingPenempatan = PenempatanPKL::where('siswa_id', $siswa->id)->first();
-                    $shouldUpdate = !$existingPenempatan || in_array(
-                        $existingPenempatan->status,
-                        [
-                            PenempatanStatus::BELUM_MEMILIH->value,
-                            PenempatanStatus::DITOLAK_SEKOLAH->value,
-                            PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
-                            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
-                        ],
-                        true
-                    );
-
-                    if ($shouldUpdate) {
-                        $oldStatus = $existingPenempatan?->status;
-
-                        $penempatan = PenempatanPKL::updateOrCreate(
-                            ['siswa_id' => $siswa->id],
-                            [
-                                'industri_id' => null,
-                                'usulan_industri_id' => null,
-                                'pilihan_siswa' => null,
-                                'status' => PenempatanStatus::BELUM_MEMILIH->value,
-                            ]
-                        );
-
-                        if ($oldStatus !== null) {
-                            $this->statusService->handleStatusChange($penempatan, $oldStatus);
-                        }
-                    }
-                }
+                $this->syncInitialPenempatanFromScores((int) $siswa->id, $scores);
 
                 $rank = 1;
                 foreach ($scores as $score) {
@@ -233,19 +239,120 @@ class SawRunService
 
             if ($rows) {
                 HasilRekomendasi::insert($rows);
-                $rowsCount = count($rows);
             }
+
+            return count($rows);
+        });
+    }
+
+    /**
+     * @param array<int, array{industri_id:int,nilai_preferensi:float|int}> $scores
+     */
+    private function syncInitialPenempatanFromScores(int $siswaId, array $scores): void
+    {
+        $topChoice = $scores[0] ?? null;
+        if (!$topChoice) {
+            return;
+        }
+
+        $existingPenempatan = PenempatanPKL::where('siswa_id', $siswaId)->first();
+        if (!$this->shouldUpdatePenempatan($existingPenempatan)) {
+            return;
+        }
+
+        $oldStatus = $existingPenempatan?->status;
+        $penempatan = PenempatanPKL::updateOrCreate(
+            ['siswa_id' => $siswaId],
+            [
+                'industri_id' => null,
+                'usulan_industri_id' => null,
+                'pilihan_siswa' => null,
+                'status' => PenempatanStatus::BELUM_MEMILIH->value,
+            ]
+        );
+
+        if ($oldStatus !== null) {
+            $this->statusService->handleStatusChange($penempatan, $oldStatus);
+        }
+    }
+
+    private function shouldUpdatePenempatan(?PenempatanPKL $existingPenempatan): bool
+    {
+        if (!$existingPenempatan) {
+            return true;
+        }
+
+        return in_array(
+            $existingPenempatan->status,
+            [
+                PenempatanStatus::BELUM_MEMILIH->value,
+                PenempatanStatus::DITOLAK_SEKOLAH->value,
+                PenempatanStatus::PENGAJUAN_DITOLAK_INDUSTRI->value,
+                PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
+            ],
+            true
+        );
+    }
+
+    /**
+     * @param array<int, array{bobot:float|int,tipe:string,source:string,field:string}> $kriteriaEntries
+     * @param array<string, array{max:float|int,min:float|int}> $normalisasiSiswa
+     * @param array<string, array<string, array{max:float|int,min:float|int}>> $normalisasiIndustriByGrade
+     * @return array<int, array{industri_id:int,nilai_preferensi:float|int}>
+     */
+    private function calculateScoresForSiswa(
+        Siswa $siswa,
+        Collection $industriList,
+        Collection $industriesByGrade,
+        Collection $kriteriaEntries,
+        array $normalisasiSiswa,
+        array $normalisasiIndustriByGrade
+    ): array {
+        $grade = $this->resolveSiswaGrade((float) $siswa->nilai_akademik);
+        $poolIndustri = $industriesByGrade->get($grade, collect());
+        if ($poolIndustri->isEmpty()) {
+            $poolIndustri = $industriList;
+        }
+
+        $normalisasiIndustri = $normalisasiIndustriByGrade[$grade] ?? [];
+        $scores = [];
+        foreach ($poolIndustri as $industri) {
+            $score = 0;
+            foreach ($kriteriaEntries as $entry) {
+                $value = $entry['source'] === 'siswa'
+                    ? (float) ($siswa->{$entry['field']} ?? 0)
+                    : (float) ($industri->{$entry['field']} ?? 0);
+
+                if ($entry['source'] === 'siswa') {
+                    $max = $normalisasiSiswa[$entry['field']]['max'] ?? 0;
+                    $min = $normalisasiSiswa[$entry['field']]['min'] ?? 0;
+                } else {
+                    $max = $normalisasiIndustri[$entry['field']]['max'] ?? 0;
+                    $min = $normalisasiIndustri[$entry['field']]['min'] ?? 0;
+                }
+
+                if ($max <= 0) {
+                    $normalized = 0;
+                } elseif ($entry['tipe'] === 'cost') {
+                    $normalized = $value > 0 ? ($min / $value) : 0;
+                } else {
+                    $normalized = $value / $max;
+                }
+
+                $score += $normalized * $entry['bobot'];
+            }
+
+            $scores[] = [
+                'industri_id' => $industri->id,
+                'nilai_preferensi' => $score,
+            ];
+        }
+
+        usort($scores, function ($a, $b) {
+            return $b['nilai_preferensi'] <=> $a['nilai_preferensi'];
         });
 
-        Log::info('SAW run completed', [
-            'jurusan_id' => $jurusanId,
-            'tahun_ajaran' => $tahunAjaran,
-            'siswa' => $siswaList->count(),
-            'industri' => $industriList->count(),
-            'rows_inserted' => $rowsCount,
-        ]);
-
-        return ['ok' => true, 'rows_count' => $rowsCount];
+        return $scores;
     }
 
     private function resolveKriteriaMap(string $nama): ?array
