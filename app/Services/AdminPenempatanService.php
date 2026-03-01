@@ -14,6 +14,8 @@ use App\Models\PenempatanPKL;
 use App\Models\SawRun;
 use App\Models\Siswa;
 use App\Models\UsulanIndustri;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Lang;
 
 class AdminPenempatanService
@@ -24,14 +26,120 @@ class AdminPenempatanService
      */
     public function getIndexData(array $filters): array
     {
-        $tab = $filters['tab'] ?? 'konfigurasi';
-        $selectedJurusan = $filters['jurusan_id'] ?? null;
-        $selectedTahun = $filters['tahun_ajaran'] ?? null;
-        $selectedStatus = $filters['status'] ?? 'all';
-        $search = $filters['q'] ?? '';
+        $state = $this->normalizeFilters($filters);
+        $jurusanOptions = $this->getJurusanOptions();
+        [$state['selectedJurusan'], $state['selectedTahun']] = $this->resolveSelectedJurusanAndTahun(
+            $state['tab'],
+            $state['selectedJurusan'],
+            $state['selectedTahun'],
+            $jurusanOptions
+        );
 
-        $jurusanOptions = Jurusan::orderBy('nama')->get();
+        $tahunAjaranList = $this->getTahunAjaranList($state['selectedJurusan']);
+        if (!$state['selectedTahun'] && $tahunAjaranList->isNotEmpty() && $state['tab'] !== 'hasil') {
+            $state['selectedTahun'] = $tahunAjaranList->first();
+        }
 
+        $labels = $this->getLanguageLabels();
+        $bobotSummary = $this->getBobotSummary($state['selectedJurusan']);
+        $queryParams = $this->buildQueryParams($state);
+
+        $penempatanBaseQuery = $this->buildPenempatanBaseQuery(
+            $state['selectedJurusan'],
+            $state['selectedTahun'],
+            $state['selectedStatus'],
+            $state['search']
+        );
+
+        $penempatanData = (clone $penempatanBaseQuery)
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->appends($queryParams);
+        $penempatanLangsung = (clone $penempatanBaseQuery)
+            ->where('jenis_penempatan', JenisPenempatan::LANGSUNG->value)
+            ->orderByDesc('id')
+            ->get();
+        $statusCounts = $this->buildStatusCountsFromPenempatanQuery($penempatanBaseQuery);
+
+        $latestSawRun = null;
+        $rekomendasiBySiswa = collect();
+        $penempatanBySiswa = collect();
+
+        if ($state['tab'] === 'hasil') {
+            [
+                'penempatanData' => $penempatanData,
+                'rekomendasiBySiswa' => $rekomendasiBySiswa,
+                'penempatanBySiswa' => $penempatanBySiswa,
+                'statusCounts' => $statusCounts,
+            ] = $this->buildHasilTabData($state, $queryParams, $statusCounts);
+        } elseif ($state['selectedJurusan'] && $state['selectedTahun']) {
+            [
+                'latestSawRun' => $latestSawRun,
+                'penempatanData' => $penempatanData,
+                'rekomendasiBySiswa' => $rekomendasiBySiswa,
+                'penempatanBySiswa' => $penempatanBySiswa,
+            ] = $this->buildSingleRunData($state, $queryParams, $penempatanData);
+        }
+
+        $options = $this->getMasterOptions();
+
+        return [
+            'tahunAjaranList' => $tahunAjaranList,
+            'statusList' => $labels['statusList'],
+            'statusLabels' => $labels['statusLabels'],
+            'pilihanLabels' => $labels['pilihanLabels'],
+            'jurusanOptions' => $jurusanOptions,
+            'bobotKriteria' => $bobotSummary['bobotKriteria'],
+            'selectedJurusan' => $state['selectedJurusan'],
+            'selectedTahun' => $state['selectedTahun'],
+            'selectedStatus' => $state['selectedStatus'],
+            'search' => $state['search'],
+            'penempatanData' => $penempatanData,
+            'statusCounts' => $statusCounts,
+            'latestSawRun' => $latestSawRun,
+            'rekomendasiBySiswa' => $rekomendasiBySiswa,
+            'penempatanBySiswa' => $penempatanBySiswa,
+            'usulanList' => $options['usulanList'],
+            'totalBobot' => $bobotSummary['totalBobot'],
+            'isBobotValid' => $bobotSummary['isBobotValid'],
+            'guruOptions' => $options['guruOptions'],
+            'siswaOptions' => $options['siswaOptions'],
+            'industriOptions' => $options['industriOptions'],
+            'penempatanLangsung' => $penempatanLangsung,
+        ];
+    }
+
+    /**
+     * @param array{tab?:string,jurusan_id?:string,tahun_ajaran?:string,status?:string,q?:string} $filters
+     * @return array{tab:string,selectedJurusan:mixed,selectedTahun:mixed,selectedStatus:string,search:string}
+     */
+    private function normalizeFilters(array $filters): array
+    {
+        return [
+            'tab' => $filters['tab'] ?? 'konfigurasi',
+            'selectedJurusan' => $filters['jurusan_id'] ?? null,
+            'selectedTahun' => $filters['tahun_ajaran'] ?? null,
+            'selectedStatus' => $filters['status'] ?? 'all',
+            'search' => $filters['q'] ?? '',
+        ];
+    }
+
+    private function getJurusanOptions(): Collection
+    {
+        return Jurusan::orderBy('nama')->get();
+    }
+
+    /**
+     * @param mixed $selectedJurusan
+     * @param mixed $selectedTahun
+     * @return array{0:mixed,1:mixed}
+     */
+    private function resolveSelectedJurusanAndTahun(
+        string $tab,
+        $selectedJurusan,
+        $selectedTahun,
+        Collection $jurusanOptions
+    ): array {
         if ($tab === 'hasil' && (!$selectedJurusan || !$selectedTahun)) {
             $latestRunContext = SawRun::query()
                 ->latest('run_at')
@@ -47,7 +155,12 @@ class AdminPenempatanService
             $selectedJurusan = $jurusanOptions->first()->id;
         }
 
-        $tahunAjaranList = Siswa::query()
+        return [$selectedJurusan, $selectedTahun];
+    }
+
+    private function getTahunAjaranList($selectedJurusan): Collection
+    {
+        return Siswa::query()
             ->when($selectedJurusan, function ($query) use ($selectedJurusan) {
                 $query->where('jurusan_id', $selectedJurusan);
             })
@@ -55,15 +168,22 @@ class AdminPenempatanService
             ->distinct()
             ->orderBy('tahun_ajaran', 'desc')
             ->pluck('tahun_ajaran');
+    }
 
-        if (!$selectedTahun && $tahunAjaranList->isNotEmpty() && $tab !== 'hasil') {
-            $selectedTahun = $tahunAjaranList->first();
-        }
+    /**
+     * @return array{statusList:array,statusLabels:array,pilihanLabels:array}
+     */
+    private function getLanguageLabels(): array
+    {
+        return [
+            'statusList' => Lang::get('penempatan.list'),
+            'statusLabels' => Lang::get('penempatan.label'),
+            'pilihanLabels' => Lang::get('penempatan.pilih'),
+        ];
+    }
 
-        $statusList = Lang::get('penempatan.list');
-        $statusLabels = Lang::get('penempatan.label');
-        $pilihanLabels = Lang::get('penempatan.pilih');
-
+    private function getBobotSummary($selectedJurusan): array
+    {
         $kriteriaList = Kriteria::orderBy('nama_kriteria')->get();
         $bobotByKriteria = BobotKriteria::query()
             ->when($selectedJurusan, function ($query) use ($selectedJurusan) {
@@ -84,17 +204,36 @@ class AdminPenempatanService
         });
 
         $totalBobot = $bobotKriteria->sum('bobot');
-        $isBobotValid = abs($totalBobot - 1) <= 0.02;
 
-        $queryParams = [
-            'tab' => $tab,
-            'jurusan_id' => $selectedJurusan,
-            'tahun_ajaran' => $selectedTahun,
-            'status' => $selectedStatus,
-            'q' => $search,
+        return [
+            'bobotKriteria' => $bobotKriteria,
+            'totalBobot' => $totalBobot,
+            'isBobotValid' => abs($totalBobot - 1) <= 0.02,
         ];
+    }
 
-        $penempatanBaseQuery = PenempatanPKL::with([
+    /**
+     * @param array{tab:string,selectedJurusan:mixed,selectedTahun:mixed,selectedStatus:string,search:string} $state
+     * @return array{tab:string,jurusan_id:mixed,tahun_ajaran:mixed,status:string,q:string}
+     */
+    private function buildQueryParams(array $state): array
+    {
+        return [
+            'tab' => $state['tab'],
+            'jurusan_id' => $state['selectedJurusan'],
+            'tahun_ajaran' => $state['selectedTahun'],
+            'status' => $state['selectedStatus'],
+            'q' => $state['search'],
+        ];
+    }
+
+    private function buildPenempatanBaseQuery(
+        $selectedJurusan,
+        $selectedTahun,
+        string $selectedStatus,
+        string $search
+    ): Builder {
+        $query = PenempatanPKL::with([
             'siswa.user',
             'siswa.jurusan',
             'industri',
@@ -103,53 +242,33 @@ class AdminPenempatanService
         ]);
 
         if ($selectedJurusan) {
-            $penempatanBaseQuery->whereHas('siswa', function ($query) use ($selectedJurusan) {
-                $query->where('jurusan_id', $selectedJurusan);
+            $query->whereHas('siswa', function ($q) use ($selectedJurusan) {
+                $q->where('jurusan_id', $selectedJurusan);
             });
         }
 
         if ($selectedTahun) {
-            $penempatanBaseQuery->whereHas('siswa', function ($query) use ($selectedTahun) {
-                $query->where('tahun_ajaran', $selectedTahun);
+            $query->whereHas('siswa', function ($q) use ($selectedTahun) {
+                $q->where('tahun_ajaran', $selectedTahun);
             });
         }
 
-        if ($selectedStatus && $selectedStatus !== 'all') {
-            $penempatanBaseQuery->where('status', $selectedStatus);
+        if ($selectedStatus !== 'all') {
+            $query->where('status', $selectedStatus);
         }
 
-        if ($search) {
-            $penempatanBaseQuery->whereHas('siswa.user', function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
+        if ($search !== '') {
+            $query->whereHas('siswa.user', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
             });
         }
 
-        $penempatanData = (clone $penempatanBaseQuery)
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->appends($queryParams);
+        return $query;
+    }
 
-        $penempatanLangsung = (clone $penempatanBaseQuery)
-            ->where('jenis_penempatan', JenisPenempatan::LANGSUNG->value)
-            ->orderByDesc('id')
-            ->get();
-
-        $siswaOptions = Siswa::with('user', 'jurusan')
-            ->orderBy('id')
-            ->get();
-
-        $industriOptions = Industri::orderBy('nama_industri')->get();
-
-        $usulanList = UsulanIndustri::with(['siswa.user', 'jurusan'])
-            ->orderByDesc('id')
-            ->get();
-
-        $guruOptions = GuruPembimbing::with('user', 'jurusan')
-            ->orderBy('id')
-            ->get()
-            ->groupBy('jurusan_id');
-
-        $statusCounts = [
+    private function buildStatusCountsFromPenempatanQuery(Builder $penempatanBaseQuery): array
+    {
+        return [
             PenempatanStatus::DITERIMA_INDUSTRI->value => (clone $penempatanBaseQuery)
                 ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
                 ->count(),
@@ -160,197 +279,207 @@ class AdminPenempatanService
                 ->where('status', PenempatanStatus::MENUNGGU_KONFIRMASI->value)
                 ->count(),
         ];
+    }
 
-        $latestSawRun = null;
-        $rekomendasiBySiswa = collect();
-        $penempatanBySiswa = collect();
-
-        if ($tab === 'hasil') {
-            $latestRunIds = SawRun::query()
-                ->orderByDesc('run_at')
-                ->orderByDesc('id')
+    private function getMasterOptions(): array
+    {
+        return [
+            'siswaOptions' => Siswa::with('user', 'jurusan')->orderBy('id')->get(),
+            'industriOptions' => Industri::orderBy('nama_industri')->get(),
+            'usulanList' => UsulanIndustri::with(['siswa.user', 'jurusan'])->orderByDesc('id')->get(),
+            'guruOptions' => GuruPembimbing::with('user', 'jurusan')
+                ->orderBy('id')
                 ->get()
-                ->unique('jurusan_id')
-                ->pluck('id')
-                ->values();
+                ->groupBy('jurusan_id'),
+        ];
+    }
 
-            if ($latestRunIds->isNotEmpty()) {
-                $allRekomendasi = HasilRekomendasi::with('industri')
-                    ->whereIn('saw_run_id', $latestRunIds)
-                    ->orderBy('peringkat')
-                    ->get();
-
-                $rekomendasiBySiswa = $allRekomendasi->groupBy(function ($item) {
-                    return $item->saw_run_id . '-' . $item->siswa_id;
-                });
-
-                $hasilBaseQuery = HasilRekomendasi::with([
-                    'siswa.user',
-                    'siswa.jurusan',
-                    'industri',
-                ])
-                    ->whereIn('saw_run_id', $latestRunIds)
-                    ->where('peringkat', 1);
-
-                if ($selectedStatus && $selectedStatus !== 'all') {
-                    $siswaIdsByStatus = PenempatanPKL::query()
-                        ->where('status', $selectedStatus)
-                        ->pluck('siswa_id');
-
-                    $hasilBaseQuery->whereIn('siswa_id', $siswaIdsByStatus);
-                }
-
-                if ($search) {
-                    $hasilBaseQuery->whereHas('siswa.user', function ($query) use ($search) {
-                        $query->where('name', 'like', '%' . $search . '%');
-                    });
-                }
-
-                $penempatanData = $hasilBaseQuery
-                    ->orderByDesc('saw_run_id')
-                    ->orderBy('siswa_id')
-                    ->paginate(10)
-                    ->appends($queryParams);
-
-                $latestRunSiswaIds = HasilRekomendasi::query()
-                    ->whereIn('saw_run_id', $latestRunIds)
-                    ->where('peringkat', 1)
-                    ->pluck('siswa_id')
-                    ->unique()
-                    ->values();
-
-                $statusCounts = [
-                    PenempatanStatus::DITERIMA_INDUSTRI->value => PenempatanPKL::query()
-                        ->whereIn('siswa_id', $latestRunSiswaIds)
-                        ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
-                        ->count(),
-                    PenempatanStatus::PROSES_PENGAJUAN->value => PenempatanPKL::query()
-                        ->whereIn('siswa_id', $latestRunSiswaIds)
-                        ->where('status', PenempatanStatus::PROSES_PENGAJUAN->value)
-                        ->count(),
-                    PenempatanStatus::MENUNGGU_KONFIRMASI->value => PenempatanPKL::query()
-                        ->whereIn('siswa_id', $latestRunSiswaIds)
-                        ->where('status', PenempatanStatus::MENUNGGU_KONFIRMASI->value)
-                        ->count(),
-                ];
-
-                $currentSiswaIds = $penempatanData->getCollection()
-                    ->pluck('siswa_id')
-                    ->filter()
-                    ->values();
-
-                if ($currentSiswaIds->isNotEmpty()) {
-                    $penempatanBySiswa = PenempatanPKL::with([
-                        'siswa.user',
-                        'siswa.jurusan',
-                        'industri',
-                        'usulanIndustri',
-                        'guruPembimbing.user',
-                    ])
-                        ->whereIn('siswa_id', $currentSiswaIds)
-                        ->orderByDesc('id')
-                        ->get()
-                        ->unique('siswa_id')
-                        ->keyBy('siswa_id');
-                }
-            } else {
-                $penempatanData = HasilRekomendasi::with([
-                    'siswa.user',
-                    'siswa.jurusan',
-                    'industri',
-                ])
-                    ->whereRaw('1 = 0')
-                    ->paginate(10)
-                    ->appends($queryParams);
-            }
-        } elseif ($selectedJurusan && $selectedTahun) {
-            $latestSawRun = SawRun::query()
-                ->where('jurusan_id', $selectedJurusan)
-                ->where('tahun_ajaran', $selectedTahun)
-                ->latest('run_at')
-                ->first();
-
-            if ($latestSawRun) {
-                $rekomendasiBySiswa = HasilRekomendasi::with('industri')
-                    ->where('saw_run_id', $latestSawRun->id)
-                    ->orderBy('peringkat')
-                    ->get()
-                    ->groupBy(function ($item) {
-                        return $item->saw_run_id . '-' . $item->siswa_id;
-                    });
-
-                $hasilBaseQuery = HasilRekomendasi::with([
-                    'siswa.user',
-                    'siswa.jurusan',
-                    'industri',
-                ])
-                    ->where('saw_run_id', $latestSawRun->id)
-                    ->where('peringkat', 1);
-
-                if ($selectedStatus && $selectedStatus !== 'all') {
-                    $siswaIdsByStatus = PenempatanPKL::query()
-                        ->where('status', $selectedStatus)
-                        ->pluck('siswa_id');
-
-                    $hasilBaseQuery->whereIn('siswa_id', $siswaIdsByStatus);
-                }
-
-                if ($search) {
-                    $hasilBaseQuery->whereHas('siswa.user', function ($query) use ($search) {
-                        $query->where('name', 'like', '%' . $search . '%');
-                    });
-                }
-
-                $penempatanData = $hasilBaseQuery
-                    ->orderBy('siswa_id')
-                    ->paginate(10)
-                    ->appends($queryParams);
-
-                $currentSiswaIds = $penempatanData->getCollection()
-                    ->pluck('siswa_id')
-                    ->filter()
-                    ->values();
-
-                if ($currentSiswaIds->isNotEmpty()) {
-                    $penempatanBySiswa = PenempatanPKL::with([
-                        'siswa.user',
-                        'siswa.jurusan',
-                        'industri',
-                        'usulanIndustri',
-                        'guruPembimbing.user',
-                    ])
-                        ->whereIn('siswa_id', $currentSiswaIds)
-                        ->orderByDesc('id')
-                        ->get()
-                        ->unique('siswa_id')
-                        ->keyBy('siswa_id');
-                }
-            }
+    /**
+     * @param array{tab:string,selectedJurusan:mixed,selectedTahun:mixed,selectedStatus:string,search:string} $state
+     * @param array{tab:string,jurusan_id:mixed,tahun_ajaran:mixed,status:string,q:string} $queryParams
+     */
+    private function buildHasilTabData(array $state, array $queryParams, array $defaultStatusCounts): array
+    {
+        $latestRunIds = $this->getLatestRunIdsPerJurusan();
+        if ($latestRunIds->isEmpty()) {
+            return [
+                'penempatanData' => $this->buildEmptyHasilPaginator($queryParams),
+                'rekomendasiBySiswa' => collect(),
+                'penempatanBySiswa' => collect(),
+                'statusCounts' => $defaultStatusCounts,
+            ];
         }
 
+        $rekomendasiBySiswa = HasilRekomendasi::with('industri')
+            ->whereIn('saw_run_id', $latestRunIds)
+            ->orderBy('peringkat')
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->saw_run_id . '-' . $item->siswa_id;
+            });
+
+        $hasilBaseQuery = $this->buildHasilTopRankedQueryByRunIds($latestRunIds);
+        $this->applyHasilFilters($hasilBaseQuery, $state['selectedStatus'], $state['search']);
+
+        $penempatanData = $hasilBaseQuery
+            ->orderByDesc('saw_run_id')
+            ->orderBy('siswa_id')
+            ->paginate(10)
+            ->appends($queryParams);
+
+        $latestRunSiswaIds = HasilRekomendasi::query()
+            ->whereIn('saw_run_id', $latestRunIds)
+            ->where('peringkat', 1)
+            ->pluck('siswa_id')
+            ->unique()
+            ->values();
+
+        $statusCounts = $this->buildStatusCountsFromSiswaIds($latestRunSiswaIds);
+        $penempatanBySiswa = $this->getPenempatanBySiswaFromPaginator($penempatanData);
+
         return [
-            'tahunAjaranList' => $tahunAjaranList,
-            'statusList' => $statusList,
-            'statusLabels' => $statusLabels,
-            'pilihanLabels' => $pilihanLabels,
-            'jurusanOptions' => $jurusanOptions,
-            'bobotKriteria' => $bobotKriteria,
-            'selectedJurusan' => $selectedJurusan,
-            'selectedTahun' => $selectedTahun,
-            'selectedStatus' => $selectedStatus,
-            'search' => $search,
             'penempatanData' => $penempatanData,
-            'statusCounts' => $statusCounts,
-            'latestSawRun' => $latestSawRun,
             'rekomendasiBySiswa' => $rekomendasiBySiswa,
             'penempatanBySiswa' => $penempatanBySiswa,
-            'usulanList' => $usulanList,
-            'totalBobot' => $totalBobot,
-            'isBobotValid' => $isBobotValid,
-            'guruOptions' => $guruOptions,
-            'siswaOptions' => $siswaOptions,
-            'industriOptions' => $industriOptions,
-            'penempatanLangsung' => $penempatanLangsung,
+            'statusCounts' => $statusCounts,
         ];
+    }
+
+    /**
+     * @param array{tab:string,selectedJurusan:mixed,selectedTahun:mixed,selectedStatus:string,search:string} $state
+     * @param array{tab:string,jurusan_id:mixed,tahun_ajaran:mixed,status:string,q:string} $queryParams
+     */
+    private function buildSingleRunData(array $state, array $queryParams, $fallbackPenempatanData): array
+    {
+        $latestSawRun = SawRun::query()
+            ->where('jurusan_id', $state['selectedJurusan'])
+            ->where('tahun_ajaran', $state['selectedTahun'])
+            ->latest('run_at')
+            ->first();
+
+        if (!$latestSawRun) {
+            return [
+                'latestSawRun' => null,
+                'penempatanData' => $fallbackPenempatanData,
+                'rekomendasiBySiswa' => collect(),
+                'penempatanBySiswa' => collect(),
+            ];
+        }
+
+        $rekomendasiBySiswa = HasilRekomendasi::with('industri')
+            ->where('saw_run_id', $latestSawRun->id)
+            ->orderBy('peringkat')
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->saw_run_id . '-' . $item->siswa_id;
+            });
+
+        $hasilBaseQuery = $this->buildHasilTopRankedQueryByRunIds(collect([$latestSawRun->id]));
+        $this->applyHasilFilters($hasilBaseQuery, $state['selectedStatus'], $state['search']);
+
+        $penempatanData = $hasilBaseQuery
+            ->orderBy('siswa_id')
+            ->paginate(10)
+            ->appends($queryParams);
+
+        return [
+            'latestSawRun' => $latestSawRun,
+            'penempatanData' => $penempatanData,
+            'rekomendasiBySiswa' => $rekomendasiBySiswa,
+            'penempatanBySiswa' => $this->getPenempatanBySiswaFromPaginator($penempatanData),
+        ];
+    }
+
+    private function getLatestRunIdsPerJurusan(): Collection
+    {
+        return SawRun::query()
+            ->orderByDesc('run_at')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('jurusan_id')
+            ->pluck('id')
+            ->values();
+    }
+
+    private function buildHasilTopRankedQueryByRunIds(Collection $runIds): Builder
+    {
+        return HasilRekomendasi::with([
+            'siswa.user',
+            'siswa.jurusan',
+            'industri',
+        ])
+            ->whereIn('saw_run_id', $runIds)
+            ->where('peringkat', 1);
+    }
+
+    private function applyHasilFilters(Builder $hasilBaseQuery, string $selectedStatus, string $search): void
+    {
+        if ($selectedStatus !== 'all') {
+            $siswaIdsByStatus = PenempatanPKL::query()
+                ->where('status', $selectedStatus)
+                ->pluck('siswa_id');
+            $hasilBaseQuery->whereIn('siswa_id', $siswaIdsByStatus);
+        }
+
+        if ($search !== '') {
+            $hasilBaseQuery->whereHas('siswa.user', function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            });
+        }
+    }
+
+    private function buildStatusCountsFromSiswaIds(Collection $siswaIds): array
+    {
+        return [
+            PenempatanStatus::DITERIMA_INDUSTRI->value => PenempatanPKL::query()
+                ->whereIn('siswa_id', $siswaIds)
+                ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
+                ->count(),
+            PenempatanStatus::PROSES_PENGAJUAN->value => PenempatanPKL::query()
+                ->whereIn('siswa_id', $siswaIds)
+                ->where('status', PenempatanStatus::PROSES_PENGAJUAN->value)
+                ->count(),
+            PenempatanStatus::MENUNGGU_KONFIRMASI->value => PenempatanPKL::query()
+                ->whereIn('siswa_id', $siswaIds)
+                ->where('status', PenempatanStatus::MENUNGGU_KONFIRMASI->value)
+                ->count(),
+        ];
+    }
+
+    private function getPenempatanBySiswaFromPaginator($penempatanData): Collection
+    {
+        $currentSiswaIds = $penempatanData->getCollection()
+            ->pluck('siswa_id')
+            ->filter()
+            ->values();
+
+        if ($currentSiswaIds->isEmpty()) {
+            return collect();
+        }
+
+        return PenempatanPKL::with([
+            'siswa.user',
+            'siswa.jurusan',
+            'industri',
+            'usulanIndustri',
+            'guruPembimbing.user',
+        ])
+            ->whereIn('siswa_id', $currentSiswaIds)
+            ->orderByDesc('id')
+            ->get()
+            ->unique('siswa_id')
+            ->keyBy('siswa_id');
+    }
+
+    private function buildEmptyHasilPaginator(array $queryParams)
+    {
+        return HasilRekomendasi::with([
+            'siswa.user',
+            'siswa.jurusan',
+            'industri',
+        ])
+            ->whereRaw('1 = 0')
+            ->paginate(10)
+            ->appends($queryParams);
     }
 }
