@@ -114,6 +114,11 @@
         'route' => 'admin.elogbook',
         ],
         [
+        'label' => 'Absensi',
+        'icon' => 'map',
+        'route' => 'admin.absensi',
+        ],
+        [
         'label' => 'Perizinan',
         'icon' => 'file',
         'route' => 'admin.perizinan',
@@ -172,6 +177,11 @@
         'label' => 'E-Logbook',
         'icon' => 'book',
         'route' => 'siswa.elogbook',
+        ],
+        [
+        'label' => 'Absensi',
+        'icon' => 'map',
+        'route' => 'siswa.absensi',
         ],
         
         [

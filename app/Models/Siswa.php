@@ -73,4 +73,9 @@ class Siswa extends Model
     {
         return $this->hasMany(JadwalWawancara::class);
     }
+
+    public function absensiPkl()
+    {
+        return $this->hasMany(AbsensiPkl::class);
+    }
 }

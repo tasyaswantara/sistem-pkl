@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'nominatim' => [
+        'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
+        'user_agent' => env('NOMINATIM_USER_AGENT', env('APP_NAME', 'sistem-pkl') . '/1.0 (admin geocode)'),
+        'email' => env('NOMINATIM_EMAIL'),
+    ],
+
 ];

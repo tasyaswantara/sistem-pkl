@@ -13,11 +13,20 @@ class Industri extends Model
         'nama_industri',
         'kapasitas',
         'alamat',
+        'latitude',
+        'longitude',
+        'geofence_radius_m',
         'jurusan_id',
         'grade',
         'status_pengajuan',
         'pengajuan_dikirim_at',
         'pengajuan_dijawab_at',
+    ];
+
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'geofence_radius_m' => 'integer',
     ];
 
     public function user()
@@ -57,5 +66,10 @@ class Industri extends Model
     public function jadwalWawancara()
     {
         return $this->hasMany(JadwalWawancara::class);
+    }
+
+    public function absensiPkl()
+    {
+        return $this->hasMany(AbsensiPkl::class);
     }
 }

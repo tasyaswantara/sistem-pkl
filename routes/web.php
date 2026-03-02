@@ -11,11 +11,13 @@ use App\Http\Controllers\Admin\AdminPerizinanController;
 use App\Http\Controllers\Admin\AdminPenilaianController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminRiskController;
+use App\Http\Controllers\Admin\AdminAbsensiController;
 use App\Http\Controllers\Guru\GuruSiswaController;
 use App\Http\Controllers\Guru\GuruLogbookController;
 use App\Http\Controllers\Guru\GuruPerizinanController;
 use App\Http\Controllers\Guru\GuruPenilaianController;
 use App\Http\Controllers\Guru\GuruRiskController;
+use App\Http\Controllers\Siswa\SiswaAbsensiController;
 use App\Http\Controllers\Siswa\SiswaPenempatanController;
 use App\Http\Controllers\Siswa\SiswaLogbookController;
 use App\Http\Controllers\Siswa\SiswaPerizinanController;
@@ -97,6 +99,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
     Route::get('/risk', [AdminRiskController::class, 'index'])->name('admin.risk');
     Route::post('/risk/run', [AdminRiskController::class, 'runRisk'])->name('admin.risk.run');
+    Route::get('/absensi', [AdminAbsensiController::class, 'index'])->name('admin.absensi');
+    Route::put('/absensi/geofence/{industri}', [AdminAbsensiController::class, 'updateGeofence'])->name('admin.absensi.geofence');
+    Route::post('/absensi/geofence/{industri}/geocode', [AdminAbsensiController::class, 'geocodeGeofence'])->name('admin.absensi.geofence.geocode');
 
     Route::get('/forms', function () {
         return view('admin.forms');
@@ -128,6 +133,8 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::post('/elogbook', [SiswaLogbookController::class, 'store'])->name('elogbook.store');
     Route::put('/elogbook/{logbook}', [SiswaLogbookController::class, 'update'])->name('elogbook.update');
     Route::delete('/elogbook/{logbook}', [SiswaLogbookController::class, 'destroy'])->name('elogbook.destroy');
+    Route::get('/absensi', [SiswaAbsensiController::class, 'index'])->name('absensi');
+    Route::post('/absensi', [SiswaAbsensiController::class, 'store'])->name('absensi.store');
     Route::get('/perizinan', [SiswaPerizinanController::class, 'index'])->name('perizinan');
     Route::get('/penilaian', [SiswaPenilaianController::class, 'index'])->name('penilaian');
     Route::get('/berkas', [SiswaBerkasController::class, 'index'])->name('berkas');

@@ -23,6 +23,7 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
     <style>
         @keyframes fadeUp {
             from {
@@ -69,6 +70,7 @@
             </main>
         </div>
     </div>
+    @stack('scripts')
 </body>
 
 </html>
