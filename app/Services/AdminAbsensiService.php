@@ -17,7 +17,9 @@ class AdminAbsensiService
      *  absensiList:LengthAwarePaginator,
      *  statusCounts:array<string,int>,
      *  mapPoints:array<int,array<string,mixed>>,
-     *  geofenceList:Collection<int,Industri>
+     *  geofenceList:Collection<int,Industri>,
+     *  globalRadiusM:int,
+     *  radiusUniform:bool
      * }
      */
     public function getIndexData(array $filters): array
@@ -91,11 +93,21 @@ class AdminAbsensiService
             ->orderBy('nama_industri')
             ->get();
 
+        $radiusStats = Industri::query()
+            ->selectRaw('MIN(geofence_radius_m) as min_radius, MAX(geofence_radius_m) as max_radius')
+            ->first();
+        $minRadius = $radiusStats?->min_radius !== null ? (int) $radiusStats->min_radius : null;
+        $maxRadius = $radiusStats?->max_radius !== null ? (int) $radiusStats->max_radius : null;
+        $globalRadiusM = $maxRadius ?? 200;
+        $radiusUniform = $minRadius !== null && $maxRadius !== null && $minRadius === $maxRadius;
+
         return [
             'absensiList' => $absensiList,
             'statusCounts' => $statusCounts,
             'mapPoints' => $mapPoints,
             'geofenceList' => $geofenceList,
+            'globalRadiusM' => $globalRadiusM,
+            'radiusUniform' => $radiusUniform,
         ];
     }
 
@@ -119,6 +131,13 @@ class AdminAbsensiService
             'latitude' => round((float) $data['latitude'], 7),
             'longitude' => round((float) $data['longitude'], 7),
             'geofence_radius_m' => (int) $data['geofence_radius_m'],
+        ]);
+    }
+
+    public function updateGlobalRadius(int $radiusMeter): void
+    {
+        Industri::query()->update([
+            'geofence_radius_m' => $radiusMeter,
         ]);
     }
 }

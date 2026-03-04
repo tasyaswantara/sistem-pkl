@@ -68,167 +68,9 @@
                 const group = L.featureGroup(markers);
                 map.fitBounds(group.getBounds().pad(0.2));
             }
-        }
 
-        // Modal ini dipakai khusus untuk koreksi titik geofence per industri.
-        const correctionModal = document.getElementById('geofence-correction-modal');
-        const correctionMapElement = document.getElementById('geofence-correction-map');
-        const correctionTitle = document.getElementById('correction-title');
-        const correctionHint = document.getElementById('correction-hint');
-        const closeCorrectionBtn = document.getElementById('close-correction-btn');
-        const applyCorrectionBtn = document.getElementById('apply-correction-btn');
-        const radiusWatcherInput = document.getElementById('correction-radius-input');
-        const openButtons = document.querySelectorAll('.open-correction-map-btn');
-        let selectedIndustryId = null;
-        let correctionMap = null;
-        let correctionMarker = null;
-        let correctionCircle = null;
-
-        function closeCorrectionModal() {
-            if (correctionModal) {
-                correctionModal.classList.add('hidden');
-            }
-        }
-
-        function upsertMarkerAndCircle(lat, lng, radius) {
-            if (!correctionMap || !hasLeaflet) {
-                return;
-            }
-
-            if (correctionMarker) {
-                correctionMarker.setLatLng([lat, lng]);
-            } else {
-                correctionMarker = L.marker([lat, lng], { draggable: true }).addTo(correctionMap);
-                correctionMarker.on('dragend', () => {
-                    const pos = correctionMarker.getLatLng();
-                    if (selectedIndustryId !== null) {
-                        const latInput = document.getElementById(`geofence-lat-${selectedIndustryId}`);
-                        const lngInput = document.getElementById(`geofence-lng-${selectedIndustryId}`);
-                        if (latInput && lngInput) {
-                            latInput.value = Number(pos.lat).toFixed(7);
-                            lngInput.value = Number(pos.lng).toFixed(7);
-                        }
-                    }
-                    if (correctionCircle) {
-                        correctionCircle.setLatLng(pos);
-                    }
-                });
-            }
-
-            if (correctionCircle) {
-                correctionCircle.setLatLng([lat, lng]);
-                correctionCircle.setRadius(radius);
-            } else {
-                correctionCircle = L.circle([lat, lng], {
-                    radius: radius,
-                    color: '#2563eb',
-                    fillColor: '#93c5fd',
-                    fillOpacity: 0.18,
-                }).addTo(correctionMap);
-            }
-
-            correctionMap.setView([lat, lng], 16);
-        }
-
-        openButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                if (!hasLeaflet) {
-                    alert('Leaflet tidak tersedia, koreksi via peta belum bisa digunakan.');
-                    return;
-                }
-
-                selectedIndustryId = button.dataset.industriId;
-                const name = button.dataset.industriName || 'Industri';
-                const address = button.dataset.industriAddress || '-';
-                const latInput = document.getElementById(`geofence-lat-${selectedIndustryId}`);
-                const lngInput = document.getElementById(`geofence-lng-${selectedIndustryId}`);
-                const radiusInput = document.getElementById(`geofence-radius-${selectedIndustryId}`);
-                if (!latInput || !lngInput || !radiusInput) {
-                    return;
-                }
-
-                const lat = Number(latInput.value || button.dataset.defaultLat || -6.2);
-                const lng = Number(lngInput.value || button.dataset.defaultLng || 106.816666);
-                const radius = Number(radiusInput.value || 200);
-                if (correctionTitle) {
-                    correctionTitle.textContent = `Koreksi Titik: ${name}`;
-                }
-                if (correctionHint) {
-                    correctionHint.textContent = address;
-                }
-                if (radiusWatcherInput) {
-                    radiusWatcherInput.value = String(radius);
-                }
-
-                correctionModal.classList.remove('hidden');
-                if (!correctionMap) {
-                    correctionMap = L.map(correctionMapElement).setView([lat, lng], 16);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        maxZoom: 19,
-                        attribution: '&copy; OpenStreetMap'
-                    }).addTo(correctionMap);
-                    correctionMap.on('click', (e) => {
-                        // Klik peta langsung memindahkan titik geofence.
-                        const { lat: clickedLat, lng: clickedLng } = e.latlng;
-                        const latInputInner = document.getElementById(`geofence-lat-${selectedIndustryId}`);
-                        const lngInputInner = document.getElementById(`geofence-lng-${selectedIndustryId}`);
-                        if (latInputInner && lngInputInner) {
-                            latInputInner.value = Number(clickedLat).toFixed(7);
-                            lngInputInner.value = Number(clickedLng).toFixed(7);
-                        }
-                        const radiusInner = Number(radiusWatcherInput?.value || 200);
-                        upsertMarkerAndCircle(clickedLat, clickedLng, radiusInner);
-                    });
-                }
-
-                upsertMarkerAndCircle(lat, lng, radius);
-                setTimeout(() => correctionMap.invalidateSize(), 0);
-            });
-        });
-
-        if (radiusWatcherInput) {
-            radiusWatcherInput.addEventListener('input', () => {
-                const radius = Number(radiusWatcherInput.value || 200);
-                if (selectedIndustryId !== null) {
-                    const radiusInput = document.getElementById(`geofence-radius-${selectedIndustryId}`);
-                    if (radiusInput) {
-                        radiusInput.value = String(Math.max(radius, 20));
-                    }
-                }
-                if (correctionCircle) {
-                    correctionCircle.setRadius(Math.max(radius, 20));
-                }
-            });
-        }
-
-        if (applyCorrectionBtn) {
-            applyCorrectionBtn.addEventListener('click', () => {
-                if (!correctionMarker || selectedIndustryId === null) {
-                    closeCorrectionModal();
-                    return;
-                }
-
-                const pos = correctionMarker.getLatLng();
-                const latInput = document.getElementById(`geofence-lat-${selectedIndustryId}`);
-                const lngInput = document.getElementById(`geofence-lng-${selectedIndustryId}`);
-                if (latInput && lngInput) {
-                    // Sinkronkan posisi marker ke input form sebelum disimpan.
-                    latInput.value = Number(pos.lat).toFixed(7);
-                    lngInput.value = Number(pos.lng).toFixed(7);
-                }
-                closeCorrectionModal();
-            });
-        }
-
-        if (closeCorrectionBtn) {
-            closeCorrectionBtn.addEventListener('click', closeCorrectionModal);
-        }
-        if (correctionModal) {
-            correctionModal.addEventListener('click', (event) => {
-                if (event.target === correctionModal) {
-                    closeCorrectionModal();
-                }
-            });
+            // Pastikan ukuran peta sinkron setelah layout selesai dirender.
+            setTimeout(() => map.invalidateSize(), 120);
         }
     });
 </script>
@@ -317,212 +159,161 @@
             </div>
         </form>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Hadir Valid</div>
-                <div class="text-2xl font-semibold text-emerald-700">{{ $statusCounts[AbsensiStatus::HADIR_VALID->value] ?? 0 }}</div>
-            </div>
-            <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Di Luar Area</div>
-                <div class="text-2xl font-semibold text-rose-700">{{ $statusCounts[AbsensiStatus::DI_LUAR_AREA->value] ?? 0 }}</div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-base font-semibold text-gray-900">Peta Check-in</h3>
-                <div class="text-xs text-gray-500">{{ count($mapPoints) }} titik di halaman ini</div>
-            </div>
-            <div id="admin-absensi-map" class="w-full h-[360px] rounded-lg border border-gray-200"></div>
-            <div class="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-600">
-                <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Hadir Valid</span>
-                <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Di Luar Area</span>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-base font-semibold text-gray-900">Data Absensi</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[1100px]">
-                    <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200">
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Waktu</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Koordinat</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jarak</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @forelse ($absensiList as $row)
-                        @php
-                        $statusClass = match ($row->status) {
-                            AbsensiStatus::HADIR_VALID->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                            AbsensiStatus::DI_LUAR_AREA->value => 'bg-rose-50 text-rose-700 border border-rose-200',
-                            default => 'bg-gray-50 text-gray-700 border border-gray-200',
-                        };
-                        $statusKey = 'absensi.status.' . $row->status;
-                        $statusLabel = \Illuminate\Support\Facades\Lang::has($statusKey)
-                            ? __($statusKey)
-                            : ucfirst(str_replace('_', ' ', $row->status));
-                        @endphp
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 text-sm text-gray-700">
-                                <div class="font-medium text-gray-900">{{ $row->siswa?->user?->name ?? '-' }}</div>
-                                <div class="text-xs text-gray-500">{{ $row->siswa?->nis ?? '-' }}</div>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row->siswa?->jurusan?->nama ?? '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row->check_in_at?->format('d/m/Y H:i:s') ?? '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">
-                                {{ number_format((float) $row->latitude, 6) }}, {{ number_format((float) $row->longitude, 6) }}
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-700">
-                                {{ $row->distance_to_industri_m !== null ? number_format((float) $row->distance_to_industri_m, 2) . ' m' : '-' }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
-                                    {{ $statusLabel }}
-                                </span>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
-                                Belum ada data absensi pada filter ini.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div>{{ $absensiList->links() }}</div>
-
-        <div id="geofence-setting" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-base font-semibold text-gray-900">Pengaturan Geofence Industri (Admin)</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[1000px]">
-                    <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200">
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Latitude</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Longitude</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Radius (m)</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @forelse ($geofenceList as $industri)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 text-sm text-gray-700">
-                                <div class="font-medium text-gray-900">{{ $industri->nama_industri }}</div>
-                                <div class="text-xs text-gray-500">{{ $industri->alamat }}</div>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $industri->jurusan?->nama ?? '-' }}</td>
-                            <td class="px-4 py-3">
-                                <input
-                                    id="geofence-lat-{{ $industri->id }}"
-                                    type="number"
-                                    step="0.0000001"
-                                    name="latitude"
-                                    form="update-geofence-{{ $industri->id }}"
-                                    value="{{ old('latitude', $industri->latitude) }}"
-                                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-[170px]">
-                            </td>
-                            <td class="px-4 py-3">
-                                <input
-                                    id="geofence-lng-{{ $industri->id }}"
-                                    type="number"
-                                    step="0.0000001"
-                                    name="longitude"
-                                    form="update-geofence-{{ $industri->id }}"
-                                    value="{{ old('longitude', $industri->longitude) }}"
-                                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-[170px]">
-                            </td>
-                            <td class="px-4 py-3">
-                                <input
-                                    id="geofence-radius-{{ $industri->id }}"
-                                    type="number"
-                                    min="20"
-                                    max="5000"
-                                    name="geofence_radius_m"
-                                    form="update-geofence-{{ $industri->id }}"
-                                    value="{{ old('geofence_radius_m', $industri->geofence_radius_m ?? 200) }}"
-                                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-[120px]">
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex flex-wrap gap-2">
-                                    <form id="update-geofence-{{ $industri->id }}" method="POST" action="{{ route('admin.absensi.geofence', $industri->id) }}">
-                                        @csrf
-                                        @method('PUT')
-                                        <button class="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-medium">
-                                            Simpan
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('admin.absensi.geofence.geocode', $industri->id) }}">
-                                        @csrf
-                                        <button class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs font-medium">
-                                            Auto Geocode
-                                        </button>
-                                    </form>
-                                    <button
-                                        type="button"
-                                        class="open-correction-map-btn px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs font-medium"
-                                        data-industri-id="{{ $industri->id }}"
-                                        data-industri-name="{{ $industri->nama_industri }}"
-                                        data-industri-address="{{ $industri->alamat }}"
-                                        data-default-lat="{{ $industri->latitude ?? -6.2000000 }}"
-                                        data-default-lng="{{ $industri->longitude ?? 106.8166660 }}">
-                                        Koreksi di Peta
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
-                                Belum ada data industri.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="geofence-correction-modal" class="fixed inset-0 z-50 hidden bg-black/40 p-4">
-            <div class="mx-auto mt-10 max-w-3xl bg-white rounded-xl shadow-xl border border-gray-200">
-                <div class="flex items-start justify-between p-4 border-b border-gray-200">
-                    <div>
-                        <h4 id="correction-title" class="text-base font-semibold text-gray-900">Koreksi Titik Geofence</h4>
-                        <p id="correction-hint" class="text-xs text-gray-500 mt-1"></p>
-                    </div>
-                    <button type="button" id="close-correction-btn" class="text-gray-400 hover:text-gray-600">✕</button>
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="text-xs text-gray-500 mb-1">Hadir Valid</div>
+                    <div class="text-2xl font-semibold text-emerald-700">{{ $statusCounts[AbsensiStatus::HADIR_VALID->value] ?? 0 }}</div>
                 </div>
-                <div class="p-4">
-                    <div id="geofence-correction-map" class="w-full h-[420px] rounded-lg border border-gray-200"></div>
-                    <div class="mt-3 flex items-center justify-between gap-3">
-                        <div class="text-xs text-gray-500">
-                            Klik peta atau drag marker untuk mengoreksi titik.
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="text-xs text-gray-500 mb-1">Di Luar Area</div>
+                    <div class="text-2xl font-semibold text-rose-700">{{ $statusCounts[AbsensiStatus::DI_LUAR_AREA->value] ?? 0 }}</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <h3 class="text-sm font-semibold text-gray-900">Peta Lokasi</h3>
+                            <div class="text-xs text-gray-500">{{ count($mapPoints) }} titik pada halaman ini</div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <label for="correction-radius-input" class="text-xs text-gray-600">Radius (m)</label>
-                            <input id="correction-radius-input" type="number" min="20" max="5000" value="200"
-                                class="w-28 px-2 py-1.5 border border-gray-300 rounded text-sm">
-                            <button type="button" id="apply-correction-btn"
-                                class="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-medium">
-                                Gunakan Titik Ini
-                            </button>
+                        <div class="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-600">
+                            <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Hadir Valid</span>
+                            <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Di Luar Area</span>
                         </div>
+                    </div>
+                    <div id="admin-absensi-map" class="w-full h-[420px] md:h-[520px] xl:h-[560px]"></div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
+                        <h3 class="text-base font-semibold text-gray-900">Data Absensi</h3>
+                        <div class="text-xs text-gray-500">{{ $absensiList->total() }} data</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[980px]">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Waktu</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Koordinat</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jarak</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @forelse ($absensiList as $row)
+                                @php
+                                $statusClass = match ($row->status) {
+                                    AbsensiStatus::HADIR_VALID->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                                    AbsensiStatus::DI_LUAR_AREA->value => 'bg-rose-50 text-rose-700 border border-rose-200',
+                                    default => 'bg-gray-50 text-gray-700 border border-gray-200',
+                                };
+                                $statusKey = 'absensi.status.' . $row->status;
+                                $statusLabel = \Illuminate\Support\Facades\Lang::has($statusKey)
+                                    ? __($statusKey)
+                                    : ucfirst(str_replace('_', ' ', $row->status));
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        <div class="font-medium text-gray-900">{{ $row->siswa?->user?->name ?? '-' }}</div>
+                                        <div class="text-xs text-gray-500">{{ $row->siswa?->nis ?? '-' }}</div>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $row->siswa?->jurusan?->nama ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $row->check_in_at?->format('d/m/Y H:i:s') ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        {{ number_format((float) $row->latitude, 6) }}, {{ number_format((float) $row->longitude, 6) }}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        {{ $row->distance_to_industri_m !== null ? number_format((float) $row->distance_to_industri_m, 2) . ' m' : '-' }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
+                                            {{ $statusLabel }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
+                                        Belum ada data absensi pada filter ini.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-4 py-3 border-t border-gray-200">
+                        {{ $absensiList->links() }}
+                    </div>
+                </div>
+
+                <div id="geofence-setting" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="px-5 py-4 border-b border-gray-200">
+                        <div class="flex flex-col gap-3">
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900">Data Geofence Industri</h3>
+                                @if (!$radiusUniform)
+                                <p class="text-xs text-amber-700 mt-1">Radius antar industri saat ini berbeda. Simpan radius global untuk menyeragamkan.</p>
+                                @endif
+                            </div>
+                            <form method="POST" action="{{ route('admin.absensi.geofence.radius-global') }}" class="flex flex-wrap items-end gap-2">
+                                @csrf
+                                @method('PUT')
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Radius Global (m)</label>
+                                    <input
+                                        type="number"
+                                        name="geofence_radius_m"
+                                        min="20"
+                                        max="5000"
+                                        value="{{ old('geofence_radius_m', $globalRadiusM ?? 200) }}"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-[140px]">
+                                </div>
+                                <button class="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-medium">
+                                    Terapkan ke Semua
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[920px]">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jurusan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Latitude</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Longitude</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Radius (m)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @forelse ($geofenceList as $industri)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        <div class="font-medium text-gray-900">{{ $industri->nama_industri }}</div>
+                                        <div class="text-xs text-gray-500">{{ $industri->alamat }}</div>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $industri->jurusan?->nama ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $industri->latitude !== null ? number_format((float) $industri->latitude, 7) : '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $industri->longitude !== null ? number_format((float) $industri->longitude, 7) : '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $industri->geofence_radius_m !== null ? number_format((float) $industri->geofence_radius_m, 0) : '-' }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
+                                        Belum ada data industri.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

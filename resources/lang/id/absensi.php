@@ -15,6 +15,7 @@ return [
         'checkin' => 'Check-in berhasil direkam.',
         'geofence' => 'Pengaturan geofence industri berhasil diperbarui.',
         'geocode_ok' => 'Geocoding berhasil untuk :industri (:lat, :lng).',
+        'global_radius' => 'Radius geofence global berhasil diterapkan untuk semua industri.',
     ],
     'status' => [
         'all' => 'Semua Status',

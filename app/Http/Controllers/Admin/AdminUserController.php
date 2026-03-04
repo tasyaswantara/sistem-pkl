@@ -66,6 +66,7 @@ class AdminUserController extends Controller
         $assignedRoles = $user->roles->pluck('id')->toArray();
         $jurusan = Jurusan::all();
         $roleName = $user->roles->first()->name ?? 'admin';
+
         return view('admin.users.edit', compact('user', 'roles', 'assignedRoles', 'jurusan', 'roleName'));
     }
 

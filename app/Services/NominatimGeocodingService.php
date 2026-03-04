@@ -23,6 +23,8 @@ class NominatimGeocodingService
         $baseUrl = rtrim((string) config('services.nominatim.base_url'), '/');
         $userAgent = (string) config('services.nominatim.user_agent');
         $email = (string) config('services.nominatim.email');
+        $countrycodes = trim((string) config('services.nominatim.countrycodes', 'id'));
+        $acceptLanguage = trim((string) config('services.nominatim.accept_language', 'id'));
 
         $query = [
             'q' => $address,
@@ -31,6 +33,12 @@ class NominatimGeocodingService
             'limit' => 1,
             'addressdetails' => 1,
         ];
+        if ($countrycodes !== '') {
+            $query['countrycodes'] = $countrycodes;
+        }
+        if ($acceptLanguage !== '') {
+            $query['accept-language'] = $acceptLanguage;
+        }
 
         if ($email !== '') {
             $query['email'] = $email;
@@ -41,7 +49,7 @@ class NominatimGeocodingService
                 ->withHeaders([
                     'User-Agent' => $userAgent,
                 ])
-                ->timeout(12)
+                ->timeout((int) config('services.nominatim.timeout', 12))
                 ->get($baseUrl . '/search', $query);
         } catch (\Throwable $e) {
             // Network error / timeout tetap diperlakukan sebagai "tidak ditemukan"

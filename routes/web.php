@@ -100,8 +100,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/risk', [AdminRiskController::class, 'index'])->name('admin.risk');
     Route::post('/risk/run', [AdminRiskController::class, 'runRisk'])->name('admin.risk.run');
     Route::get('/absensi', [AdminAbsensiController::class, 'index'])->name('admin.absensi');
-    Route::put('/absensi/geofence/{industri}', [AdminAbsensiController::class, 'updateGeofence'])->name('admin.absensi.geofence');
-    Route::post('/absensi/geofence/{industri}/geocode', [AdminAbsensiController::class, 'geocodeGeofence'])->name('admin.absensi.geofence.geocode');
+    Route::put('/absensi/geofence/radius-global', [AdminAbsensiController::class, 'updateGlobalRadius'])->name('admin.absensi.geofence.radius-global');
 
     Route::get('/forms', function () {
         return view('admin.forms');

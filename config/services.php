@@ -39,6 +39,9 @@ return [
         'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
         'user_agent' => env('NOMINATIM_USER_AGENT', env('APP_NAME', 'sistem-pkl') . '/1.0 (admin geocode)'),
         'email' => env('NOMINATIM_EMAIL'),
+        'countrycodes' => env('NOMINATIM_COUNTRYCODES', 'id'),
+        'accept_language' => env('NOMINATIM_ACCEPT_LANGUAGE', 'id'),
+        'timeout' => env('NOMINATIM_TIMEOUT', 12),
     ],
 
 ];

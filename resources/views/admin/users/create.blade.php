@@ -1,3 +1,5 @@
+@include('admin.users.partials.industri-map-picker-assets')
+
 <x-admin-layout>
     <div x-data="{
             role: '{{ old('role', $prefillRole ?? '') }}',
@@ -221,6 +223,41 @@
                         <label class="block text-xs font-medium text-gray-600 mb-1">Alamat</label>
                         <textarea name="alamat" placeholder="Alamat"
                             class="input-text md:col-span-2">{{ old('alamat') }}</textarea>
+                    </div>
+                    <div id="industri-map-picker-section" class="md:col-span-2 rounded-lg border border-orange-200 bg-white p-4">
+                        <label class="block text-xs font-medium text-gray-600 mb-2">Pilih Titik Industri di Peta</label>
+                        <div class="flex flex-col md:flex-row gap-2">
+                            <input id="industri-location-search" type="text"
+                                class="input-text flex-1"
+                                placeholder="Cari area: nama jalan, kecamatan, kota, atau tempat">
+                            <button id="industri-location-search-btn" type="button"
+                                class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">
+                                Cari Lokasi
+                            </button>
+                        </div>
+                        <div id="industri-location-search-results" class="mt-2 rounded-lg border border-gray-200 bg-white max-h-44 overflow-auto"></div>
+                        <div id="industri-location-map" class="w-full h-[360px] rounded-lg border border-gray-200 mt-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Latitude</label>
+                                <input id="industri-latitude" name="latitude" type="number" step="0.0000001"
+                                    value="{{ old('latitude') }}"
+                                    class="input-text">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Longitude</label>
+                                <input id="industri-longitude" name="longitude" type="number" step="0.0000001"
+                                    value="{{ old('longitude') }}"
+                                    class="input-text">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Radius Geofence (m)</label>
+                                <input name="geofence_radius_m" type="number" min="20" max="5000"
+                                    value="{{ old('geofence_radius_m', 200) }}"
+                                    class="input-text">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Klik peta atau drag marker untuk mengubah titik secara presisi.</p>
                     </div>
                 </div>
             </div>
