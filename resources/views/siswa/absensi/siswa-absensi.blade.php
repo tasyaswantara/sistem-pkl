@@ -1,185 +1,212 @@
-@section('title', 'Absensi PKL')
+@section('title', 'Presensi Harian')
 
 @php
-    use App\Enums\AbsensiStatus;
+    use App\Enums\LogbookStatus;
     use App\Enums\PenempatanStatus;
+    use App\Enums\PerizinanStatus;
 
     $industri = $penempatan?->industri;
     $isPenempatanAktif = $penempatan?->status === PenempatanStatus::DITERIMA_INDUSTRI->value && $industri;
     $geofenceSet = $industri?->latitude !== null && $industri?->longitude !== null;
-    $canCheckIn = $isPenempatanAktif && $geofenceSet && !$todayAbsensi;
+
+    $weekMeta = [
+        'hadir' => [
+            'box' => 'bg-emerald-100 border-emerald-200 text-emerald-800',
+            'dot' => 'bg-emerald-500',
+            'label' => 'Hadir',
+        ],
+        'izin' => [
+            'box' => 'bg-amber-100 border-amber-200 text-amber-800',
+            'dot' => 'bg-amber-500',
+            'label' => 'Izin',
+        ],
+        'tidak_absen' => [
+            'box' => 'bg-rose-100 border-rose-200 text-rose-800',
+            'dot' => 'bg-rose-500',
+            'label' => 'Tidak Absen',
+        ],
+    ];
+
+    $logbookFieldErrors = collect(['tanggal', 'aktivitas'])->contains(fn($key) => $errors->has($key))
+        || $errors->has('logbook');
+    $izinFieldErrors = collect(['jenis_izin', 'tanggal_mulai', 'tanggal_selesai'])->contains(fn($key) => $errors->has($key))
+        || $errors->has('perizinan');
+    $checkInTimeDisplay = $todayAbsensi?->check_in_at?->format('H:i:s') ?? session('checkin_at');
+    $hasCheckInToday = !empty($checkInTimeDisplay);
+    $canTapPresensi = $isPenempatanAktif && $geofenceSet;
+
+    $statusPresensiClass = 'rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600';
+    $statusPresensiText = 'Klik tombol Presensi untuk mengambil lokasi otomatis.';
 @endphp
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <style>
+        #presensi-map .leaflet-pane,
+        #presensi-map .leaflet-top,
+        #presensi-map .leaflet-bottom {
+            z-index: 20;
+        }
+    </style>
 @endpush
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const mapElement = document.getElementById('siswa-absensi-map');
-        if (!mapElement) {
-            return;
-        }
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapElement = document.getElementById('presensi-map');
+            if (!mapElement) {
+                return;
+            }
 
-        const industriLat = parseFloat(mapElement.dataset.industriLat);
-        const industriLng = parseFloat(mapElement.dataset.industriLng);
-        const industriName = mapElement.dataset.industriName || 'Lokasi Industri';
-        const radius = parseInt(mapElement.dataset.radius || '200', 10);
-        const oldLat = parseFloat(mapElement.dataset.oldLat);
-        const oldLng = parseFloat(mapElement.dataset.oldLng);
-        const oldAccuracy = parseFloat(mapElement.dataset.oldAccuracy || '0');
-        const geofenceReady = !Number.isNaN(industriLat) && !Number.isNaN(industriLng);
+            const industriLat = parseFloat(mapElement.dataset.industriLat);
+            const industriLng = parseFloat(mapElement.dataset.industriLng);
+            const industriName = mapElement.dataset.industriName || 'Lokasi Industri';
+            const radius = parseInt(mapElement.dataset.radius || '200', 10);
+            const oldLat = parseFloat(mapElement.dataset.oldLat);
+            const oldLng = parseFloat(mapElement.dataset.oldLng);
+            const oldAccuracy = parseFloat(mapElement.dataset.oldAccuracy || '0');
+            const geofenceReady = !Number.isNaN(industriLat) && !Number.isNaN(industriLng);
 
-        const latInput = document.getElementById('absensi-latitude');
-        const lngInput = document.getElementById('absensi-longitude');
-        const accuracyInput = document.getElementById('absensi-accuracy');
-        const catatanLabel = document.getElementById('catatan-label');
-        const catatanInput = document.getElementById('catatan-textarea');
-        const statusLokasi = document.getElementById('status-lokasi');
-        const submitButton = document.getElementById('submit-absensi-btn');
-        const ambilLokasiButton = document.getElementById('ambil-lokasi-btn');
+            const form = document.getElementById('presensi-form');
+            const presensiButton = document.getElementById('btn-presensi');
+            const statusBox = document.getElementById('status-presensi-lokasi');
+            const catatanInput = document.getElementById('presensi-catatan');
+            const catatanLabel = document.getElementById('presensi-catatan-label');
+            const hasCheckInToday = form?.dataset.hasCheckinToday === '1';
+            const checkInTime = form?.dataset.checkinTime || '-';
 
-        let map = null;
-        let siswaMarker = null;
-        let accuracyCircle = null;
+            const latInput = document.getElementById('presensi-latitude');
+            const lngInput = document.getElementById('presensi-longitude');
+            const accuracyInput = document.getElementById('presensi-accuracy');
 
-        if (typeof L !== 'undefined') {
-            const defaultCenter = geofenceReady ? [industriLat, industriLng] : [-6.200000, 106.816666];
-            map = L.map('siswa-absensi-map').setView(defaultCenter, 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
+            let map = null;
+            let siswaMarker = null;
+            let accuracyCircle = null;
 
-            if (geofenceReady) {
-                L.marker([industriLat, industriLng]).addTo(map).bindPopup(industriName);
-                L.circle([industriLat, industriLng], {
-                    radius: radius,
-                    color: '#16a34a',
-                    fillColor: '#86efac',
-                    fillOpacity: 0.2
+            if (typeof L !== 'undefined') {
+                const defaultCenter = geofenceReady ? [industriLat, industriLng] : [-7.983908, 112.621391];
+                map = L.map('presensi-map').setView(defaultCenter, 14);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap',
                 }).addTo(map);
-            }
-        } else {
-            mapElement.innerHTML = '<div class="h-full flex items-center justify-center text-sm text-amber-700 bg-amber-50">Leaflet gagal dimuat. Peta tidak tersedia, tetapi check-in lokasi tetap bisa dilakukan.</div>';
-        }
 
-        function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
-            const toRad = (deg) => (deg * Math.PI) / 180;
-            const earthRadius = 6371000;
-            const dLat = toRad(lat2 - lat1);
-            const dLng = toRad(lon2 - lon1);
-            const a = Math.sin(dLat / 2) ** 2
-                + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return earthRadius * c;
-        }
-
-        function syncCatatanRequirement(distanceMeters) {
-            if (!catatanInput || !catatanLabel) {
-                return;
-            }
-
-            if (!geofenceReady || Number.isNaN(distanceMeters)) {
-                catatanInput.removeAttribute('required');
-                catatanLabel.textContent = 'Catatan (opsional)';
-                return;
-            }
-
-            if (distanceMeters > radius) {
-                catatanInput.setAttribute('required', 'required');
-                catatanLabel.textContent = 'Catatan (wajib karena di luar area)';
-            } else {
-                catatanInput.removeAttribute('required');
-                catatanLabel.textContent = 'Catatan (opsional)';
-            }
-        }
-
-        function updateSubmitState() {
-            if (!submitButton) {
-                return;
-            }
-
-            const hasLatLng = latInput.value && lngInput.value;
-            if (!hasLatLng && !submitButton.hasAttribute('disabled')) {
-                submitButton.setAttribute('disabled', 'disabled');
-            }
-            if (hasLatLng && submitButton.dataset.serverDisabled !== '1') {
-                submitButton.removeAttribute('disabled');
-            }
-        }
-
-        function setLokasi(lat, lng, accuracy = null) {
-            latInput.value = Number(lat).toFixed(7);
-            lngInput.value = Number(lng).toFixed(7);
-            accuracyInput.value = accuracy !== null && !Number.isNaN(accuracy)
-                ? Number(accuracy).toFixed(2)
-                : '';
-
-            if (map) {
-                if (siswaMarker) {
-                    map.removeLayer(siswaMarker);
-                }
-                if (accuracyCircle) {
-                    map.removeLayer(accuracyCircle);
-                }
-
-                siswaMarker = L.marker([lat, lng]).addTo(map).bindPopup('Posisi Anda').openPopup();
-                if (accuracy !== null && !Number.isNaN(accuracy)) {
-                    accuracyCircle = L.circle([lat, lng], {
-                        radius: accuracy,
-                        color: '#2563eb',
-                        fillColor: '#93c5fd',
-                        fillOpacity: 0.25
+                if (geofenceReady) {
+                    L.marker([industriLat, industriLng]).addTo(map).bindPopup(industriName);
+                    L.circle([industriLat, industriLng], {
+                        radius,
+                        color: '#0f766e',
+                        fillColor: '#5eead4',
+                        fillOpacity: 0.2,
                     }).addTo(map);
                 }
-
-                map.setView([lat, lng], 16);
-            }
-
-            let info = `Lokasi siap: ${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}${accuracy ? ` (akurasi ±${Number(accuracy).toFixed(1)} m)` : ''}`;
-            let distance = NaN;
-            if (geofenceReady) {
-                distance = haversineDistanceMeters(lat, lng, industriLat, industriLng);
-                const distanceText = Number(distance).toFixed(2);
-                if (distance <= radius) {
-                    info += ` | Dalam area (${distanceText} m dari titik industri)`;
-                    statusLokasi.className = 'px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700';
-                } else {
-                    info += ` | Di luar area (${distanceText} m, radius ${radius} m)`;
-                    statusLokasi.className = 'px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700';
-                }
             } else {
-                statusLokasi.className = 'px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700';
+                mapElement.innerHTML = '<div class="h-full flex items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-700">Leaflet gagal dimuat. Peta tidak tersedia.</div>';
             }
 
-            statusLokasi.textContent = info;
-            syncCatatanRequirement(distance);
-            updateSubmitState();
-        }
+            function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
+                const toRad = (deg) => (deg * Math.PI) / 180;
+                const earthRadius = 6371000;
+                const dLat = toRad(lat2 - lat1);
+                const dLng = toRad(lon2 - lon1);
+                const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return earthRadius * c;
+            }
 
-        if (submitButton && submitButton.hasAttribute('disabled')) {
-            submitButton.dataset.serverDisabled = '1';
-        }
-
-        if (!Number.isNaN(oldLat) && !Number.isNaN(oldLng)) {
-            setLokasi(oldLat, oldLng, Number.isNaN(oldAccuracy) ? null : oldAccuracy);
-        } else {
-            updateSubmitState();
-        }
-
-        if (ambilLokasiButton) {
-            ambilLokasiButton.addEventListener('click', () => {
-                if (!navigator.geolocation) {
-                    statusLokasi.textContent = 'Browser tidak mendukung geolocation.';
-                    statusLokasi.className = 'px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700';
+            function syncCatatanRequirement(distanceMeters) {
+                if (!catatanInput || !catatanLabel) {
                     return;
                 }
 
-                statusLokasi.textContent = 'Mengambil lokasi...';
-                statusLokasi.className = 'px-3 py-2 bg-sky-50 border border-sky-200 rounded-lg text-sm text-sky-700';
+                if (!geofenceReady || Number.isNaN(distanceMeters)) {
+                    catatanInput.removeAttribute('required');
+                    catatanLabel.textContent = 'Catatan (opsional)';
+                    return;
+                }
+
+                if (distanceMeters > radius) {
+                    catatanInput.setAttribute('required', 'required');
+                    catatanLabel.textContent = 'Catatan (wajib jika di luar area)';
+                } else {
+                    catatanInput.removeAttribute('required');
+                    catatanLabel.textContent = 'Catatan (opsional)';
+                }
+            }
+
+            function setLokasi(lat, lng, accuracy = null) {
+                latInput.value = Number(lat).toFixed(7);
+                lngInput.value = Number(lng).toFixed(7);
+                accuracyInput.value = accuracy !== null && !Number.isNaN(accuracy)
+                    ? Number(accuracy).toFixed(2)
+                    : '';
+
+                if (map) {
+                    if (siswaMarker) {
+                        map.removeLayer(siswaMarker);
+                    }
+                    if (accuracyCircle) {
+                        map.removeLayer(accuracyCircle);
+                    }
+
+                    siswaMarker = L.marker([lat, lng]).addTo(map).bindPopup('Posisi Anda').openPopup();
+                    if (accuracy !== null && !Number.isNaN(accuracy)) {
+                        accuracyCircle = L.circle([lat, lng], {
+                            radius: accuracy,
+                            color: '#2563eb',
+                            fillColor: '#93c5fd',
+                            fillOpacity: 0.2,
+                        }).addTo(map);
+                    }
+
+                    map.setView([lat, lng], 16);
+                }
+
+                let distance = NaN;
+                let info = `Lokasi siap: ${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+
+                if (geofenceReady) {
+                    distance = haversineDistanceMeters(lat, lng, industriLat, industriLng);
+                    const distanceText = Number(distance).toFixed(2);
+                    if (distance <= radius) {
+                        info += ` | Dalam area (${distanceText} m)`;
+                        statusBox.className = 'rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700';
+                    } else {
+                        info += ` | Di luar area (${distanceText} m, radius ${radius} m)`;
+                        statusBox.className = 'rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700';
+                    }
+                } else {
+                    statusBox.className = 'rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700';
+                }
+
+                statusBox.textContent = info;
+                syncCatatanRequirement(distance);
+            }
+
+            async function runCheckInWithCurrentLocation() {
+                if (!form || !presensiButton) {
+                    return;
+                }
+
+                if (hasCheckInToday) {
+                    statusBox.textContent = `Anda sudah presensi hari ini pada ${checkInTime}.`;
+                    statusBox.className = 'rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700';
+                    return;
+                }
+
+                if (!navigator.geolocation) {
+                    statusBox.textContent = 'Browser tidak mendukung geolocation.';
+                    statusBox.className = 'rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700';
+                    return;
+                }
+
+                presensiButton.disabled = true;
+                presensiButton.textContent = 'Mengambil Lokasi...';
+
+                statusBox.textContent = 'Mengambil lokasi akurat...';
+                statusBox.className = 'rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-700';
 
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -188,209 +215,396 @@
                             position.coords.longitude,
                             position.coords.accuracy
                         );
+
+                        presensiButton.textContent = 'Mengirim Presensi...';
+                        form.requestSubmit();
                     },
                     (error) => {
-                        statusLokasi.textContent = `Gagal mengambil lokasi: ${error.message}`;
-                        statusLokasi.className = 'px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700';
+                        statusBox.textContent = `Gagal mengambil lokasi: ${error.message}`;
+                        statusBox.className = 'rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700';
+                        presensiButton.disabled = false;
+                        presensiButton.textContent = 'Presensi Sekarang';
                     },
                     {
                         enableHighAccuracy: true,
                         timeout: 15000,
-                        maximumAge: 0
+                        maximumAge: 0,
                     }
                 );
-            });
-        }
-    });
-</script>
+            }
+
+            if (presensiButton) {
+                presensiButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    runCheckInWithCurrentLocation();
+                });
+            }
+
+            if (!Number.isNaN(oldLat) && !Number.isNaN(oldLng)) {
+                setLokasi(oldLat, oldLng, Number.isNaN(oldAccuracy) ? null : oldAccuracy);
+            }
+        });
+    </script>
 @endpush
 
-<x-admin-layout>
-    <div class="space-y-6">
-        <div class="mb-2">
-            <div class="text-sm text-gray-500 mb-2">Dashboard → Absensi PKL</div>
-            <h1 class="text-gray-900 text-2xl font-semibold mb-2">Absensi Lokasi Siswa</h1>
-            <p class="text-gray-500 text-sm max-w-2xl">
-                Lakukan check-in harian berbasis lokasi untuk memvalidasi kehadiran di area industri.
-            </p>
-        </div>
+<x-siswa-layout>
+    <div
+        x-data="{
+            izinOpen: @js($izinFieldErrors),
+            logbookOpen: @js($logbookFieldErrors),
+            editOpen: false,
+            editAction: '',
+            editTanggal: '',
+            editAktivitas: ''
+        }"
+        class="space-y-6">
 
         @if (session('success'))
-        <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {{ session('success') }}
-        </div>
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {{ session('success') }}
+            </div>
         @endif
 
         @if ($errors->any())
-        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <div class="font-semibold mb-1">Terjadi kesalahan:</div>
-            <ul class="list-disc list-inside space-y-0.5">
-                @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                <div class="mb-1 font-semibold">Terjadi kesalahan:</div>
+                <ul class="list-disc space-y-0.5 pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Industri Aktif</div>
-                <div class="text-sm font-semibold text-gray-900">{{ $industri?->nama_industri ?? 'Belum tersedia' }}</div>
-                <div class="text-xs text-gray-500 mt-2">{{ $industri?->alamat ?? '-' }}</div>
-            </div>
-            <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Geofence</div>
-                <div class="text-sm font-semibold {{ $geofenceSet ? 'text-emerald-700' : 'text-amber-700' }}">
-                    {{ $geofenceSet ? 'Aktif' : 'Belum diatur admin' }}
-                </div>
-                <div class="text-xs text-gray-500 mt-2">
-                    Radius: {{ $industri?->geofence_radius_m ?? 200 }} m
-                </div>
-            </div>
-            <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Check-in Hari Ini</div>
-                <div class="text-sm font-semibold {{ $todayAbsensi ? 'text-emerald-700' : 'text-gray-900' }}">
-                    {{ $todayAbsensi ? 'Sudah check-in' : 'Belum check-in' }}
-                </div>
-                @if ($todayAbsensi?->check_in_at)
-                <div class="text-xs text-gray-500 mt-2">{{ $todayAbsensi->check_in_at->format('d/m/Y H:i') }}</div>
-                @endif
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-base font-semibold text-gray-900">Check-in Lokasi</h3>
-                @if (!$isPenempatanAktif)
-                <span class="text-xs px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700">
-                    Penempatan belum diterima industri
-                </span>
-                @endif
-            </div>
-
-            @if ($isPenempatanAktif && !$geofenceSet)
-            <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                Geofence industri belum diatur admin, jadi check-in belum bisa dilakukan.
-            </div>
-            @endif
-
-            <div
-                id="siswa-absensi-map"
-                class="w-full h-[320px] rounded-lg border border-gray-200 mb-4"
-                data-industri-lat="{{ $industri?->latitude }}"
-                data-industri-lng="{{ $industri?->longitude }}"
-                data-industri-name="{{ $industri?->nama_industri }}"
-                data-radius="{{ $industri?->geofence_radius_m ?? 200 }}"
-                data-old-lat="{{ old('latitude') }}"
-                data-old-lng="{{ old('longitude') }}"
-                data-old-accuracy="{{ old('accuracy_m') }}">
-            </div>
-
-            <form method="POST" action="{{ route('siswa.absensi.store') }}" class="space-y-4">
-                @csrf
-                <input type="hidden" name="latitude" id="absensi-latitude" value="{{ old('latitude') }}">
-                <input type="hidden" name="longitude" id="absensi-longitude" value="{{ old('longitude') }}">
-                <input type="hidden" name="accuracy_m" id="absensi-accuracy" value="{{ old('accuracy_m') }}">
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <section class="grid gap-6 xl:grid-cols-5 xl:items-stretch">
+            <div class="flex flex-col rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(15,46,36,0.12)] xl:col-span-3 sm:p-5">
+                <div class="mb-3 flex items-center justify-between">
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Status Lokasi</label>
-                        <div id="status-lokasi" class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
-                            Belum mengambil lokasi.
-                        </div>
+                        <h2 class="text-base font-semibold text-gray-900">Peta Lokasi Presensi</h2>
+                        <p class="text-xs text-gray-500">{{ $industri?->nama_industri ?? 'Belum ada industri aktif' }}</p>
                     </div>
+                    <span class="rounded-full border px-2.5 py-1 text-xs {{ $geofenceSet ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700' }}">
+                        {{ $geofenceSet ? 'Geofence Aktif' : 'Geofence Belum Diatur' }}
+                    </span>
+                </div>
+
+                <div id="presensi-map"
+                    class="relative z-0 mt-2 min-h-[430px] flex-1 w-full overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+                    data-industri-lat="{{ $industri?->latitude }}"
+                    data-industri-lng="{{ $industri?->longitude }}"
+                    data-industri-name="{{ $industri?->nama_industri }}"
+                    data-radius="{{ $industri?->geofence_radius_m ?? 200 }}"
+                    data-old-lat="{{ old('latitude') }}"
+                    data-old-lng="{{ old('longitude') }}"
+                    data-old-accuracy="{{ old('accuracy_m') }}">
+                </div>
+
+                <div class="mt-3 text-xs text-gray-500">
+                    Alamat: {{ $industri?->alamat ?? '-' }}
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(15,46,36,0.12)] xl:col-span-2 sm:p-5">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-base font-semibold text-gray-900">Status 7 Hari Terakhir</h2>
+                    <div class="text-xs text-gray-500">Hari ini: {{ now()->locale('id')->translatedFormat('d M Y') }}</div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-2">
+                    @foreach ($weekDays as $day)
+                        @php $meta = $weekMeta[$day['state']]; @endphp
+                        <div class="rounded-lg border px-2 py-2 text-center {{ $meta['box'] }} {{ $day['is_today'] ? 'ring-2 ring-teal-400 ring-offset-1' : '' }}">
+                            <div class="text-[10px] font-semibold uppercase">{{ $day['day_name'] }}</div>
+                            <div class="text-sm font-semibold leading-none mt-1">{{ $day['day_number'] }}</div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+                    <div class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full {{ $weekMeta['hadir']['dot'] }}"></span>Hadir</div>
+                    <div class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full {{ $weekMeta['izin']['dot'] }}"></span>Izin</div>
+                    <div class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full {{ $weekMeta['tidak_absen']['dot'] }}"></span>Tidak Absen</div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-2 text-emerald-700">
+                        <div class="font-semibold text-sm">{{ $weekCounts['hadir'] ?? 0 }}</div>
+                        <div>Hadir</div>
+                    </div>
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 px-2 py-2 text-amber-700">
+                        <div class="font-semibold text-sm">{{ $weekCounts['izin'] ?? 0 }}</div>
+                        <div>Izin</div>
+                    </div>
+                    <div class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-2 text-rose-700">
+                        <div class="font-semibold text-sm">{{ $weekCounts['tidak_absen'] ?? 0 }}</div>
+                        <div>Tidak</div>
+                    </div>
+                </div>
+
+                <form id="presensi-form" method="POST" action="{{ route('siswa.absensi.store') }}" class="mt-4 space-y-3"
+                    data-has-checkin-today="{{ $hasCheckInToday ? '1' : '0' }}"
+                    data-checkin-time="{{ $checkInTimeDisplay ?? '-' }}">
+                    @csrf
+                    <input type="hidden" name="latitude" id="presensi-latitude" value="{{ old('latitude') }}">
+                    <input type="hidden" name="longitude" id="presensi-longitude" value="{{ old('longitude') }}">
+                    <input type="hidden" name="accuracy_m" id="presensi-accuracy" value="{{ old('accuracy_m') }}">
+
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Aksi Lokasi</label>
-                        <button
-                            type="button"
-                            id="ambil-lokasi-btn"
-                            class="w-full px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">
-                            Ambil Lokasi Saya
+                        <label id="presensi-catatan-label" class="mb-1.5 block text-xs font-medium text-gray-700">Catatan (opsional)</label>
+                        <textarea id="presensi-catatan" name="catatan" rows="2"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200"
+                            placeholder="Wajib diisi jika presensi di luar area industri.">{{ old('catatan') }}</textarea>
+                    </div>
+
+                    @if (!$isPenempatanAktif)
+                        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                            Presensi aktif setelah status penempatan diterima industri.
+                        </div>
+                    @elseif (!$geofenceSet)
+                        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                            Titik geofence industri belum diatur admin.
+                        </div>
+                    @endif
+
+                    <div id="status-presensi-lokasi" class="{{ $statusPresensiClass }}">
+                        {{ $statusPresensiText }}
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                        <button id="btn-presensi" type="button"
+                            class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            {{ $canTapPresensi ? '' : 'disabled' }}>
+                            Presensi Sekarang
+                        </button>
+                        <button type="button" @click="izinOpen = true"
+                            class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                            {{ $canRequestIzin ? '' : 'disabled' }}>
+                            Ajukan Izin
                         </button>
                     </div>
-                </div>
+                </form>
 
-                <div>
-                    <label id="catatan-label" class="block text-xs font-medium text-gray-700 mb-1.5">Catatan (opsional)</label>
-                    <textarea
-                        id="catatan-textarea"
-                        name="catatan"
-                        rows="2"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                        placeholder="Contoh: Sinyal GPS kurang stabil, cek ulang lokasi.">{{ old('catatan') }}</textarea>
+                <div class="mt-4 border-t border-gray-200 pt-3">
+                    <div class="mb-2 text-xs font-medium text-gray-700">Perizinan Terbaru</div>
+                    <div class="space-y-2">
+                        @forelse ($perizinanLatest as $izin)
+                            @php
+                                $izinStatusClass = match ($izin->status) {
+                                    PerizinanStatus::DISETUJUI->value => 'bg-emerald-100 text-emerald-700',
+                                    PerizinanStatus::DITOLAK->value => 'bg-rose-100 text-rose-700',
+                                    default => 'bg-amber-100 text-amber-700',
+                                };
+                            @endphp
+                            <div class="rounded-lg border border-gray-200 px-3 py-2 text-xs">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-medium text-gray-800">{{ $izin->jenis_izin }}</span>
+                                    <span class="rounded-full px-2 py-0.5 {{ $izinStatusClass }}">
+                                        {{ $perizinanStatusLabels[$izin->status] ?? ucfirst((string) $izin->status) }}
+                                    </span>
+                                </div>
+                                <div class="mt-1 text-gray-500">
+                                    {{ $izin->tanggal_mulai?->format('d/m/Y') ?? '-' }} - {{ $izin->tanggal_selesai?->format('d/m/Y') ?? '-' }}
+                                </div>
+                            </div>
+                        @empty
+                            <div class="rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500">
+                                Belum ada perizinan.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
-
-                <div class="flex justify-end">
-                    <button
-                        type="submit"
-                        id="submit-absensi-btn"
-                        class="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-                        {{ $canCheckIn ? '' : 'disabled' }}>
-                        Simpan Check-in
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-base font-semibold text-gray-900">Riwayat Absensi</h3>
             </div>
+        </section>
+
+        <section class="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(15,46,36,0.12)] sm:p-5">
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Logbook</h2>
+                    <p class="mt-1 inline-flex rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs text-teal-700">
+                        Tercatat: {{ str_pad((string) $logbookTotal, 2, '0', STR_PAD_LEFT) }}
+                    </p>
+                </div>
+                <button type="button" @click="logbookOpen = true"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-teal-600 text-xl font-semibold text-white hover:bg-teal-700"
+                    title="Tambah Logbook">
+                    +
+                </button>
+            </div>
+
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[950px]">
+                <table class="min-w-[980px] w-full text-sm">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200">
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tanggal</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Waktu</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Industri</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Koordinat</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jarak</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                        <tr class="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                            <th class="px-4 py-3">Tanggal</th>
+                            <th class="px-4 py-3">Industri</th>
+                            <th class="px-4 py-3">Aktivitas</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Catatan Industri</th>
+                            <th class="px-4 py-3">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        @forelse ($absensiList as $row)
-                        @php
-                        $statusClass = match ($row->status) {
-                            AbsensiStatus::HADIR_VALID->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                            AbsensiStatus::DI_LUAR_AREA->value => 'bg-rose-50 text-rose-700 border border-rose-200',
-                            default => 'bg-gray-50 text-gray-700 border border-gray-200',
-                        };
-                        $statusKey = 'absensi.status.' . $row->status;
-                        $statusLabel = \Illuminate\Support\Facades\Lang::has($statusKey)
-                            ? __($statusKey)
-                            : ucfirst(str_replace('_', ' ', $row->status));
-                        @endphp
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row->tanggal?->format('d/m/Y') ?? '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row->check_in_at?->format('H:i:s') ?? '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">
-                                {{ number_format((float) $row->latitude, 6) }}, {{ number_format((float) $row->longitude, 6) }}
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-700">
-                                {{ $row->distance_to_industri_m !== null ? number_format((float) $row->distance_to_industri_m, 2) . ' m' : '-' }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
-                                    {{ $statusLabel }}
-                                </span>
-                            </td>
-                        </tr>
+                        @forelse ($logbooks as $logbook)
+                            @php
+                                $logbookStatusClass = match ($logbook->status_validasi) {
+                                    LogbookStatus::DISETUJUI->value => 'bg-emerald-100 text-emerald-700',
+                                    LogbookStatus::DITOLAK->value => 'bg-rose-100 text-rose-700',
+                                    default => 'bg-amber-100 text-amber-700',
+                                };
+                            @endphp
+                            <tr class="align-top">
+                                <td class="px-4 py-3 text-gray-700">{{ $logbook->tanggal?->format('d/m/Y') ?? '-' }}</td>
+                                <td class="px-4 py-3 text-gray-700">{{ $logbook->industri?->nama_industri ?? '-' }}</td>
+                                <td class="px-4 py-3 text-gray-700 whitespace-pre-line">{{ $logbook->aktivitas }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="rounded-full px-2 py-1 text-xs {{ $logbookStatusClass }}">
+                                        {{ $logbookStatusLabels[$logbook->status_validasi] ?? ucfirst((string) $logbook->status_validasi) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-700">{{ $logbook->catatan_industri ?? '-' }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <button type="button"
+                                            class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                                            @click="editOpen = true; editAction = @js(route('siswa.elogbook.update', $logbook->id)); editTanggal = @js($logbook->tanggal?->format('Y-m-d')); editAktivitas = @js($logbook->aktivitas);">
+                                            Edit
+                                        </button>
+                                        <form method="POST" action="{{ route('siswa.elogbook.destroy', $logbook->id) }}"
+                                            onsubmit="return confirm('Hapus logbook ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs text-rose-700 hover:bg-rose-50">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
-                                Belum ada data absensi.
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="px-4 py-6 text-center text-gray-500">Belum ada logbook tercatat.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <div>
-            {{ $absensiList->links() }}
-        </div>
+            <div class="mt-4">
+                {{ $logbooks->links() }}
+            </div>
+        </section>
+
+        <template x-teleport="body">
+            <div x-show="izinOpen" x-cloak class="fixed inset-0 z-[2000] flex items-center justify-center">
+                <div class="fixed inset-0 bg-gray-900/50" @click="izinOpen = false"></div>
+                <div class="relative z-10 mx-4 w-full max-w-lg rounded-2xl bg-white p-5 shadow-[0_14px_30px_rgba(15,46,36,0.16)]">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-gray-900">Ajukan Perizinan</h3>
+                        <button type="button" @click="izinOpen = false" class="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-600">Tutup</button>
+                    </div>
+
+                    <form method="POST" action="{{ route('siswa.perizinan.store') }}" class="space-y-4">
+                        @csrf
+                        <div>
+                            <label class="mb-1.5 block text-xs font-medium text-gray-700">Jenis Izin</label>
+                            <input type="text" name="jenis_izin" value="{{ old('jenis_izin') }}"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                placeholder="Contoh: Izin Sakit" required>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="mb-1.5 block text-xs font-medium text-gray-700">Tanggal Mulai</label>
+                                <input type="date" name="tanggal_mulai" value="{{ old('tanggal_mulai') }}"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="mb-1.5 block text-xs font-medium text-gray-700">Tanggal Selesai</label>
+                                <input type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai') }}"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700">
+                                Kirim Pengajuan Izin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
+
+        <template x-teleport="body">
+            <div x-show="logbookOpen" x-cloak class="fixed inset-0 z-[2000] flex items-center justify-center">
+                <div class="fixed inset-0 bg-gray-900/50" @click="logbookOpen = false"></div>
+                <div class="relative z-10 mx-4 w-full max-w-xl rounded-2xl bg-white p-5 shadow-[0_14px_30px_rgba(15,46,36,0.16)]">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-gray-900">Tambah Logbook</h3>
+                        <button type="button" @click="logbookOpen = false" class="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-600">Tutup</button>
+                    </div>
+
+                    <form method="POST" action="{{ route('siswa.elogbook.store') }}" class="space-y-4">
+                        @csrf
+                        <div>
+                            <label class="mb-1.5 block text-xs font-medium text-gray-700">Tanggal</label>
+                            <input type="date" name="tanggal" value="{{ old('tanggal') }}"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200"
+                                required>
+                        </div>
+                        <div>
+                            <label class="mb-1.5 block text-xs font-medium text-gray-700">Aktivitas</label>
+                            <textarea name="aktivitas" rows="4"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200"
+                                placeholder="Tuliskan aktivitas utama hari ini" required>{{ old('aktivitas') }}</textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                                Simpan Logbook
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
+
+        <template x-teleport="body">
+            <div x-show="editOpen" x-cloak class="fixed inset-0 z-[2000] flex items-center justify-center">
+                <div class="fixed inset-0 bg-gray-900/50" @click="editOpen = false"></div>
+                <div class="relative z-10 mx-4 w-full max-w-xl rounded-2xl bg-white p-5 shadow-[0_14px_30px_rgba(15,46,36,0.16)]">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-gray-900">Ubah Logbook</h3>
+                        <button type="button" @click="editOpen = false" class="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-600">Tutup</button>
+                    </div>
+
+                    <form method="POST" :action="editAction" class="space-y-4">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label class="mb-1.5 block text-xs font-medium text-gray-700">Tanggal</label>
+                            <input type="date" name="tanggal" x-model="editTanggal"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200"
+                                required>
+                        </div>
+                        <div>
+                            <label class="mb-1.5 block text-xs font-medium text-gray-700">Aktivitas</label>
+                            <textarea name="aktivitas" rows="4" x-model="editAktivitas"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200"
+                                required></textarea>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" @click="editOpen = false" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                Batal
+                            </button>
+                            <button type="submit" class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
     </div>
-</x-admin-layout>
+</x-siswa-layout>

@@ -155,6 +155,11 @@
             if ($isSiswa) {
                 $menus = array_merge($menus, [
                     [
+                        'label' => 'Beranda',
+                        'icon' => 'clipboard',
+                        'route' => 'siswa.dashboard',
+                    ],
+                    [
                         'label' => 'Penempatan PKL',
                         'icon' => 'map',
                         'route' => 'siswa.penempatan',

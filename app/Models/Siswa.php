@@ -23,6 +23,7 @@ class Siswa extends Model
         'tahun_ajaran',
         'bpjs_link',
         'kartu_pelajar_link',
+        'foto_profil_link',
         'cv_link',
         'portofolio_links',
     ];

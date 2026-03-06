@@ -18,6 +18,7 @@ use App\Http\Controllers\Guru\GuruPerizinanController;
 use App\Http\Controllers\Guru\GuruPenilaianController;
 use App\Http\Controllers\Guru\GuruRiskController;
 use App\Http\Controllers\Siswa\SiswaAbsensiController;
+use App\Http\Controllers\Siswa\SiswaDashboardController;
 use App\Http\Controllers\Siswa\SiswaPenempatanController;
 use App\Http\Controllers\Siswa\SiswaLogbookController;
 use App\Http\Controllers\Siswa\SiswaPerizinanController;
@@ -39,7 +40,7 @@ Route::get('/', function () {
         return redirect()->route('guru.siswa');
     }
     if ($user->hasRole('siswa')) {
-        return redirect()->route('siswa.penempatan');
+        return redirect()->route('siswa.dashboard');
     }
     if ($user->hasRole('perwakilan industri')) {
         return redirect()->route('industri.pengajuan');
@@ -125,6 +126,7 @@ Route::middleware(['auth', 'role:guru pembimbing'])->prefix('guru')->name('guru.
 });
 
 Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
+    Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
     Route::get('/penempatan', [SiswaPenempatanController::class, 'index'])->name('penempatan');
     Route::post('/penempatan/pilih', [SiswaPenempatanController::class, 'pilihRekomendasi'])->name('penempatan.pilih');
     Route::post('/penempatan/usulan', [SiswaPenempatanController::class, 'usulkanIndustri'])->name('penempatan.usulan');
@@ -135,6 +137,7 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::get('/absensi', [SiswaAbsensiController::class, 'index'])->name('absensi');
     Route::post('/absensi', [SiswaAbsensiController::class, 'store'])->name('absensi.store');
     Route::get('/perizinan', [SiswaPerizinanController::class, 'index'])->name('perizinan');
+    Route::post('/perizinan', [SiswaPerizinanController::class, 'store'])->name('perizinan.store');
     Route::get('/penilaian', [SiswaPenilaianController::class, 'index'])->name('penilaian');
     Route::get('/berkas', [SiswaBerkasController::class, 'index'])->name('berkas');
     Route::put('/berkas', [SiswaBerkasController::class, 'update'])->name('berkas.update');

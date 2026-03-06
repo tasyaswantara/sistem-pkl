@@ -72,6 +72,31 @@
                     </a>
                     @endif
                 </div>
+                <div class="md:col-span-2">
+                    @php
+                    $fotoProfilUrl = $siswa->foto_profil_link
+                        ? (\Illuminate\Support\Str::startsWith($siswa->foto_profil_link, ['http://', 'https://'])
+                            ? $siswa->foto_profil_link
+                            : Storage::url($siswa->foto_profil_link))
+                        : asset('assets/images/avatar-placeholder.svg');
+                    @endphp
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Upload Foto Profil (JPG/PNG, max 10MB, opsional)</label>
+                    <div class="flex items-start gap-4">
+                        <img src="{{ $fotoProfilUrl }}" alt="Foto profil saat ini" class="h-16 w-16 rounded-full border border-gray-200 object-cover">
+                        <div class="flex-1">
+                            <input
+                                type="file"
+                                name="foto_profil_file"
+                                accept="image/png,image/jpeg"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500">
+                            @if ($siswa->foto_profil_link)
+                            <a href="{{ $fotoProfilUrl }}" target="_blank" class="mt-2 inline-flex text-xs text-emerald-700 hover:underline">
+                                Lihat foto profil saat ini
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-6">

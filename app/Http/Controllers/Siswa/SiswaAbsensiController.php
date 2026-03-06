@@ -2,25 +2,44 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Enums\LogbookStatus;
+use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;
 use App\Services\SiswaAbsensiService;
+use App\Services\SiswaPresensiService;
 use Illuminate\Http\Request;
 
 class SiswaAbsensiController extends Controller
 {
-    public function index(Request $request, SiswaAbsensiService $service)
+    public function index(Request $request, SiswaPresensiService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
             abort(403, __('absensi.errors.akun'));
         }
 
-        $data = $service->getIndexData($siswa);
+        $data = $service->getPageData($siswa);
 
         return view('siswa.absensi.siswa-absensi', [
             'penempatan' => $data['penempatan'],
             'todayAbsensi' => $data['todayAbsensi'],
-            'absensiList' => $data['absensiList'],
+            'canCheckIn' => $data['canCheckIn'],
+            'canRequestIzin' => $data['canRequestIzin'],
+            'weekDays' => $data['weekDays'],
+            'weekCounts' => $data['weekCounts'],
+            'logbooks' => $data['logbooks'],
+            'logbookTotal' => $data['logbookTotal'],
+            'perizinanLatest' => $data['perizinanLatest'],
+            'logbookStatusLabels' => [
+                LogbookStatus::PENDING->value => 'Pending',
+                LogbookStatus::DISETUJUI->value => 'Disetujui',
+                LogbookStatus::DITOLAK->value => 'Ditolak',
+            ],
+            'perizinanStatusLabels' => [
+                PerizinanStatus::MENUNGGU->value => 'Menunggu',
+                PerizinanStatus::DISETUJUI->value => 'Disetujui',
+                PerizinanStatus::DITOLAK->value => 'Ditolak',
+            ],
         ]);
     }
 
@@ -45,6 +64,8 @@ class SiswaAbsensiController extends Controller
             ])->withInput();
         }
 
-        return back()->with('success', __('absensi.success.checkin'));
+        return back()
+            ->with('success', __('absensi.success.checkin'))
+            ->with('checkin_at', $result['absensi']?->check_in_at?->format('H:i:s'));
     }
 }

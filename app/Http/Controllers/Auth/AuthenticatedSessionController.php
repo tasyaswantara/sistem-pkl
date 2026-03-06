@@ -40,7 +40,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->hasRole('siswa')) {
-            return redirect()->route('siswa.penempatan');
+            return redirect()->route('siswa.dashboard');
         }
 
         if ($user->hasRole('perwakilan industri')) {
