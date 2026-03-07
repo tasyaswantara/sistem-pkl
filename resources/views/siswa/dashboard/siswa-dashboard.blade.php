@@ -132,7 +132,7 @@
                         class="text-xs text-emerald-600 hover:text-emerald-700">Detail</a>
                 </div>
 
-                <div class="space-y-3">
+                <div class="space-y-3 xl:mt-8">
                     @foreach ($timelineSteps as $index => $step)
                         @php
                             $meta = $timelineMeta[$step['state'] ?? 'pending'];
@@ -141,29 +141,38 @@
                             <div class="flex w-4 shrink-0 flex-col items-center">
                                 <div class="mt-1 h-3 w-3 rounded-full {{ $meta['dot'] }}"></div>
                                 @if (!$loop->last)
-                                    <div class="-mb-3 mt-1 w-0.5 flex-1 min-h-[56px] {{ $meta['line'] }}"></div>
+                                    <div class="-mb-3 mt-1 w-0.5 flex-1 min-h-[90px] {{ $meta['line'] }}"></div>
                                 @endif
                             </div>
-                            <div class="flex-1 rounded-xl border px-3 py-4 {{ $meta['card'] }}">
+                            <div class="flex-1 rounded-xl h-full border px-3 py-4 {{ $meta['card'] }}">
                                 <div class="text-sm font-semibold">{{ $step['label'] }}</div>
                                 <div class="text-xs">{{ $step['hint'] }}</div>
                             </div>
                         </div>
                     @endforeach
                 </div>
+                <div class="mt-4 flex flex-wrap gap-3 text-xs text-gray-500">
+                    <div class="inline-flex items-center gap-1.5"><span
+                            class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>Selesai</div>
+                    <div class="inline-flex items-center gap-1.5"><span
+                            class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>Proses</div>
+                    <div class="inline-flex items-center gap-1.5"><span
+                            class="h-2.5 w-2.5 rounded-full bg-gray-500"></span>Belum</div>
+                </div>
             </div>
-
+            {{-- KALENDER INI --}}
             <div class="rounded-2xl bg-white p-5 shadow-[0_10px_24px_rgba(15,46,36,0.12)] xl:col-span-3">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-base font-semibold text-gray-900">Kalender {{ $monthLabel }}</h2>
                     <div class="flex items-center gap-1">
                         <a href="{{ route('siswa.dashboard', ['month' => $prevMonth]) }}"
-                            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Sebelumnya</a>
-                        <a href="{{ route('siswa.dashboard') }}"
-                            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Bulan
-                            Ini</a>
-                        <a href="{{ route('siswa.dashboard', ['month' => $nextMonth]) }}"
-                            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Berikutnya</a>
+                            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+                            < </a>
+                                <a href="{{ route('siswa.dashboard') }}"
+                                    class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Bulan
+                                    Ini</a>
+                                <a href="{{ route('siswa.dashboard', ['month' => $nextMonth]) }}"
+                                    class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">></a>
                     </div>
                 </div>
 
