@@ -102,7 +102,7 @@ class AdminUserService
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:8',
+            'password' => 'required|min:8',
             'role' => 'required',
         ];
 
@@ -154,7 +154,7 @@ class AdminUserService
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8',
             'role' => 'required',
         ];
 
