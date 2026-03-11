@@ -44,10 +44,6 @@
                                 <span class="mx-2 text-gray-600 text-sm">Remember me</span>
                             </label>
                         </div>
-                        
-                        <div>
-                            <a class="block text-sm fontme text-indigo-700 hover:underline" href="#">Forgot your password?</a>
-                        </div>
                     </div>
 
                     <div class="mt-6">
