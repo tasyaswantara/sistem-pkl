@@ -28,7 +28,10 @@
         @endif
 
         @php
-        $status = $industri->status_pengajuan ?? PengajuanStatus::MENUNGGU->value;
+        $hasPengajuan = $penempatanList->isNotEmpty();
+        $status = $hasPengajuan
+            ? ($industri->status_pengajuan ?? PengajuanStatus::MENUNGGU->value)
+            : null;
         $statusClass = match ($status) {
         PengajuanStatus::DISETUJUI->value => 'bg-green-50 text-green-700 border border-green-200',
         PengajuanStatus::DITOLAK->value => 'bg-red-50 text-red-700 border border-red-200',
@@ -39,9 +42,15 @@
         <div class="bg-white rounded-lg border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Status Pengajuan</h3>
+                @if ($status)
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
                     {{ ucfirst($status) }}
                 </span>
+                @else
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                    Belum ada pengajuan
+                </span>
+                @endif
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -66,8 +75,10 @@
                     Tolak Pengajuan
                 </button>
             </form>
-            @else
+            @elseif ($status)
             <p class="text-sm text-gray-500">Status pengajuan sudah dikonfirmasi.</p>
+            @else
+            <p class="text-sm text-gray-500">Belum ada pengajuan yang perlu dikonfirmasi.</p>
             @endif
         </div>
 

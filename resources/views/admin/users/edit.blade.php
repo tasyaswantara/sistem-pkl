@@ -80,12 +80,6 @@
                             class="input-text">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Konfirmasi Password</label>
-                        <input type="password" name="password_confirmation"
-                            placeholder="Konfirmasi Password"
-                            class="input-text">
-                    </div>
                 </div>
             </div>
 

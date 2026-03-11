@@ -252,21 +252,23 @@ class SawRunService
 
     private function cleanupOldRuns(int $jurusanId, string $tahunAjaran, int $keep): int
     {
-        $runIdsToDelete = SawRun::query()
+        $keepIds = SawRun::query()
             ->where('jurusan_id', $jurusanId)
             ->where('tahun_ajaran', $tahunAjaran)
             ->orderByDesc('run_at')
             ->orderByDesc('id')
-            ->offset($keep)
+            ->limit($keep)
             ->pluck('id');
 
-        if ($runIdsToDelete->isEmpty()) {
-            return 0;
+        $deleteQuery = SawRun::query()
+            ->where('jurusan_id', $jurusanId)
+            ->where('tahun_ajaran', $tahunAjaran);
+
+        if ($keepIds->isNotEmpty()) {
+            $deleteQuery->whereNotIn('id', $keepIds);
         }
 
-        return SawRun::query()
-            ->whereIn('id', $runIdsToDelete)
-            ->delete();
+        return $deleteQuery->delete();
     }
 
     /**
