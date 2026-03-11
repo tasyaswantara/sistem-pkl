@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class SawRunService
 {
+    private const KEEP_RUNS_PER_JURUSAN_TAHUN = 3;
+
     public function __construct(private PenempatanStatusService $statusService)
     {
     }
@@ -81,12 +83,15 @@ class SawRunService
             $normalisasiIndustriByGrade
         );
 
+        $deletedRuns = $this->cleanupOldRuns($jurusanId, $tahunAjaran, self::KEEP_RUNS_PER_JURUSAN_TAHUN);
+
         Log::info('SAW run completed', [
             'jurusan_id' => $jurusanId,
             'tahun_ajaran' => $tahunAjaran,
             'siswa' => $siswaList->count(),
             'industri' => $industriList->count(),
             'rows_inserted' => $rowsCount,
+            'runs_deleted' => $deletedRuns,
         ]);
 
         return ['ok' => true, 'rows_count' => $rowsCount];
@@ -243,6 +248,25 @@ class SawRunService
 
             return count($rows);
         });
+    }
+
+    private function cleanupOldRuns(int $jurusanId, string $tahunAjaran, int $keep): int
+    {
+        $runIdsToDelete = SawRun::query()
+            ->where('jurusan_id', $jurusanId)
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->orderByDesc('run_at')
+            ->orderByDesc('id')
+            ->offset($keep)
+            ->pluck('id');
+
+        if ($runIdsToDelete->isEmpty()) {
+            return 0;
+        }
+
+        return SawRun::query()
+            ->whereIn('id', $runIdsToDelete)
+            ->delete();
     }
 
     /**
