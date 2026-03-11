@@ -160,34 +160,9 @@
                         'route' => 'siswa.dashboard',
                     ],
                     [
-                        'label' => 'Penempatan PKL',
-                        'icon' => 'map',
-                        'route' => 'siswa.penempatan',
-                    ],
-                    [
                         'label' => 'Absensi',
                         'icon' => 'map',
                         'route' => 'siswa.absensi',
-                    ],
-                    [
-                        'label' => 'E-Logbook',
-                        'icon' => 'book',
-                        'route' => 'siswa.elogbook',
-                    ],
-                    [
-                        'label' => 'Perizinan',
-                        'icon' => 'file',
-                        'route' => 'siswa.perizinan',
-                    ],
-                    [
-                        'label' => 'Penilaian',
-                        'icon' => 'clipboard',
-                        'route' => 'siswa.penilaian',
-                    ],
-                    [
-                        'label' => 'Berkas Siswa',
-                        'icon' => 'file',
-                        'route' => 'siswa.berkas',
                     ],
                 ]);
             }

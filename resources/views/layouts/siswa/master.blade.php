@@ -24,8 +24,6 @@
         $menus = [
             ['label' => 'Beranda', 'route' => 'siswa.dashboard'],
             ['label' => 'Presensi', 'route' => 'siswa.absensi'],
-            ['label' => 'Penilaian', 'route' => 'siswa.penilaian'],
-            ['label' => 'Berkas', 'route' => 'siswa.berkas'],
         ];
     @endphp
 

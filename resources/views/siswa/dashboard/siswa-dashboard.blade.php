@@ -128,8 +128,6 @@
             <div class="rounded-2xl bg-white p-5 shadow-[0_10px_24px_rgba(15,46,36,0.12)] xl:col-span-2">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-base font-semibold text-gray-900">Timeline Penempatan</h2>
-                    <a href="{{ route('siswa.penempatan') }}"
-                        class="text-xs text-emerald-600 hover:text-emerald-700">Detail</a>
                 </div>
 
                 <div class="space-y-3 xl:mt-8">
@@ -319,10 +317,6 @@
                     <h2 class="text-base font-semibold text-gray-900">Penilaian Siswa</h2>
                     <p class="text-sm text-gray-500">Riwayat penilaian dari industri.</p>
                 </div>
-                <a href="{{ route('siswa.penilaian') }}"
-                    class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
-                    Lihat Halaman Penilaian
-                </a>
             </div>
 
             <div class="overflow-x-auto">
