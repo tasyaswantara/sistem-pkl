@@ -1,4 +1,4 @@
-@section('title', 'Absensi Siswa PKL')
+@section('title', 'Presensi Siswa PKL')
 
 @php
     use App\Enums\AbsensiStatus;
@@ -77,8 +77,8 @@
 <x-admin-layout>
     <div class="space-y-6">
         <div class="mb-2">
-            <div class="text-sm text-gray-500 mb-2">Dashboard → Absensi</div>
-            <h1 class="text-gray-900 text-2xl font-semibold mb-2">Absensi Siswa PKL</h1>
+            <div class="text-sm text-gray-500 mb-2">Dashboard → Presensi</div>
+            <h1 class="text-gray-900 text-2xl font-semibold mb-2">Presensi Siswa PKL</h1>
             <p class="text-gray-500 text-sm max-w-2xl">
                 Pantau check-in harian siswa yang sudah diterima magang di industri Anda.
             </p>
@@ -101,7 +101,7 @@
             </div>
         @endif
 
-        <form method="GET" action="{{ route('industri.absensi') }}" class="bg-white rounded-lg border border-gray-200 p-6">
+        <form method="GET" action="{{ route('industri.presensi') }}" class="bg-white rounded-lg border border-gray-200 p-6">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal</label>
@@ -139,7 +139,7 @@
                 <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
                     Terapkan
                 </button>
-                <a href="{{ route('industri.absensi') }}"
+                <a href="{{ route('industri.presensi') }}"
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
                     Reset
                 </a>
@@ -175,7 +175,7 @@
 
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
-                <h3 class="text-base font-semibold text-gray-900">Data Absensi</h3>
+                <h3 class="text-base font-semibold text-gray-900">Data Presensi</h3>
                 <div class="text-xs text-gray-500">{{ $absensiList->total() }} data</div>
             </div>
             <div class="overflow-x-auto">
@@ -230,7 +230,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
-                                    Belum ada data absensi pada filter ini.
+                                    Belum ada data presensi pada filter ini.
                                 </td>
                             </tr>
                         @endforelse

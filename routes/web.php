@@ -38,6 +38,9 @@ Route::get('/', function () {
     }
 
     $user = auth()->user();
+    if ($user->hasRole('admin')) {
+        return redirect()->route('admin.data-pengguna');
+    }
     if ($user->hasRole('guru pembimbing')) {
         return redirect()->route('guru.siswa');
     }
@@ -102,8 +105,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
     Route::get('/risk', [AdminRiskController::class, 'index'])->name('admin.risk');
     Route::post('/risk/run', [AdminRiskController::class, 'runRisk'])->name('admin.risk.run');
-    Route::get('/absensi', [AdminAbsensiController::class, 'index'])->name('admin.absensi');
-    Route::put('/absensi/geofence/radius-global', [AdminAbsensiController::class, 'updateGlobalRadius'])->name('admin.absensi.geofence.radius-global');
+    Route::get('/presensi', [AdminAbsensiController::class, 'index'])->name('admin.presensi');
+    Route::put('/presensi/geofence/radius-global', [AdminAbsensiController::class, 'updateGlobalRadius'])->name('admin.presensi.geofence.radius-global');
 
     Route::get('/forms', function () {
         return view('admin.forms');
@@ -120,7 +123,7 @@ Route::group(['middleware' => ['permission:publish articles']], function () {});
 
 Route::middleware(['auth', 'role:guru pembimbing'])->prefix('guru')->name('guru.')->group(function () {
     Route::get('/siswa', [GuruSiswaController::class, 'index'])->name('siswa');
-    Route::get('/absensi', [GuruAbsensiController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [GuruAbsensiController::class, 'index'])->name('presensi');
     Route::get('/elogbook', [GuruLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}/komentar', [GuruLogbookController::class, 'storeKomentar'])->name('elogbook.komentar');
     Route::get('/perizinan', [GuruPerizinanController::class, 'index'])->name('perizinan');
@@ -135,8 +138,8 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::post('/elogbook', [SiswaLogbookController::class, 'store'])->name('elogbook.store');
     Route::put('/elogbook/{logbook}', [SiswaLogbookController::class, 'update'])->name('elogbook.update');
     Route::delete('/elogbook/{logbook}', [SiswaLogbookController::class, 'destroy'])->name('elogbook.destroy');
-    Route::get('/absensi', [SiswaAbsensiController::class, 'index'])->name('absensi');
-    Route::post('/absensi', [SiswaAbsensiController::class, 'store'])->name('absensi.store');
+    Route::get('/presensi', [SiswaAbsensiController::class, 'index'])->name('presensi');
+    Route::post('/presensi', [SiswaAbsensiController::class, 'store'])->name('presensi.store');
     Route::post('/perizinan', [SiswaPerizinanController::class, 'store'])->name('perizinan.store');
     Route::put('/berkas', [SiswaBerkasController::class, 'update'])->name('berkas.update');
 });
@@ -151,7 +154,7 @@ Route::middleware(['auth', 'role:perwakilan industri', 'industri.approved'])->pr
     Route::post('/siswa/{penempatan}/status', [IndustriDataSiswaController::class, 'setStatus'])->name('siswa.status');
     Route::post('/siswa/{penempatan}/jadwal', [IndustriDataSiswaController::class, 'storeJadwal'])->name('siswa.jadwal');
     Route::post('/siswa/{penempatan}/laporan', [IndustriDataSiswaController::class, 'storeLaporan'])->name('siswa.laporan');
-    Route::get('/absensi', [IndustriAbsensiController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [IndustriAbsensiController::class, 'index'])->name('presensi');
     Route::get('/elogbook', [IndustriLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}', [IndustriLogbookController::class, 'update'])->name('elogbook.update');
     Route::get('/perizinan', [IndustriPerizinanController::class, 'index'])->name('perizinan');

@@ -1,4 +1,4 @@
-@section('title', 'Absensi PKL')
+@section('title', 'Presensi PKL')
 
 @php
     use App\Enums\AbsensiStatus;
@@ -23,7 +23,7 @@
         }
 
         if (hasLeaflet) {
-            // Peta monitoring absensi harian (read-only) untuk admin.
+            // Peta monitoring presensi harian (read-only) untuk admin.
             const points = @json($mapPoints);
             const map = L.map('admin-absensi-map').setView([-6.200000, 106.816666], 11);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -80,8 +80,8 @@
 <x-admin-layout>
     <div class="space-y-6">
         <div class="mb-2">
-            <div class="text-sm text-gray-500 mb-2">Dashboard → Absensi PKL</div>
-            <h1 class="text-gray-900 text-2xl font-semibold mb-2">Monitoring Absensi Lokasi</h1>
+            <div class="text-sm text-gray-500 mb-2">Dashboard → Presensi PKL</div>
+            <h1 class="text-gray-900 text-2xl font-semibold mb-2">Monitoring Presensi Lokasi</h1>
             <p class="text-gray-500 text-sm max-w-2xl">
                 Pantau check-in harian siswa berbasis lokasi, termasuk validasi geofence industri.
             </p>
@@ -104,7 +104,7 @@
         </div>
         @endif
 
-        <form method="GET" action="{{ route('admin.absensi') }}" class="bg-white rounded-lg border border-gray-200 p-6">
+        <form method="GET" action="{{ route('admin.presensi') }}" class="bg-white rounded-lg border border-gray-200 p-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal</label>
@@ -153,7 +153,7 @@
                 <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
                     Terapkan
                 </button>
-                <a href="{{ route('admin.absensi') }}"
+                <a href="{{ route('admin.presensi') }}"
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
                     Reset
                 </a>
@@ -191,7 +191,7 @@
             <div class="space-y-6">
                 <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
-                        <h3 class="text-base font-semibold text-gray-900">Data Absensi</h3>
+                        <h3 class="text-base font-semibold text-gray-900">Data Presensi</h3>
                         <div class="text-xs text-gray-500">{{ $absensiList->total() }} data</div>
                     </div>
                     <div class="overflow-x-auto">
@@ -247,7 +247,7 @@
                                 @empty
                                 <tr>
                                     <td colspan="8" class="px-4 py-6 text-center text-sm text-gray-500">
-                                        Belum ada data absensi pada filter ini.
+                                        Belum ada data presensi pada filter ini.
                                     </td>
                                 </tr>
                                 @endforelse
@@ -268,7 +268,7 @@
                                 <p class="text-xs text-amber-700 mt-1">Radius antar industri saat ini berbeda. Simpan radius global untuk menyeragamkan.</p>
                                 @endif
                             </div>
-                            <form method="POST" action="{{ route('admin.absensi.geofence.radius-global') }}" class="flex flex-wrap items-end gap-2">
+                            <form method="POST" action="{{ route('admin.presensi.geofence.radius-global') }}" class="flex flex-wrap items-end gap-2">
                                 @csrf
                                 @method('PUT')
                                 <div>

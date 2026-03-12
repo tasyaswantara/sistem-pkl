@@ -23,7 +23,7 @@
     @php
         $menus = [
             ['label' => 'Beranda', 'route' => 'siswa.dashboard'],
-            ['label' => 'Presensi', 'route' => 'siswa.absensi'],
+            ['label' => 'Presensi', 'route' => 'siswa.presensi'],
         ];
     @endphp
 

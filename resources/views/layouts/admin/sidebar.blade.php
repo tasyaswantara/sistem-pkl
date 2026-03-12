@@ -95,9 +95,9 @@
                         ],
                     ],
                     [
-                        'label' => 'Absensi',
+                        'label' => 'Presensi',
                         'icon' => 'map',
-                        'route' => 'admin.absensi',
+                        'route' => 'admin.presensi',
                     ],
                     [
                         'label' => 'E-Logbook',
@@ -130,9 +130,9 @@
                         'route' => 'guru.siswa',
                     ],
                     [
-                        'label' => 'Absensi',
+                        'label' => 'Presensi',
                         'icon' => 'map',
-                        'route' => 'guru.absensi',
+                        'route' => 'guru.presensi',
                     ],
                     [
                         'label' => 'E-Logbook',
@@ -165,9 +165,9 @@
                         'route' => 'siswa.dashboard',
                     ],
                     [
-                        'label' => 'Absensi',
+                        'label' => 'Presensi',
                         'icon' => 'map',
-                        'route' => 'siswa.absensi',
+                        'route' => 'siswa.presensi',
                     ],
                 ]);
             }
@@ -190,9 +190,9 @@
                         'route' => 'industri.siswa',
                     ],
                     [
-                        'label' => 'Absensi',
+                        'label' => 'Presensi',
                         'icon' => 'map',
-                        'route' => 'industri.absensi',
+                        'route' => 'industri.presensi',
                     ],
                     [
                         'label' => 'E-Logbook',

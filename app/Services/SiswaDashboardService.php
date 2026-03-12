@@ -270,7 +270,7 @@ class SiswaDashboardService
         if ($status === PenempatanStatus::DITERIMA_INDUSTRI->value) {
             return [
                 'label' => 'Presensi',
-                'route' => 'siswa.absensi',
+                'route' => 'siswa.presensi',
                 'description' => 'Buka halaman presensi, izin, dan logbook harian.',
             ];
         }

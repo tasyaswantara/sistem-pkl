@@ -359,7 +359,7 @@
                     </div>
                 </div>
 
-                <form id="presensi-form" method="POST" action="{{ route('siswa.absensi.store') }}" class="mt-4 space-y-3"
+                <form id="presensi-form" method="POST" action="{{ route('siswa.presensi.store') }}" class="mt-4 space-y-3"
                     data-has-checkin-today="{{ $hasCheckInToday ? '1' : '0' }}"
                     data-checkin-time="{{ $checkInTimeDisplay ?? '-' }}">
                     @csrf
