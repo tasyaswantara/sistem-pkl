@@ -3,40 +3,37 @@
 namespace App\Services;
 
 use App\Enums\AbsensiStatus;
+use App\Enums\PenempatanStatus;
 use App\Models\AbsensiPkl;
 use App\Models\Industri;
 use App\Models\Jurusan;
+use App\Models\PenempatanPKL;
+use App\Models\Siswa;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
-class AdminAbsensiService
+class IndustriAbsensiService
 {
     /**
-     * @param array{date?:string,jurusan_id?:string,industri_id?:string,status?:string,q?:string} $filters
-     * @return array{
-     *  absensiList:LengthAwarePaginator,
-     *  statusCounts:array<string,int>,
-     *  mapPoints:array<int,array<string,mixed>>,
-     *  geofenceList:Collection<int,Industri>,
-     *  globalRadiusM:int,
-     *  radiusUniform:bool
-     * }
+     * @param array{date?:string,jurusan_id?:string,status?:string,q?:string} $filters
+     * @return array{absensiList:LengthAwarePaginator,statusCounts:array<string,int>,mapPoints:array<int,array<string,mixed>>}
      */
-    public function getIndexData(array $filters): array
+    public function getIndexData(Industri $industri, array $filters): array
     {
         $date = $filters['date'] ?? now()->toDateString();
+        $siswaIds = PenempatanPKL::where('industri_id', $industri->id)
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
+            ->pluck('siswa_id');
+
         $baseQuery = AbsensiPkl::query()
             ->with(['siswa.user', 'siswa.jurusan', 'industri'])
+            ->whereIn('siswa_id', $siswaIds)
+            ->where('industri_id', $industri->id)
             ->whereDate('tanggal', $date);
 
         if (!empty($filters['jurusan_id'])) {
             $baseQuery->whereHas('siswa', function ($query) use ($filters) {
                 $query->where('jurusan_id', $filters['jurusan_id']);
             });
-        }
-
-        if (!empty($filters['industri_id'])) {
-            $baseQuery->where('industri_id', $filters['industri_id']);
         }
 
         if (!empty($filters['q'])) {
@@ -87,58 +84,29 @@ class AdminAbsensiService
             ->values()
             ->all();
 
-        $geofenceList = Industri::with('jurusan')
-            ->when(!empty($filters['jurusan_id']), function ($query) use ($filters) {
-                $query->where('jurusan_id', $filters['jurusan_id']);
-            })
-            ->orderBy('nama_industri')
-            ->get();
-
-        $radiusStats = Industri::query()
-            ->selectRaw('MIN(geofence_radius_m) as min_radius, MAX(geofence_radius_m) as max_radius')
-            ->first();
-        $minRadius = $radiusStats?->min_radius !== null ? (int) $radiusStats->min_radius : null;
-        $maxRadius = $radiusStats?->max_radius !== null ? (int) $radiusStats->max_radius : null;
-        $globalRadiusM = $maxRadius ?? 200;
-        $radiusUniform = $minRadius !== null && $maxRadius !== null && $minRadius === $maxRadius;
-
         return [
             'absensiList' => $absensiList,
             'statusCounts' => $statusCounts,
             'mapPoints' => $mapPoints,
-            'geofenceList' => $geofenceList,
-            'globalRadiusM' => $globalRadiusM,
-            'radiusUniform' => $radiusUniform,
         ];
     }
 
     /**
-     * @return array{jurusanOptions:Collection<int,Jurusan>,industriOptions:Collection<int,Industri>}
+     * @return array{jurusanOptions:\Illuminate\Support\Collection}
      */
-    public function getOptions(): array
+    public function getOptions(Industri $industri): array
     {
+        $siswaIds = PenempatanPKL::where('industri_id', $industri->id)
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
+            ->pluck('siswa_id');
+
+        $jurusanOptions = Jurusan::whereIn(
+            'id',
+            Siswa::whereIn('id', $siswaIds)->pluck('jurusan_id')->unique()
+        )->orderBy('nama')->get();
+
         return [
-            'jurusanOptions' => Jurusan::orderBy('nama')->get(),
-            'industriOptions' => Industri::orderBy('nama_industri')->get(),
+            'jurusanOptions' => $jurusanOptions,
         ];
-    }
-
-    /**
-     * @param array{latitude:float,longitude:float,geofence_radius_m:int} $data
-     */
-    public function updateGeofence(Industri $industri, array $data): void
-    {
-        $industri->update([
-            'latitude' => round((float) $data['latitude'], 7),
-            'longitude' => round((float) $data['longitude'], 7),
-            'geofence_radius_m' => (int) $data['geofence_radius_m'],
-        ]);
-    }
-
-    public function updateGlobalRadius(int $radiusMeter): void
-    {
-        Industri::query()->update([
-            'geofence_radius_m' => $radiusMeter,
-        ]);
     }
 }

@@ -23,6 +23,7 @@
             ? $penempatan?->usulanIndustri?->nama_industri
             : $penempatan?->industri?->nama_industri;
 
+    // desain untuk timelinenya
     $timelineMeta = [
         'done' => [
             'dot' => 'bg-emerald-500',
@@ -163,6 +164,7 @@
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-base font-semibold text-gray-900">Kalender {{ $monthLabel }}</h2>
                     <div class="flex items-center gap-1">
+                        {{-- menerima inputan bulan yg dipilih --}}
                         <a href="{{ route('siswa.dashboard', ['month' => $prevMonth]) }}"
                             class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
                             < </a>
@@ -184,7 +186,7 @@
                     <div>Jum</div>
                     <div>Sab</div>
                 </div>
-
+                {{-- mapping clendar sel yang diatur di dashboard service --}}
                 <div class="grid grid-cols-7 gap-2">
                     @foreach ($calendarCells as $cell)
                         @php
@@ -207,7 +209,7 @@
                                     </span>
                                 @endif
                             </div>
-
+                            {{-- kondisi ketika  ada event maka akan ada flag tertentu --}}
                             <div class="mt-2 flex items-center gap-1.5">
                                 @if ($cell['has_wawancara'])
                                     <span class="inline-flex h-2.5 w-2.5 rounded-full bg-sky-500"
@@ -403,7 +405,9 @@
                                 </div>
                                 <p class="mt-1 text-xs text-gray-600" x-text="event.subtitle"></p>
                                 <div class="mt-2 flex gap-3 text-xs text-gray-500">
-                                    <span>Waktu: <span x-text="event.time"></span></span>
+                                    <template x-if="event.time && event.time !== '-'">
+                                        <span>Waktu: <span x-text="event.time"></span></span>
+                                    </template>
                                     <span>Status: <span x-text="event.status"></span></span>
                                 </div>
                             </div>

@@ -56,6 +56,7 @@
                         NIS: ${point.nis}<br>
                         Industri: ${point.industri}<br>
                         Status: ${point.status}<br>
+                        Catatan: ${point.catatan ?? '-'}<br>
                         Waktu: ${point.check_in_at ?? '-'}<br>
                         Jarak: ${point.distance ? Number(point.distance).toFixed(2) + ' m' : '-'}
                     </div>
@@ -194,7 +195,7 @@
                         <div class="text-xs text-gray-500">{{ $absensiList->total() }} data</div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full min-w-[980px]">
+                        <table class="w-full min-w-[1120px]">
                             <thead>
                                 <tr class="bg-gray-50 border-b border-gray-200">
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
@@ -204,6 +205,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Koordinat</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jarak</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Catatan</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -238,10 +240,13 @@
                                             {{ $statusLabel }}
                                         </span>
                                     </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        {{ $row->catatan ? $row->catatan : '-' }}
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
+                                    <td colspan="8" class="px-4 py-6 text-center text-sm text-gray-500">
                                         Belum ada data absensi pada filter ini.
                                     </td>
                                 </tr>

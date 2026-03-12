@@ -139,7 +139,6 @@ class AdminUserService
                     'alamat' => 'required|string',
                     'latitude' => 'required|numeric|between:-90,90',
                     'longitude' => 'required|numeric|between:-180,180',
-                    'geofence_radius_m' => 'required|integer|min:20|max:5000',
                     'grade' => 'required|in:A,B,C',
                     'jurusan_id' => 'required|exists:jurusan,id',
                 ]);
@@ -206,7 +205,6 @@ class AdminUserService
                     'alamat' => 'required|string',
                     'latitude' => 'required|numeric|between:-90,90',
                     'longitude' => 'required|numeric|between:-180,180',
-                    'geofence_radius_m' => 'required|integer|min:20|max:5000',
                     'grade' => 'required|in:A,B,C',
                     'jurusan_id' => 'required|exists:jurusan,id',
                 ]);
@@ -249,13 +247,14 @@ class AdminUserService
                 break;
 
             case 'perwakilan industri':
+                $defaultRadius = Industri::query()->max('geofence_radius_m');
                 $user->industri()->create([
                     'nama_industri' => $data['nama_industri'],
                     'kapasitas' => $data['kapasitas'],
                     'alamat' => $data['alamat'],
                     'latitude' => round((float) $data['latitude'], 7),
                     'longitude' => round((float) $data['longitude'], 7),
-                    'geofence_radius_m' => (int) $data['geofence_radius_m'],
+                    'geofence_radius_m' => $defaultRadius !== null ? (int) $defaultRadius : 200,
                     'grade' => $data['grade'],
                     'jurusan_id' => $data['jurusan_id'],
                 ]);
@@ -324,7 +323,6 @@ class AdminUserService
                         'alamat' => $data['alamat'],
                         'latitude' => round((float) $data['latitude'], 7),
                         'longitude' => round((float) $data['longitude'], 7),
-                        'geofence_radius_m' => (int) $data['geofence_radius_m'],
                         'grade' => $data['grade'],
                         'jurusan_id' => $data['jurusan_id'],
                     ]

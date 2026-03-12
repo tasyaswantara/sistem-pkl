@@ -164,7 +164,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="grid grid-cols-3 gap-3 text-sm">
                         <div class="rounded-lg border border-gray-200 p-3">
                             <div class="text-xs text-gray-500">Skor Frekuensi</div>
                             <div class="text-base font-semibold text-gray-900" x-text="detailData.freq_score !== undefined ? Number(detailData.freq_score).toFixed(3) : '-'"></div>
@@ -172,6 +172,25 @@
                         <div class="rounded-lg border border-gray-200 p-3">
                             <div class="text-xs text-gray-500">Skor Ketepatan</div>
                             <div class="text-base font-semibold text-gray-900" x-text="detailData.late_score !== undefined ? Number(detailData.late_score).toFixed(3) : '-'"></div>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 p-3">
+                            <div class="text-xs text-gray-500">Skor Absensi</div>
+                            <div class="text-base font-semibold text-gray-900" x-text="detailData.absensi_score !== undefined ? Number(detailData.absensi_score).toFixed(3) : '-'"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="rounded-lg border border-gray-200 px-3 py-2">
+                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Absensi</div>
+                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_absensi ?? '-'"></div>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 px-3 py-2">
+                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Absensi Valid</div>
+                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.valid_absensi ?? '-'"></div>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 px-3 py-2">
+                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Absensi</div>
+                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_absensi ?? '-'"></div>
                         </div>
                     </div>
 

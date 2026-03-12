@@ -130,6 +130,11 @@
                         'route' => 'guru.siswa',
                     ],
                     [
+                        'label' => 'Absensi',
+                        'icon' => 'map',
+                        'route' => 'guru.absensi',
+                    ],
+                    [
                         'label' => 'E-Logbook',
                         'icon' => 'book',
                         'route' => 'guru.elogbook',
@@ -183,6 +188,11 @@
                         'label' => 'Data Siswa',
                         'icon' => 'users',
                         'route' => 'industri.siswa',
+                    ],
+                    [
+                        'label' => 'Absensi',
+                        'icon' => 'map',
+                        'route' => 'industri.absensi',
                     ],
                     [
                         'label' => 'E-Logbook',

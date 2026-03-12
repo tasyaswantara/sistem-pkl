@@ -61,6 +61,10 @@ class SiswaDashboardService
 
         $perizinan = Perizinan::with('industri')
             ->where('siswa_id', $siswa->id)
+            ->whereIn('status', [
+                PerizinanStatus::MENUNGGU->value,
+                PerizinanStatus::DISETUJUI->value,
+            ])
             ->whereDate('tanggal_mulai', '<=', $monthEnd->toDateString())
             ->whereDate('tanggal_selesai', '>=', $monthStart->toDateString())
             ->orderBy('tanggal_mulai')
@@ -101,6 +105,7 @@ class SiswaDashboardService
     /**
      * @return array{0:array<int,array<string,mixed>>,1:array<string,array<int,array<string,string>>>}
      */
+    // digunakan untuk maping jadwal dan perizinan
     private function buildCalendarData(
         Carbon $monthStart,
         Carbon $monthEnd,
@@ -123,7 +128,7 @@ class SiswaDashboardService
                 'status' => ucfirst((string) $jadwal->status),
             ];
         }
-
+        // mapping data perizinan karena bisa lebih dari sehari
         foreach ($perizinan as $izin) {
             $start = $izin->tanggal_mulai ? $izin->tanggal_mulai->copy()->startOfDay() : null;
             $end = $izin->tanggal_selesai ? $izin->tanggal_selesai->copy()->startOfDay() : null;
@@ -155,10 +160,11 @@ class SiswaDashboardService
                 ];
             }
         }
-
+        // startnya selalu sunday
         $calendarStart = $monthStart->copy()->startOfWeek(Carbon::SUNDAY);
         $calendarEnd = $monthEnd->copy()->endOfWeek(Carbon::SATURDAY);
 
+        // memetakan sel sel kalender dari data
         $calendarCells = [];
         for ($cursor = $calendarStart->copy(); $cursor->lte($calendarEnd); $cursor->addDay()) {
             $dateKey = $cursor->toDateString();

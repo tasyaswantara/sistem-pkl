@@ -260,12 +260,6 @@
                                     value="{{ old('longitude', $industri->longitude ?? '') }}"
                                     class="input-text">
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Radius Geofence (m)</label>
-                                <input name="geofence_radius_m" type="number" min="20" max="5000"
-                                    value="{{ old('geofence_radius_m', $industri->geofence_radius_m ?? 200) }}"
-                                    class="input-text">
-                            </div>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">Klik peta atau drag marker untuk mengubah titik secara presisi.</p>
                     </div>

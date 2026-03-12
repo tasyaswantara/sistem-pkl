@@ -216,6 +216,17 @@
                             position.coords.accuracy
                         );
 
+                        if (form && !form.checkValidity()) {
+                            form.reportValidity();
+                            presensiButton.disabled = false;
+                            presensiButton.textContent = 'Presensi Sekarang';
+                            statusBox.textContent = catatanInput?.required
+                                ? 'Lengkapi catatan jika presensi di luar area.'
+                                : 'Lengkapi data presensi yang diperlukan.';
+                            statusBox.className = 'rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700';
+                            return;
+                        }
+
                         presensiButton.textContent = 'Mengirim Presensi...';
                         form.requestSubmit();
                     },
@@ -258,6 +269,13 @@
             editAktivitas: ''
         }"
         class="space-y-6">
+        <div>
+            <a href="{{ route('siswa.dashboard') }}"
+                class="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-[0_6px_18px_rgba(15,46,36,0.12)] hover:bg-gray-50">
+                <span class="text-sm">&larr;</span>
+                Kembali ke Dashboard
+            </a>
+        </div>
 
         @if (session('success'))
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">

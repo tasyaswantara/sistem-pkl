@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminPenilaianController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminRiskController;
 use App\Http\Controllers\Admin\AdminAbsensiController;
+use App\Http\Controllers\Guru\GuruAbsensiController;
 use App\Http\Controllers\Guru\GuruSiswaController;
 use App\Http\Controllers\Guru\GuruLogbookController;
 use App\Http\Controllers\Guru\GuruPerizinanController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Siswa\SiswaLogbookController;
 use App\Http\Controllers\Siswa\SiswaPerizinanController;
 use App\Http\Controllers\Siswa\SiswaPenilaianController;
 use App\Http\Controllers\Siswa\SiswaBerkasController;
+use App\Http\Controllers\Industri\IndustriAbsensiController;
 use App\Http\Controllers\Industri\IndustriPengajuanController;
 use App\Http\Controllers\Industri\IndustriDataSiswaController;
 use App\Http\Controllers\Industri\IndustriLogbookController;
@@ -118,6 +120,7 @@ Route::group(['middleware' => ['permission:publish articles']], function () {});
 
 Route::middleware(['auth', 'role:guru pembimbing'])->prefix('guru')->name('guru.')->group(function () {
     Route::get('/siswa', [GuruSiswaController::class, 'index'])->name('siswa');
+    Route::get('/absensi', [GuruAbsensiController::class, 'index'])->name('absensi');
     Route::get('/elogbook', [GuruLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}/komentar', [GuruLogbookController::class, 'storeKomentar'])->name('elogbook.komentar');
     Route::get('/perizinan', [GuruPerizinanController::class, 'index'])->name('perizinan');
@@ -148,6 +151,7 @@ Route::middleware(['auth', 'role:perwakilan industri', 'industri.approved'])->pr
     Route::post('/siswa/{penempatan}/status', [IndustriDataSiswaController::class, 'setStatus'])->name('siswa.status');
     Route::post('/siswa/{penempatan}/jadwal', [IndustriDataSiswaController::class, 'storeJadwal'])->name('siswa.jadwal');
     Route::post('/siswa/{penempatan}/laporan', [IndustriDataSiswaController::class, 'storeLaporan'])->name('siswa.laporan');
+    Route::get('/absensi', [IndustriAbsensiController::class, 'index'])->name('absensi');
     Route::get('/elogbook', [IndustriLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}', [IndustriLogbookController::class, 'update'])->name('elogbook.update');
     Route::get('/perizinan', [IndustriPerizinanController::class, 'index'])->name('perizinan');

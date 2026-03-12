@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\AbsensiStatus;
 use App\Enums\PenempatanStatus;
+use App\Models\AbsensiPkl;
 use App\Models\Logbook;
 use App\Models\PenempatanPKL;
 use App\Models\RiskScore;
@@ -98,9 +100,10 @@ class AdminRiskService
     {
         $targetLogbookPerWeek = $this->countWeekdays($weekStart, $weekEnd);
         $weights = [
-            'logbook' => 0.45,
-            'late' => 0.35,
+            'logbook' => 0.35,
+            'late' => 0.25,
             'laporan' => 0.2,
+            'absensi' => 0.2,
         ];
         $laporanScores = [
             'selesai' => 1.0,
@@ -119,6 +122,10 @@ class AdminRiskService
             ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->get()
             ->groupBy('siswa_id');
+        $absensiList = AbsensiPkl::whereIn('siswa_id', $siswaIds)
+            ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->get()
+            ->groupBy('siswa_id');
 
         $rows = [];
         foreach ($siswaList as $siswa) {
@@ -132,18 +139,27 @@ class AdminRiskService
                 return $log->created_at->toDateString() > $log->tanggal->toDateString();
             })->count();
 
+            $absensiLogs = $absensiList->get($siswa->id, collect());
+            $validAbsensi = $absensiLogs
+                ->where('status', AbsensiStatus::HADIR_VALID->value)
+                ->count();
+
             $freqScore = ($totalLogs > 0 && $targetLogbookPerWeek > 0)
                 ? min($totalLogs / $targetLogbookPerWeek, 1)
                 : 0;
             $lateScore = $totalLogs > 0
                 ? 1 - min($lateLogs / $totalLogs, 1)
                 : 0;
+            $absensiScore = $targetLogbookPerWeek > 0
+                ? min($validAbsensi / $targetLogbookPerWeek, 1)
+                : 0;
             $laporanStatus = $penempatanBySiswa->get($siswa->id)?->laporan_status ?? null;
             $laporanScore = $laporanScores[$laporanStatus] ?? 1;
 
             $score = ($weights['logbook'] * $freqScore)
                 + ($weights['late'] * $lateScore)
-                + ($weights['laporan'] * $laporanScore);
+                + ($weights['laporan'] * $laporanScore)
+                + ($weights['absensi'] * $absensiScore);
 
             $rows[] = [
                 'siswa_id' => $siswa->id,
@@ -208,6 +224,10 @@ class AdminRiskService
             ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->get()
             ->groupBy('siswa_id');
+        $absensiList = AbsensiPkl::whereIn('siswa_id', $siswaIds)
+            ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->get()
+            ->groupBy('siswa_id');
 
         $targetLogbookPerWeek = $this->countWeekdays($weekStart, $weekEnd);
         $laporanScores = [
@@ -227,11 +247,20 @@ class AdminRiskService
                 return $log->created_at->toDateString() > $log->tanggal->toDateString();
             })->count();
 
+            $absensiLogs = $absensiList->get($row->siswa_id, collect());
+            $validAbsensi = $absensiLogs
+                ->where('status', AbsensiStatus::HADIR_VALID->value)
+                ->count();
+            $totalAbsensi = $absensiLogs->count();
+
             $freqScore = ($totalLogs > 0 && $targetLogbookPerWeek > 0)
                 ? min($totalLogs / $targetLogbookPerWeek, 1)
                 : 0;
             $lateScore = $totalLogs > 0
                 ? 1 - min($lateLogs / $totalLogs, 1)
+                : 0;
+            $absensiScore = $targetLogbookPerWeek > 0
+                ? min($validAbsensi / $targetLogbookPerWeek, 1)
                 : 0;
             $laporanStatus = $penempatanBySiswa->get($row->siswa_id)?->laporan_status ?? null;
             $laporanScore = $laporanScores[$laporanStatus] ?? 1;
@@ -242,6 +271,10 @@ class AdminRiskService
                 'target_logs' => $targetLogbookPerWeek,
                 'freq_score' => $freqScore,
                 'late_score' => $lateScore,
+                'total_absensi' => $totalAbsensi,
+                'valid_absensi' => $validAbsensi,
+                'target_absensi' => $targetLogbookPerWeek,
+                'absensi_score' => $absensiScore,
                 'laporan_status' => $laporanStatus ?? 'belum ada',
                 'laporan_score' => $laporanScore,
             ];

@@ -70,6 +70,7 @@ class SiswaAbsensiService
         }
 
         $today = now()->toDateString();
+        // menentukan status sudah absen hari ini
         $alreadyCheckedIn = AbsensiPkl::where('siswa_id', $siswa->id)
             ->whereDate('tanggal', $today)
             ->exists();
@@ -121,6 +122,7 @@ class SiswaAbsensiService
     /**
      * @return array{distance:?float,is_within_geofence:bool,status:string}
      */
+    // jika jarak lebih dari radius maka akan jadi diluar area
     private function resolveGeofenceStatus(Industri $industri, float $latitude, float $longitude): array
     {
         $distance = $this->calculateDistanceMeters(
@@ -141,7 +143,7 @@ class SiswaAbsensiService
                 : AbsensiStatus::DI_LUAR_AREA->value,
         ];
     }
-
+    // rumus haversine untuk geofence menentukan jarak 2 titik secara lingkaran
     private function calculateDistanceMeters(
         float $lat1,
         float $lng1,
