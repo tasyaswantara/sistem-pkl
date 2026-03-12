@@ -133,31 +133,49 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <button type="button"
-                                        class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                                        @click="openId = openId === {{ $row->id }} ? null : {{ $row->id }}">
-                                        Atur Jadwal
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                                        @click="reportId = reportId === {{ $row->id }} ? null : {{ $row->id }}">
-                                        Laporan
-                                    </button>
+                                @php
+                                    $decisionValues = [
+                                        PenempatanStatus::DITERIMA_INDUSTRI->value,
+                                        PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value,
+                                    ];
+                                    $decisionMade = in_array($row->status, $decisionValues, true);
+                                    $decisionClass = $row->status === PenempatanStatus::DITERIMA_INDUSTRI->value
+                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                        : ($row->status === PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value
+                                            ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                            : 'border-gray-200 bg-white text-gray-600');
+                                @endphp
+                                <div class="space-y-2">
+                                    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Keputusan</div>
                                     <form method="POST" action="{{ route('industri.siswa.status', $row->id) }}">
                                         @csrf
                                         <select name="status" onchange="this.form.submit()"
-                                            class="px-3 py-1.5 text-xs border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg font-semibold">
-                                            @foreach ([
-                                            PenempatanStatus::DITERIMA_INDUSTRI->value => 'Diterima',
-                                            PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'Tidak Lolos',
-                                            ] as $value => $label)
-                                            <option value="{{ $value }}" {{ $row->status === $value ? 'selected' : '' }}>
-                                                {{ $label }}
+                                            class="w-full px-3 py-2 text-xs border rounded-lg font-semibold {{ $decisionClass }}">
+                                            <option value="" disabled {{ $decisionMade ? '' : 'selected' }}>
+                                                -- Pilih Keputusan --
                                             </option>
+                                            @foreach ([
+                                                PenempatanStatus::DITERIMA_INDUSTRI->value => 'Diterima',
+                                                PenempatanStatus::TIDAK_LOLOS_INDUSTRI->value => 'Tidak Lolos',
+                                            ] as $value => $label)
+                                                <option value="{{ $value }}" {{ $row->status === $value ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </form>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <button type="button"
+                                            class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                            @click="openId = openId === {{ $row->id }} ? null : {{ $row->id }}">
+                                            Atur Jadwal
+                                        </button>
+                                        <button type="button"
+                                            class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                            @click="reportId = reportId === {{ $row->id }} ? null : {{ $row->id }}">
+                                            Laporan
+                                        </button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
