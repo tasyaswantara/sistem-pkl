@@ -404,11 +404,19 @@
                                         x-text="event.type === 'wawancara' ? 'Wawancara' : 'Perizinan'"></span>
                                 </div>
                                 <p class="mt-1 text-xs text-gray-600" x-text="event.subtitle"></p>
+                                <template x-if="event.type === 'wawancara'">
+                                    <div class="mt-2 space-y-1 text-xs text-gray-600">
+                                        <p>Lokasi: <span x-text="event.location ?? '-'"></span></p>
+                                        <p>Catatan Industri: <span x-text="event.note ?? '-'"></span></p>
+                                    </div>
+                                </template>
                                 <div class="mt-2 flex gap-3 text-xs text-gray-500">
                                     <template x-if="event.time && event.time !== '-'">
                                         <span>Waktu: <span x-text="event.time"></span></span>
                                     </template>
-                                    <span>Status: <span x-text="event.status"></span></span>
+                                    <template x-if="event.status">
+                                        <span>Status: <span x-text="event.status"></span></span>
+                                    </template>
                                 </div>
                             </div>
                         </template>

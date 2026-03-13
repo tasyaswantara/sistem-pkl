@@ -17,7 +17,6 @@ class JadwalWawancara extends Model
         'tanggal',
         'waktu',
         'lokasi',
-        'status',
         'catatan',
     ];
 

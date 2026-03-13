@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Siswa;
 
-use App\Enums\JadwalWawancaraStatus;
 use App\Enums\PenempatanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\HasilRekomendasi;
@@ -41,13 +40,6 @@ class SiswaPenempatanController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $statusWawancaraLabels = [
-            JadwalWawancaraStatus::MENUNGGU->value => 'Menunggu',
-            JadwalWawancaraStatus::DIJADWALKAN->value => 'Dijadwalkan',
-            JadwalWawancaraStatus::SELESAI->value => 'Selesai',
-            JadwalWawancaraStatus::DIBATALKAN->value => 'Dibatalkan',
-        ];
-
         $statusLabels = [
             PenempatanStatus::BELUM_MEMILIH->value => 'Belum memilih',
             PenempatanStatus::MENUNGGU_KONFIRMASI->value => 'Menunggu konfirmasi',
@@ -64,7 +56,6 @@ class SiswaPenempatanController extends Controller
             'penempatan' => $penempatan,
             'rekomendasi' => $rekomendasi,
             'jadwalWawancara' => $jadwalWawancara,
-            'statusWawancaraLabels' => $statusWawancaraLabels,
             'statusLabels' => $statusLabels,
         ]);
     }

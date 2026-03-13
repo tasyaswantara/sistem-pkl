@@ -26,7 +26,7 @@ class SiswaDashboardService
      *  prevMonth:string,
      *  nextMonth:string,
      *  calendarCells:array<int,array<string,mixed>>,
-     *  calendarEventMap:array<string,array<int,array<string,string>>>,
+     *  calendarEventMap:array<string,array<int,array<string,mixed>>>,
      *  timelineSteps:array<int,array<string,string>>,
      *  primaryAction:array{label:string,route:string,description:string}
      * }
@@ -103,7 +103,7 @@ class SiswaDashboardService
     }
 
     /**
-     * @return array{0:array<int,array<string,mixed>>,1:array<string,array<int,array<string,string>>>}
+     * @return array{0:array<int,array<string,mixed>>,1:array<string,array<int,array<string,mixed>>>}
      */
     // digunakan untuk maping jadwal dan perizinan
     private function buildCalendarData(
@@ -123,9 +123,11 @@ class SiswaDashboardService
             $eventMap[$dateKey][] = [
                 'type' => 'wawancara',
                 'title' => 'Wawancara: ' . ($jadwal->industri?->nama_industri ?? 'Industri'),
-                'subtitle' => $jadwal->lokasi ?: '-',
+                'subtitle' => $jadwal->industri?->nama_industri ?? '-',
+                'location' => $jadwal->lokasi ?: '-',
+                'note' => $jadwal->catatan ?: '-',
                 'time' => $jadwal->waktu?->format('H:i') ?? '-',
-                'status' => ucfirst((string) $jadwal->status),
+                'status' => null,
             ];
         }
         // mapping data perizinan karena bisa lebih dari sehari
@@ -155,6 +157,8 @@ class SiswaDashboardService
                     'type' => 'perizinan',
                     'title' => 'Perizinan: ' . ucfirst(str_replace('_', ' ', (string) $izin->jenis_izin)),
                     'subtitle' => $izin->industri?->nama_industri ?? '-',
+                    'location' => null,
+                    'note' => null,
                     'time' => '-',
                     'status' => $statusLabel,
                 ];

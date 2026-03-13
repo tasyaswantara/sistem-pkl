@@ -1,7 +1,6 @@
 @section('title', 'Penempatan PKL')
 @php
     use App\Enums\JenisPenempatan;
-    use App\Enums\JadwalWawancaraStatus;
     use App\Enums\PenempatanStatus;
     use App\Enums\PilihanSiswa;
 @endphp
@@ -119,7 +118,7 @@
         <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 animate-fade-up">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Jadwal Wawancara</h3>
-                <span class="text-xs text-gray-500">Pantau status penerimaan</span>
+                <span class="text-xs text-gray-500">Pantau jadwal wawancara terbaru</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[700px]">
@@ -129,20 +128,11 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tanggal</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Waktu</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Lokasi</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Catatan</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @forelse ($jadwalWawancara as $jadwal)
-                            @php
-                                $jadwalStatusClass = match ($jadwal->status) {
-                                    JadwalWawancaraStatus::DIJADWALKAN->value => 'bg-blue-50 text-blue-700 border border-blue-200',
-                                    JadwalWawancaraStatus::SELESAI->value => 'bg-green-50 text-green-700 border border-green-200',
-                                    JadwalWawancaraStatus::DIBATALKAN->value => 'bg-red-50 text-red-700 border border-red-200',
-                                    default => 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-                                };
-                            @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     {{ $jadwal->industri?->nama_industri ?? '-' }}</td>
@@ -151,17 +141,11 @@
                                 <td class="px-4 py-3 text-sm text-gray-700">{{ $jadwal->waktu?->format('H:i') ?? '-' }}
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-700">{{ $jadwal->lokasi ?? '-' }}</td>
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $jadwalStatusClass }}">
-                                        {{ $statusWawancaraLabels[$jadwal->status] ?? $jadwal->status }}
-                                    </span>
-                                </td>
                                 <td class="px-4 py-3 text-sm text-gray-700">{{ $jadwal->catatan ?? '-' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td class="px-4 py-6 text-center text-sm text-gray-500" colspan="6">
+                                <td class="px-4 py-6 text-center text-sm text-gray-500" colspan="5">
                                     Belum ada jadwal wawancara.
                                 </td>
                             </tr>

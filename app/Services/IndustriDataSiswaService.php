@@ -43,7 +43,7 @@ class IndustriDataSiswaService
     }
 
     /**
-     * @param array{tanggal:string,waktu?:string,lokasi?:string,catatan?:string,status:string} $data
+     * @param array{tanggal:string,waktu?:string,lokasi?:string,catatan?:string} $data
      */
     public function saveJadwal(Industri $industri, PenempatanPKL $penempatan, array $data): string
     {
@@ -57,7 +57,6 @@ class IndustriDataSiswaService
                 'waktu' => $data['waktu'] ?? null,
                 'lokasi' => $data['lokasi'] ?? null,
                 'catatan' => $data['catatan'] ?? null,
-                'status' => $data['status'],
             ]
         );
 
