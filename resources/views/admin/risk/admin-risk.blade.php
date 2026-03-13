@@ -1,4 +1,4 @@
-@section('title', 'Resiko PKL')
+@section('title', 'Peringatan Dini Siswa')
 
 <x-admin-layout>
     <div x-data="{
@@ -8,10 +8,10 @@
             detailData: {},
         }">
     <div class="mb-8">
-        <div class="text-sm text-gray-500 mb-2">Dashboard → Resiko PKL</div>
-        <h1 class="text-gray-900 text-2xl font-semibold mb-2">Deteksi Resiko PKL</h1>
+        <div class="text-sm text-gray-500 mb-2">Dashboard → Peringatan Dini Siswa</div>
+        <h1 class="text-gray-900 text-2xl font-semibold mb-2">Peringatan Dini Siswa</h1>
         <p class="text-gray-500 text-sm max-w-2xl">
-            Lihat hasil perhitungan resiko mingguan dan jalankan perhitungan manual bila diperlukan.
+            Fitur ini digunakan untuk mengidentifikasi siswa yang sudah diterima industri namun berpotensi mengalami masalah selama PKL, berdasarkan parameter tertentu yang dihitung menjadi skor peringatan.
         </p>
     </div>
 
@@ -43,7 +43,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Kategori Resiko</label>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Kategori Peringatan</label>
                     <select
                         name="category"
                         class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
@@ -79,7 +79,7 @@
     </form>
 
     <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6 mb-6">
-        <h3 class="text-base font-semibold text-gray-900 mb-4">Menjalankan Deteksi Resiko PKL</h3>
+        <h3 class="text-base font-semibold text-gray-900 mb-4">Jalankan Perhitungan Peringatan Dini</h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div class="bg-white rounded-lg p-4 border border-gray-200">
@@ -126,7 +126,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-medium">
-                        Hitung Resiko Mingguan
+                        Hitung Peringatan Mingguan
                     </button>
                 </div>
             </div>
@@ -199,7 +199,7 @@
                     @empty
                     <tr>
                         <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
-                            Belum ada hasil resiko untuk periode ini.
+                            Belum ada hasil peringatan dini untuk periode ini.
                         </td>
                     </tr>
                     @endforelse
@@ -211,7 +211,7 @@
     @if (method_exists($riskScores, 'total'))
     <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
         <div>
-            Menampilkan {{ $riskScores->count() }} dari {{ $riskScores->total() }} data resiko
+            Menampilkan {{ $riskScores->count() }} dari {{ $riskScores->total() }} data peringatan
         </div>
         <div>
             {{ $riskScores->links() }}
@@ -224,7 +224,7 @@
         <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
             <div class="flex items-start justify-between p-6 border-b">
                 <div>
-                    <h4 class="text-base font-semibold text-gray-900">Detail Perhitungan Resiko</h4>
+                    <h4 class="text-base font-semibold text-gray-900">Detail Perhitungan Peringatan Dini</h4>
                     <p class="text-xs text-gray-500 mt-1">
                         <span x-text="detailNama"></span>
                         <span class="mx-1 text-gray-300">•</span>

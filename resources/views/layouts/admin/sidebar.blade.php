@@ -115,7 +115,7 @@
                         'route' => 'admin.penilaian',
                     ],
                     [
-                        'label' => 'Resiko PKL',
+                        'label' => 'Peringatan Dini Siswa',
                         'icon' => 'clipboard',
                         'route' => 'admin.risk',
                     ],
@@ -150,7 +150,7 @@
                         'route' => 'guru.penilaian',
                     ],
                     [
-                        'label' => 'Resiko PKL',
+                        'label' => 'Peringatan Dini Siswa',
                         'icon' => 'clipboard',
                         'route' => 'guru.risk',
                     ],
