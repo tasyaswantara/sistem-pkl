@@ -32,8 +32,7 @@ class SiswaBerkasController extends Controller
             'kartu_pelajar_file' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
             'foto_profil_file' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
             'cv_link' => 'nullable|url|max:2048',
-            'portofolio_links' => 'nullable|array|min:1',
-            'portofolio_links.*' => 'nullable|url|max:2048',
+            'portofolio_link' => 'nullable|url|max:2048',
         ]);
 
         $updates = [];
@@ -42,15 +41,10 @@ class SiswaBerkasController extends Controller
             $updates['cv_link'] = $validated['cv_link'];
         }
 
-        if ($request->has('portofolio_links')) {
-            $portofolioLinks = collect($validated['portofolio_links'] ?? [])
-                ->filter(fn($link) => filled($link))
-                ->values()
-                ->all();
-
-            if (count($portofolioLinks) > 0) {
-                $updates['portofolio_links'] = $portofolioLinks;
-            }
+        if ($request->has('portofolio_link')) {
+            $updates['portofolio_links'] = filled($validated['portofolio_link'] ?? null)
+                ? [$validated['portofolio_link']]
+                : [];
         }
 
         if ($request->hasFile('bpjs_file')) {

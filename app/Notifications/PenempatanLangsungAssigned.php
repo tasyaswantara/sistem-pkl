@@ -23,11 +23,12 @@ class PenempatanLangsungAssigned extends Notification
     {
         return [
             'title' => 'Penempatan langsung ditetapkan',
-            'message' => sprintf(
+            'body' => sprintf(
                 'Siswa %s ditempatkan langsung ke %s.',
                 $this->penempatan->siswa?->user?->name ?? '-',
                 $this->penempatan->industri?->nama_industri ?? '-'
             ),
+            'url' => $notifiable->hasRole('siswa') ? route('siswa.dashboard') : route('guru.siswa'),
             'penempatan_id' => $this->penempatan->id,
             'status' => $this->penempatan->status,
             'jenis' => $this->penempatan->jenis_penempatan,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Industri;
 use App\Enums\PenempatanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\PenempatanPKL;
+use App\Services\AppNotificationService;
 use App\Services\IndustriDataSiswaService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -63,7 +64,7 @@ class IndustriDataSiswaController extends Controller
         return back()->with('success', __('industri_data_siswa.success.status'));
     }
 
-    public function storeJadwal(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service)
+    public function storeJadwal(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service, AppNotificationService $notificationService)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
@@ -79,11 +80,13 @@ class IndustriDataSiswaController extends Controller
 
         $oldStatus = $service->saveJadwal($industri, $penempatan, $validated);
         $this->handlePenempatanStatusChange($penempatan, $oldStatus);
+        $penempatan->loadMissing(['siswa.user', 'industri']);
+        $notificationService->notifyStudentOfJadwalWawancara($penempatan, $validated);
 
         return back()->with('success', __('industri_data_siswa.success.jadwal'));
     }
 
-    public function storeLaporan(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service)
+    public function storeLaporan(Request $request, PenempatanPKL $penempatan, IndustriDataSiswaService $service, AppNotificationService $notificationService)
     {
         $industri = $request->user()->industri;
         if (!$industri || $penempatan->industri_id !== $industri->id) {
@@ -95,6 +98,8 @@ class IndustriDataSiswaController extends Controller
         ]);
 
         $service->saveLaporan($penempatan, $validated);
+        $penempatan->loadMissing(['siswa.user', 'industri', 'guruPembimbing.user']);
+        $notificationService->notifyGuruOfLaporan($penempatan);
 
         return back()->with('success', __('industri_data_siswa.success.laporan'));
     }

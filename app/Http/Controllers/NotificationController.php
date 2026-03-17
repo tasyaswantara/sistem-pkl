@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class AdminNotificationController extends Controller
+class NotificationController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -19,7 +19,9 @@ class AdminNotificationController extends Controller
                 return [
                     'id' => $notification->id,
                     'title' => $notification->data['title'] ?? 'Notifikasi',
-                    'body' => $notification->data['body'] ?? '',
+                    'body' => $notification->data['body'] ?? ($notification->data['message'] ?? ''),
+                    'url' => $notification->data['url'] ?? null,
+                    'is_unread' => $notification->read_at === null,
                     'read_at' => $notification->read_at,
                     'created_at' => optional($notification->created_at)->diffForHumans(),
                 ];
@@ -29,5 +31,12 @@ class AdminNotificationController extends Controller
             'unread_count' => $user->unreadNotifications()->count(),
             'items' => $notifications,
         ]);
+    }
+
+    public function readAll(Request $request): JsonResponse
+    {
+        $request->user()->unreadNotifications->markAsRead();
+
+        return response()->json(['ok' => true]);
     }
 }

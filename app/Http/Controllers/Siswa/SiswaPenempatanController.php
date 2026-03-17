@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HasilRekomendasi;
 use App\Models\JadwalWawancara;
 use App\Models\PenempatanPKL;
+use App\Services\AppNotificationService;
 use App\Services\SiswaPenempatanService;
 use Illuminate\Http\Request;
 
@@ -90,7 +91,7 @@ class SiswaPenempatanController extends Controller
         return back()->with('success', __('siswa_penempatan.success.rekom'));
     }
 
-    public function usulkanIndustri(Request $request, SiswaPenempatanService $service)
+    public function usulkanIndustri(Request $request, SiswaPenempatanService $service, AppNotificationService $notificationService)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
@@ -116,11 +117,14 @@ class SiswaPenempatanController extends Controller
         }
 
         $oldStatus = $penempatan?->status;
-        [, $penempatan] = $service->handleUsulanIndustri($siswa, $validated);
+        [$usulan, $penempatan] = $service->handleUsulanIndustri($siswa, $validated);
 
         if ($oldStatus !== null) {
             $this->handlePenempatanStatusChange($penempatan, $oldStatus);
         }
+
+        $usulan->loadMissing('siswa.user');
+        $notificationService->notifyAdminsOfUsulanIndustri($usulan);
 
         return back()->with('success', __('siswa_penempatan.success.usul'));
     }

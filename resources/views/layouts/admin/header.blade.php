@@ -10,60 +10,8 @@
     </div>
 
     <div class="flex items-center">
-        <div x-data="{
-                notificationOpen: false,
-                notifications: [],
-                unreadCount: 0,
-                poller: null,
-                async fetchNotifications() {
-                    const response = await fetch('{{ route('admin.notifications') }}', {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-                    if (!response.ok) return;
-                    const data = await response.json();
-                    this.notifications = data.items || [];
-                    this.unreadCount = data.unread_count || 0;
-                },
-                startPolling() {
-                    this.fetchNotifications();
-                    this.poller = setInterval(() => this.fetchNotifications(), 30000);
-                },
-                stopPolling() {
-                    if (this.poller) clearInterval(this.poller);
-                    this.poller = null;
-                }
-            }" x-init="fetchNotifications(); startPolling()" class="relative cursor-pointer">
-            <button @click="notificationOpen = ! notificationOpen; notificationOpen ? startPolling() : stopPolling()"
-                class="relative flex mx-4 text-gray-600 focus:outline-none">
-                <svg class="w-6 h-6 cursor-pointer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15 17H20L18.5951 15.5951C18.2141 15.2141 18 14.6973 18 14.1585V11C18 8.38757 16.3304 6.16509 14 5.34142V5C14 3.89543 13.1046 3 12 3C10.8954 3 10 3.89543 10 5V5.34142C7.66962 6.16509 6 8.38757 6 11V14.1585C6 14.6973 5.78595 15.2141 5.40493 15.5951L4 17H9M15 17V18C15 19.6569 13.6569 21 12 21C10.3431 21 9 19.6569 9 18V17M15 17H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <span x-show="unreadCount > 0"
-                    class="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-[10px] px-1 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                    <span x-text="unreadCount"></span>
-                </span>
-            </button>
-
-            <div x-cloak x-show="notificationOpen" @click="notificationOpen = false" class="fixed inset-0 z-10 w-full h-full"></div>
-
-            <div x-cloak x-show="notificationOpen" class="absolute right-0 z-50 mt-2 overflow-hidden bg-white rounded-lg shadow-xl w-80">
-                <div class="px-4 py-3 border-b">
-                    <div class="text-sm font-semibold text-gray-900">Notifikasi</div>
-                    <div class="text-xs text-gray-500">Terbaru untuk admin</div>
-                </div>
-                <div class="max-h-80 overflow-y-auto">
-                    <template x-if="notifications.length === 0">
-                        <div class="px-4 py-6 text-sm text-gray-500 text-center">Belum ada notifikasi.</div>
-                    </template>
-                    <template x-for="item in notifications" :key="item.id">
-                        <div class="px-4 py-3 border-b last:border-b-0">
-                            <div class="text-sm font-semibold text-gray-900" x-text="item.title"></div>
-                            <div class="text-xs text-gray-600 mt-1" x-text="item.body"></div>
-                            <div class="text-[11px] text-gray-400 mt-1" x-text="item.created_at"></div>
-                        </div>
-                    </template>
-                </div>
-            </div>
+        <div class="mx-4">
+            @include('components.notification-dropdown')
         </div>
 
         <div x-data="{ dropdownOpen: false }" class="relative">

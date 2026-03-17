@@ -13,8 +13,8 @@ class AdminPerizinanController extends Controller
     public function index(Request $request, AdminPerizinanService $service)
     {
         $filters = [
-            'tahun_ajaran' => $request->input('tahun_ajaran'),
-            'jurusan_id' => $request->input('jurusan_id'),
+            'tanggal_dari' => $request->input('tanggal_dari'),
+            'tanggal_sampai' => $request->input('tanggal_sampai'),
             'industri_id' => $request->input('industri_id'),
             'status' => $request->input('status', 'all'),
             'q' => $request->input('q', ''),
@@ -31,10 +31,8 @@ class AdminPerizinanController extends Controller
         ];
 
         return view('admin.perizinan.admin-perizinan', [
-            'jurusanOptions' => $options['jurusanOptions'],
             'industriOptions' => $options['industriOptions'],
             'siswaPenempatanOptions' => $options['siswaPenempatanOptions'],
-            'tahunAjaranList' => $options['tahunAjaranList'],
             'filters' => $filters,
             'statusCounts' => $data['statusCounts'],
             'statusLabels' => $statusLabels,

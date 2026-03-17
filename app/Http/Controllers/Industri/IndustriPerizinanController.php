@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Industri;
 use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Perizinan;
+use App\Services\AppNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -28,7 +29,7 @@ class IndustriPerizinanController extends Controller
         ]);
     }
 
-    public function update(Request $request, Perizinan $perizinan)
+    public function update(Request $request, Perizinan $perizinan, AppNotificationService $notificationService)
     {
         $industri = $request->user()->industri;
         if (!$industri || $perizinan->industri_id !== $industri->id) {
@@ -46,10 +47,16 @@ class IndustriPerizinanController extends Controller
             'catatan_industri' => 'nullable|string|max:1000',
         ]);
 
+        $oldStatus = $perizinan->status;
         $perizinan->update([
             'status' => $validated['status'],
             'catatan_industri' => $validated['catatan_industri'],
         ]);
+
+        if ($oldStatus !== $perizinan->status) {
+            $perizinan->loadMissing(['siswa.user']);
+            $notificationService->notifyStudentOfPerizinanDecision($perizinan);
+        }
 
         return back()->with('success', __('industri_perizinan.success.ubah'));
     }

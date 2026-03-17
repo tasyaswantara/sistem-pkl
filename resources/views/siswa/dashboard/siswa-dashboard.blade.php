@@ -50,18 +50,14 @@
         'kartu_pelajar_file',
         'foto_profil_file',
         'cv_link',
-        'portofolio_links',
-        'portofolio_links.*',
+        'portofolio_link',
     ];
     $hasBerkasErrors = collect($berkasErrorKeys)->contains(fn($key) => $errors->has($key));
-    $initialPortofolioLinks = old('portofolio_links', $siswa->portofolio_links ?? []);
-    if (!is_array($initialPortofolioLinks)) {
-        $initialPortofolioLinks = [];
-    }
+    $portfolioLinkValue = old('portofolio_link', is_array($siswa->portofolio_links ?? null) ? ($siswa->portofolio_links[0] ?? '') : '');
 @endphp
 
 <x-siswa-layout>
-    <div x-data="siswaDashboard(@js($calendarEventMap), @js($hasUsulanErrors), @js($hasBerkasErrors), @js($initialPortofolioLinks))" class="space-y-6">
+    <div x-data="siswaDashboard(@js($calendarEventMap), @js($hasUsulanErrors), @js($hasBerkasErrors))" class="space-y-6">
         @if (session('success'))
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                 {{ session('success') }}
@@ -102,10 +98,12 @@
                                 class="inline-flex rounded-full border px-3 py-1.5 text-sm font-medium {{ $statusClass }}">
                                 {{ $statusLabels[$status] ?? 'Belum memilih industri' }}
                             </div>
-                            <button type="button" @click="berkasOpen = true"
-                                class="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/20">
-                                Edit Berkas
-                            </button>
+                            @if ($status === PenempatanStatus::DITERIMA_INDUSTRI->value)
+                                <button type="button" @click="berkasOpen = true"
+                                    class="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/20">
+                                    Edit Berkas
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -625,37 +623,11 @@
                         </div>
 
                         <div>
-                            <div class="mb-2 flex items-center justify-between">
-                                <label class="block text-xs font-medium text-gray-700">Link Portofolio (boleh lebih
-                                    dari satu)</label>
-                                <button type="button"
-                                    class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
-                                    @click="addPortofolio()">
-                                    Tambah Link
-                                </button>
-                            </div>
-                            <div class="space-y-2">
-                                <template x-for="(link, index) in portofolioLinks" :key="`portofolio-${index}`">
-                                    <div class="flex items-center gap-2">
-                                        <input type="url" name="portofolio_links[]"
-                                            x-model="portofolioLinks[index]"
-                                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                                            placeholder="https://drive.google.com/...">
-                                        <button type="button"
-                                            class="rounded-lg border border-gray-200 px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50"
-                                            @click="removePortofolio(index)">
-                                            Hapus
-                                        </button>
-                                    </div>
-                                </template>
-                                <div x-show="portofolioLinks.length === 0" class="text-xs italic text-gray-400">
-                                    Belum ada link portofolio.
-                                </div>
-                            </div>
-                            @error('portofolio_links')
-                                <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                            @enderror
-                            @error('portofolio_links.*')
+                            <label class="mb-1.5 block text-xs font-medium text-gray-700">Link Portofolio</label>
+                            <input type="url" name="portofolio_link" value="{{ $portfolioLinkValue }}"
+                                placeholder="https://drive.google.com/..."
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                            @error('portofolio_link')
                                 <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -727,7 +699,7 @@
 
     @push('scripts')
         <script>
-            function siswaDashboard(eventMap, openUsulanOnLoad, openBerkasOnLoad, initialPortofolioLinks) {
+            function siswaDashboard(eventMap, openUsulanOnLoad, openBerkasOnLoad) {
                 return {
                     eventMap,
                     modalOpen: false,
@@ -740,7 +712,6 @@
                     penilaianDetailIndustri: '',
                     penilaianDetailList: [],
                     penilaianDetailTotal: '',
-                    portofolioLinks: Array.isArray(initialPortofolioLinks) ? initialPortofolioLinks : [],
                     openDay(dateKey) {
                         const events = this.eventMap[dateKey] || [];
                         if (!events.length) {
@@ -762,12 +733,6 @@
                     },
                     closePenilaianDetail() {
                         this.penilaianDetailOpen = false;
-                    },
-                    addPortofolio() {
-                        this.portofolioLinks.push('');
-                    },
-                    removePortofolio(index) {
-                        this.portofolioLinks.splice(index, 1);
                     },
                     formatDate(dateKey) {
                         const date = new Date(`${dateKey}T00:00:00`);

@@ -3,13 +3,17 @@
 namespace App\Services;
 
 use App\Mail\NewUserCredentialsMail;
+use App\Enums\PenempatanStatus;
 use App\Enums\StatusPKL;
 use App\Models\Industri;
 use App\Models\Jurusan;
+use App\Models\PenempatanPKL;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Models\UsulanIndustri;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -17,6 +21,10 @@ use Illuminate\Validation\Rule;
 
 class AdminUserService
 {
+    public function __construct(private AppNotificationService $notificationService)
+    {
+    }
+
     /**
      * @param array{role?:string,search?:string,jurusan_id?:string,kelas?:string,grade?:string} $filters
      */
@@ -261,19 +269,38 @@ class AdminUserService
                 break;
         }
 
-        try {
-            Mail::to($user->email)->send(
-                new NewUserCredentialsMail($user->name, $user->email, $plainPassword)
-            );
-        } catch (\Throwable $e) {
-            Log::warning('Gagal mengirim email kredensial user baru', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->sendCredentialsEmail($user, $plainPassword);
 
         return $user;
+    }
+
+    public function createIndustryRepresentativeFromUsulan(UsulanIndustri $usulan): Industri
+    {
+        $plainPassword = (string) $usulan->email;
+
+        $user = User::create([
+            'name' => $usulan->nama_industri,
+            'email' => $usulan->email,
+            'password' => Hash::make($plainPassword),
+        ]);
+
+        $user->assignRole('perwakilan industri');
+
+        $industri = $user->industri()->create([
+            'nama_industri' => $usulan->nama_industri,
+            'kapasitas' => $usulan->kapasitas,
+            'alamat' => $usulan->alamat,
+            'grade' => 'C',
+            'jurusan_id' => $usulan->jurusan_id,
+            'status_pengajuan' => 'menunggu',
+            'pengajuan_dikirim_at' => now(),
+        ]);
+
+        $this->sendCredentialsEmail($user, $plainPassword);
+        $industri->loadMissing('user');
+        $this->notificationService->notifyIndustryOfPengajuanBaru($industri);
+
+        return $industri;
     }
 
     public function updateUser(User $user, array $data, string $role): void
@@ -331,6 +358,68 @@ class AdminUserService
         }
     }
 
+    public function deleteUser(User $user): void
+    {
+        DB::transaction(function () use ($user) {
+            $industri = $user->industri;
+
+            if ($industri && $user->hasRole('perwakilan industri')) {
+                $affectedSiswaIds = PenempatanPKL::query()
+                    ->where('industri_id', $industri->id)
+                    ->pluck('siswa_id');
+
+                PenempatanPKL::query()
+                    ->where('industri_id', $industri->id)
+                    ->update([
+                        'industri_id' => null,
+                        'usulan_industri_id' => null,
+                        'pilihan_siswa' => null,
+                        'status' => PenempatanStatus::DITOLAK_SEKOLAH->value,
+                        'jenis_penempatan' => 'normal',
+                        'alasan_penempatan_langsung' => null,
+                        'ditetapkan_oleh' => null,
+                        'ditetapkan_at' => null,
+                        'tanggal_mulai' => null,
+                        'tanggal_selesai' => null,
+                        'guru_pembimbing_id' => null,
+                        'laporan_industri' => null,
+                        'laporan_status' => 'menunggu',
+                        'laporan_at' => null,
+                    ]);
+
+                if ($affectedSiswaIds->isNotEmpty()) {
+                    Siswa::query()
+                        ->whereIn('id', $affectedSiswaIds)
+                        ->update([
+                            'status_pkl' => StatusPKL::BELUM->value,
+                        ]);
+                }
+
+                $matchedUsulanIds = UsulanIndustri::query()
+                    ->where('email', $user->email)
+                    ->where('nama_industri', $industri->nama_industri)
+                    ->pluck('id');
+
+                if ($matchedUsulanIds->isNotEmpty()) {
+                    PenempatanPKL::query()
+                        ->whereIn('usulan_industri_id', $matchedUsulanIds)
+                        ->update([
+                            'industri_id' => null,
+                            'usulan_industri_id' => null,
+                            'pilihan_siswa' => null,
+                            'status' => PenempatanStatus::DITOLAK_SEKOLAH->value,
+                        ]);
+
+                    UsulanIndustri::query()
+                        ->whereIn('id', $matchedUsulanIds)
+                        ->delete();
+                }
+            }
+
+            $user->delete();
+        });
+    }
+
     public function ensurePengajuanIndustri(Industri $industri): string
     {
         if (!$industri->status_pengajuan) {
@@ -338,8 +427,26 @@ class AdminUserService
                 'status_pengajuan' => 'menunggu',
                 'pengajuan_dikirim_at' => now(),
             ]);
+
+            $industri->loadMissing('user');
+            $this->notificationService->notifyIndustryOfPengajuanBaru($industri);
         }
 
         return $industri->status_pengajuan;
+    }
+
+    private function sendCredentialsEmail(User $user, string $plainPassword): void
+    {
+        try {
+            Mail::to($user->email)->send(
+                new NewUserCredentialsMail($user->name, $user->email, $plainPassword)
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mengirim email kredensial user baru', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

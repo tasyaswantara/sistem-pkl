@@ -50,7 +50,8 @@
                     @endforeach
                 </nav> --}}
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
+                    @include('components.notification-dropdown')
                     <span class="hidden text-sm text-gray-600 sm:block">{{ auth()->user()->name }}</span>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

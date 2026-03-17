@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
+use App\Services\AppNotificationService;
 use App\Services\SiswaPerizinanService;
 use Illuminate\Http\Request;
 
@@ -22,7 +23,7 @@ class SiswaPerizinanController extends Controller
         ]);
     }
 
-    public function store(Request $request, SiswaPerizinanService $service)
+    public function store(Request $request, SiswaPerizinanService $service, AppNotificationService $notificationService)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
@@ -44,7 +45,9 @@ class SiswaPerizinanController extends Controller
             return back()->withErrors(['perizinan' => __('siswa_perizinan.errors.tumpang_tindih')])->withInput();
         }
 
-        $service->createPerizinan($siswa, $penempatan, $request->user()->id, $validated);
+        $perizinan = $service->createPerizinan($siswa, $penempatan, $request->user()->id, $validated);
+        $perizinan->loadMissing(['siswa.user', 'industri.user']);
+        $notificationService->notifyPerizinanCreated($perizinan);
 
         return back()->with('success', __('siswa_perizinan.success.tambah'));
     }

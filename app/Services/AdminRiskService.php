@@ -15,6 +15,10 @@ use Illuminate\Support\Collection;
 
 class AdminRiskService
 {
+    public function __construct(private AppNotificationService $notificationService)
+    {
+    }
+
     /**
      * @return array{riskScores:LengthAwarePaginator|Collection,weekStart:?Carbon,weekEnd:?Carbon,detailByRiskId:array}
      */
@@ -174,8 +178,24 @@ class AdminRiskService
     private function storeRiskScores(array $rows, Carbon $weekStart, Carbon $weekEnd): int
     {
         $updatedCount = 0;
+        $siswaIds = collect($rows)->pluck('siswa_id')->all();
+        $currentWeekScores = RiskScore::where('week_start', $weekStart->toDateString())
+            ->whereIn('siswa_id', $siswaIds)
+            ->get()
+            ->keyBy('siswa_id');
+        $latestPreviousBySiswa = RiskScore::whereIn('siswa_id', $siswaIds)
+            ->where('week_start', '!=', $weekStart->toDateString())
+            ->orderByDesc('week_end')
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('siswa_id')
+            ->map(fn ($items) => $items->first());
+
         foreach ($rows as $row) {
-            RiskScore::updateOrCreate(
+            $baselineCategory = $currentWeekScores->get($row['siswa_id'])?->category
+                ?? $latestPreviousBySiswa->get($row['siswa_id'])?->category;
+
+            $riskScore = RiskScore::updateOrCreate(
                 [
                     'siswa_id' => $row['siswa_id'],
                     'week_start' => $weekStart->toDateString(),
@@ -186,6 +206,8 @@ class AdminRiskService
                     'category' => $row['category'],
                 ]
             );
+
+            $this->notificationService->notifyRiskAlert($riskScore, $baselineCategory);
             $updatedCount++;
         }
 

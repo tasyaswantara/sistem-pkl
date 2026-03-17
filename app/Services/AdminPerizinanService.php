@@ -6,20 +6,17 @@ use App\Enums\JenisIzin;
 use App\Enums\PenempatanStatus;
 use App\Enums\PerizinanStatus;
 use App\Models\Industri;
-use App\Models\Jurusan;
 use App\Models\Perizinan;
 use App\Models\PenempatanPKL;
-use App\Models\Siswa;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AdminPerizinanService
 {
     /**
-     * @return array{jurusanOptions:\Illuminate\Support\Collection,industriOptions:\Illuminate\Support\Collection,siswaPenempatanOptions:\Illuminate\Support\Collection,tahunAjaranList:\Illuminate\Support\Collection}
+     * @return array{industriOptions:\Illuminate\Support\Collection,siswaPenempatanOptions:\Illuminate\Support\Collection}
      */
     public function getOptions(): array
     {
-        $jurusanOptions = Jurusan::orderBy('nama')->get();
         $industriOptions = Industri::orderBy('nama_industri')->get();
         $siswaPenempatanOptions = PenempatanPKL::with(['siswa.user', 'siswa.jurusan', 'industri'])
             ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
@@ -27,22 +24,14 @@ class AdminPerizinanService
             ->orderByDesc('id')
             ->get();
 
-        $tahunAjaranList = Siswa::query()
-            ->select('tahun_ajaran')
-            ->distinct()
-            ->orderBy('tahun_ajaran', 'desc')
-            ->pluck('tahun_ajaran');
-
         return [
-            'jurusanOptions' => $jurusanOptions,
             'industriOptions' => $industriOptions,
             'siswaPenempatanOptions' => $siswaPenempatanOptions,
-            'tahunAjaranList' => $tahunAjaranList,
         ];
     }
 
     /**
-     * @param array{tahun_ajaran?:string,jurusan_id?:string,industri_id?:string,status?:string,q?:string} $filters
+     * @param array{tanggal_dari?:string,tanggal_sampai?:string,industri_id?:string,status?:string,q?:string} $filters
      * @return array{perizinanList:LengthAwarePaginator,statusCounts:array<string,int>}
      */
     public function getPerizinanData(array $filters): array
@@ -50,16 +39,12 @@ class AdminPerizinanService
         $baseQuery = Perizinan::query()
             ->with(['siswa.user', 'siswa.jurusan', 'industri', 'pembuat']);
 
-        if (!empty($filters['tahun_ajaran'])) {
-            $baseQuery->whereHas('siswa', function ($query) use ($filters) {
-                $query->where('tahun_ajaran', $filters['tahun_ajaran']);
-            });
+        if (!empty($filters['tanggal_dari'])) {
+            $baseQuery->whereDate('tanggal_selesai', '>=', $filters['tanggal_dari']);
         }
 
-        if (!empty($filters['jurusan_id'])) {
-            $baseQuery->whereHas('siswa', function ($query) use ($filters) {
-                $query->where('jurusan_id', $filters['jurusan_id']);
-            });
+        if (!empty($filters['tanggal_sampai'])) {
+            $baseQuery->whereDate('tanggal_mulai', '<=', $filters['tanggal_sampai']);
         }
 
         if (!empty($filters['industri_id'])) {

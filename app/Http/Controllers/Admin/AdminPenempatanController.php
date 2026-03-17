@@ -9,6 +9,7 @@ use App\Enums\PilihanSiswa;
 use App\Enums\UsulanStatus;
 use App\Http\Controllers\Controller;
 use App\Services\AdminPenempatanService;
+use App\Services\AdminUserService;
 use App\Models\BobotKriteria;
 use App\Models\Industri;
 use App\Models\Kriteria;
@@ -19,7 +20,6 @@ use App\Services\PenempatanLangsungService;
 use App\Services\SawRunService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class AdminPenempatanController extends Controller
@@ -111,7 +111,7 @@ class AdminPenempatanController extends Controller
         return back()->with('success', __('penempatan.success.saw', ['count' => $result['rows_count'] ?? 0]));
     }
 
-    public function approveUsulanIndustri(Request $request, UsulanIndustri $usulan)
+    public function approveUsulanIndustri(Request $request, UsulanIndustri $usulan, AdminUserService $userService)
     {
         if ($usulan->status !== UsulanStatus::MENUNGGU->value) {
             return back()->withErrors(['usulan' => __('penempatan.errors.usulan_proses')]);
@@ -125,23 +125,7 @@ class AdminPenempatanController extends Controller
             return back()->withErrors(['usulan' => __('penempatan.errors.nama')]);
         }
 
-        $user = User::create([
-            'name' => $usulan->nama_industri,
-            'email' => $usulan->email,
-            'password' => Hash::make($usulan->email),
-        ]);
-
-        $user->assignRole('perwakilan industri');
-
-        $industri = $user->industri()->create([
-            'nama_industri' => $usulan->nama_industri,
-            'kapasitas' => $usulan->kapasitas,
-            'alamat' => $usulan->alamat,
-            'grade' => 'C',
-            'jurusan_id' => $usulan->jurusan_id,
-            'status_pengajuan' => PengajuanStatus::MENUNGGU->value,
-            'pengajuan_dikirim_at' => now(),
-        ]);
+        $industri = $userService->createIndustryRepresentativeFromUsulan($usulan);
 
         $usulan->update([
             'status' => UsulanStatus::DISETUJUI->value,
@@ -195,7 +179,7 @@ class AdminPenempatanController extends Controller
         return back()->with('success', __('penempatan.success.usul_tolak'));
     }
 
-    public function confirmPilihan(PenempatanPKL $penempatan)
+    public function confirmPilihan(PenempatanPKL $penempatan, AdminUserService $userService)
     {
         if ($penempatan->status !== PenempatanStatus::MENUNGGU_KONFIRMASI->value) {
             return back()->withErrors(['penempatan' => __('penempatan.errors.tunggu')]);
@@ -240,23 +224,7 @@ class AdminPenempatanController extends Controller
                 return back()->withErrors(['penempatan' => __('penempatan.errors.nama')]);
             }
 
-            $user = User::create([
-                'name' => $usulan->nama_industri,
-                'email' => $usulan->email,
-                'password' => Hash::make($usulan->email),
-            ]);
-
-            $user->assignRole('perwakilan industri');
-
-            $industri = $user->industri()->create([
-                'nama_industri' => $usulan->nama_industri,
-                'kapasitas' => $usulan->kapasitas,
-                'alamat' => $usulan->alamat,
-                'grade' => 'C',
-                'jurusan_id' => $usulan->jurusan_id,
-                'status_pengajuan' => PengajuanStatus::MENUNGGU->value,
-                'pengajuan_dikirim_at' => now(),
-            ]);
+            $industri = $userService->createIndustryRepresentativeFromUsulan($usulan);
 
             $usulan->update([
                 'status' => UsulanStatus::DISETUJUI->value,

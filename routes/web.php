@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminRoleController;
@@ -9,7 +10,6 @@ use App\Http\Controllers\Admin\AdminPenempatanController;
 use App\Http\Controllers\Admin\AdminLogbookController;
 use App\Http\Controllers\Admin\AdminPerizinanController;
 use App\Http\Controllers\Admin\AdminPenilaianController;
-use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminRiskController;
 use App\Http\Controllers\Admin\AdminAbsensiController;
 use App\Http\Controllers\Guru\GuruAbsensiController;
@@ -62,6 +62,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -102,7 +104,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/penilaian/rubrik', [AdminPenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
     Route::post('/penilaian/aspek', [AdminPenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
     Route::delete('/penilaian/aspek/{aspek}', [AdminPenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
-    Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
     Route::get('/risk', [AdminRiskController::class, 'index'])->name('admin.risk');
     Route::post('/risk/run', [AdminRiskController::class, 'runRisk'])->name('admin.risk.run');
     Route::get('/presensi', [AdminAbsensiController::class, 'index'])->name('admin.presensi');

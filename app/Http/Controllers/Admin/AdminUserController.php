@@ -84,9 +84,9 @@ class AdminUserController extends Controller
     }
 
 
-    public function destroy(User $user)
+    public function destroy(User $user, AdminUserService $service)
     {
-        $user->delete();
+        $service->deleteUser($user);
 
         return redirect()
             ->route('admin.data-pengguna', request()->query())
