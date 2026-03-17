@@ -97,9 +97,15 @@
                         <h1 class="text-2xl font-semibold text-white sm:text-3xl">{{ $siswa->user?->name }}</h1>
                         <p class="text-base text-emerald-100">Kelas {{ $siswa->kelas ?? '-' }} ·
                             {{ $siswa->jurusan?->nama ?? '-' }}</p>
-                        <div
-                            class="mt-3 inline-flex rounded-full border px-3 py-1.5 text-sm font-medium {{ $statusClass }}">
-                            {{ $statusLabels[$status] ?? 'Belum memilih industri' }}
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <div
+                                class="inline-flex rounded-full border px-3 py-1.5 text-sm font-medium {{ $statusClass }}">
+                                {{ $statusLabels[$status] ?? 'Belum memilih industri' }}
+                            </div>
+                            <button type="button" @click="berkasOpen = true"
+                                class="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/20">
+                                Edit Berkas
+                            </button>
                         </div>
                     </div>
                 </div>
