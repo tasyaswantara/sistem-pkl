@@ -146,7 +146,8 @@
                 <h3 class="text-base font-semibold text-gray-900">Filter Penilaian</h3>
             </div>
 
-            <div class="flex flex-wrap items-end gap-4 mb-4">
+            <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div class="flex-1 flex flex-wrap items-end gap-4">
                 <div class="min-w-[180px]">
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
                     <select name="tahun_ajaran" onchange="this.form.submit()" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
@@ -193,12 +194,12 @@
                             oninput="debouncedSubmit(this)">
                     </div>
                 </div>
-            </div>
-
-            <div class="flex items-center gap-3">
+                </div>
+                <div class="flex items-center gap-3">
                 <a href="{{ route('admin.penilaian') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
-                    Reset Filter
+                    Reset
                 </a>
+                </div>
             </div>
         </form>
 

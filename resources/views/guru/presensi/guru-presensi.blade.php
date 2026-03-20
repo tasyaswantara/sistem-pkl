@@ -11,20 +11,21 @@
 @push('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const mapElement = document.getElementById('guru-absensi-map');
+        window.initGuruPresensiMap = function initGuruPresensiMap() {
+            const mapElement = document.getElementById('guru-presensi-map');
             const hasLeaflet = typeof L !== 'undefined';
             if (!mapElement) {
                 return;
             }
 
             if (!hasLeaflet) {
-                mapElement.innerHTML = '<div class="h-full flex items-center justify-center text-sm text-amber-700 bg-amber-50">Leaflet gagal dimuat. Cek koneksi internet/CDN atau gunakan asset Leaflet lokal.</div>';
+                mapElement.innerHTML =
+                    '<div class="h-full flex items-center justify-center text-sm text-amber-700 bg-amber-50">Leaflet gagal dimuat. Cek koneksi internet/CDN atau gunakan asset Leaflet lokal.</div>';
             }
 
             if (hasLeaflet) {
                 const points = @json($mapPoints);
-                const map = L.map('guru-absensi-map').setView([-6.200000, 106.816666], 11);
+                const map = L.map('guru-presensi-map').setView([-6.200000, 106.816666], 11);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
                     attribution: '&copy; OpenStreetMap'
@@ -38,9 +39,9 @@
                         return;
                     }
 
-                    const color = point.status === '{{ AbsensiStatus::HADIR_VALID->value }}'
-                        ? '#16a34a'
-                        : (point.status === '{{ AbsensiStatus::DI_LUAR_AREA->value }}' ? '#e11d48' : '#6b7280');
+                    const color = point.status === '{{ AbsensiStatus::HADIR_VALID->value }}' ?
+                        '#16a34a' :
+                        (point.status === '{{ AbsensiStatus::DI_LUAR_AREA->value }}' ? '#e11d48' : '#6b7280');
 
                     const marker = L.circleMarker([lat, lng], {
                         radius: 8,
@@ -71,6 +72,10 @@
 
                 setTimeout(() => map.invalidateSize(), 120);
             }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.initGuruPresensiMap();
         });
     </script>
 @endpush
@@ -102,70 +107,92 @@
             </div>
         @endif
 
-        <form method="GET" action="{{ route('guru.presensi') }}" class="bg-white rounded-lg border border-gray-200 p-6">
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal</label>
-                    <input type="date" name="date" value="{{ $filters['date'] }}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+        <div id="guru-presensi-filter-target">
+            <form id="guru-presensi-filter-form" method="GET" action="{{ route('guru.presensi') }}"
+                class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-7 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal</label>
+                            <input type="date" name="date" value="{{ $filters['date'] }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
+                            <select name="tahun_ajaran"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">Semua</option>
+                                @foreach ($tahunAjaranOptions as $tahun)
+                                    <option value="{{ $tahun }}"
+                                        {{ (string) $filters['tahun_ajaran'] === (string) $tahun ? 'selected' : '' }}>
+                                        {{ $tahun }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                            <select name="jurusan_id"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">Semua</option>
+                                @foreach ($jurusanOptions as $jurusan)
+                                    <option value="{{ $jurusan->id }}"
+                                        {{ (string) $filters['jurusan_id'] === (string) $jurusan->id ? 'selected' : '' }}>
+                                        {{ $jurusan->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Industri</label>
+                            <select name="industri_id"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">Semua</option>
+                                @foreach ($industriOptions as $industri)
+                                    <option value="{{ $industri->id }}"
+                                        {{ (string) $filters['industri_id'] === (string) $industri->id ? 'selected' : '' }}>
+                                        {{ $industri->nama_industri }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
+                            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                @foreach ($statusLabels as $value => $label)
+                                    <option value="{{ $value }}"
+                                        {{ (string) $filters['status'] === (string) $value ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
+                            <input type="text" name="q" value="{{ $filters['q'] }}"
+                                placeholder="Nama atau NIS"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('guru.presensi') }}"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
+                            Reset
+                        </a>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
-                    <select name="jurusan_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                        <option value="">Semua</option>
-                        @foreach ($jurusanOptions as $jurusan)
-                            <option value="{{ $jurusan->id }}" {{ (string) $filters['jurusan_id'] === (string) $jurusan->id ? 'selected' : '' }}>
-                                {{ $jurusan->nama }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Industri</label>
-                    <select name="industri_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                        <option value="">Semua</option>
-                        @foreach ($industriOptions as $industri)
-                            <option value="{{ $industri->id }}" {{ (string) $filters['industri_id'] === (string) $industri->id ? 'selected' : '' }}>
-                                {{ $industri->nama_industri }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
-                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                        @foreach ($statusLabels as $value => $label)
-                            <option value="{{ $value }}" {{ (string) $filters['status'] === (string) $value ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Nama atau NIS"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                </div>
-            </div>
-            <div class="mt-4 flex items-center gap-2">
-                <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
-                    Terapkan
-                </button>
-                <a href="{{ route('guru.presensi') }}"
-                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
-                    Reset
-                </a>
-            </div>
-        </form>
-
+            </form>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-white rounded-lg border border-gray-200 p-4">
                 <div class="text-xs text-gray-500 mb-1">Hadir Valid</div>
-                <div class="text-2xl font-semibold text-emerald-700">{{ $statusCounts[AbsensiStatus::HADIR_VALID->value] ?? 0 }}</div>
+                <div class="text-2xl font-semibold text-emerald-700">
+                    {{ $statusCounts[AbsensiStatus::HADIR_VALID->value] ?? 0 }}</div>
             </div>
             <div class="bg-white rounded-lg border border-gray-200 p-4">
                 <div class="text-xs text-gray-500 mb-1">Di Luar Area</div>
-                <div class="text-2xl font-semibold text-rose-700">{{ $statusCounts[AbsensiStatus::DI_LUAR_AREA->value] ?? 0 }}</div>
+                <div class="text-2xl font-semibold text-rose-700">
+                    {{ $statusCounts[AbsensiStatus::DI_LUAR_AREA->value] ?? 0 }}</div>
             </div>
         </div>
 
@@ -177,11 +204,13 @@
                         <div class="text-xs text-gray-500">{{ count($mapPoints) }} titik pada halaman ini</div>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-600">
-                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Hadir Valid</span>
-                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Di Luar Area</span>
+                        <span class="inline-flex items-center gap-2"><span
+                                class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Hadir Valid</span>
+                        <span class="inline-flex items-center gap-2"><span
+                                class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Di Luar Area</span>
                     </div>
                 </div>
-                <div id="guru-absensi-map" class="w-full h-[420px] md:h-[520px] xl:h-[560px]"></div>
+                <div id="guru-presensi-map" class="w-full h-[420px] md:h-[520px] xl:h-[560px]"></div>
             </div>
         </div>
 
@@ -208,11 +237,13 @@
                         @forelse ($absensiList as $row)
                             @php
                                 $statusClass = match ($row->status) {
-                                    AbsensiStatus::HADIR_VALID->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                                    AbsensiStatus::DI_LUAR_AREA->value => 'bg-rose-50 text-rose-700 border border-rose-200',
+                                    AbsensiStatus::HADIR_VALID->value
+                                        => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                                    AbsensiStatus::DI_LUAR_AREA->value
+                                        => 'bg-rose-50 text-rose-700 border border-rose-200',
                                     default => 'bg-gray-50 text-gray-700 border border-gray-200',
                                 };
-                                $statusKey = 'absensi.status.' . $row->status;
+                                $statusKey = 'presensi.status.' . $row->status;
                                 $statusLabel = \Illuminate\Support\Facades\Lang::has($statusKey)
                                     ? __($statusKey)
                                     : ucfirst(str_replace('_', ' ', $row->status));
@@ -222,9 +253,12 @@
                                     <div class="font-medium text-gray-900">{{ $row->siswa?->user?->name ?? '-' }}</div>
                                     <div class="text-xs text-gray-500">{{ $row->siswa?->nis ?? '-' }}</div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ $row->siswa?->jurusan?->nama ?? '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ $row->check_in_at?->format('d/m/Y H:i:s') ?? '-' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-700">{{ $row->siswa?->jurusan?->nama ?? '-' }}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-700">{{ $row->industri?->nama_industri ?? '-' }}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-700">
+                                    {{ $row->check_in_at?->format('d/m/Y H:i:s') ?? '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     {{ $row->latitude !== null ? number_format((float) $row->latitude, 6) : '-' }},
                                     {{ $row->longitude !== null ? number_format((float) $row->longitude, 6) : '-' }}
@@ -233,7 +267,8 @@
                                     {{ $row->distance_to_industri_m !== null ? number_format((float) $row->distance_to_industri_m, 2) . ' m' : '-' }}
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClass }}">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
@@ -255,5 +290,17 @@
                 {{ $absensiList->links() }}
             </div>
         </div>
+
     </div>
 </x-admin-layout>
+@include('partials.ajax-filter-script')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        window.setupAjaxFilter({
+            formId: 'guru-presensi-filter-form',
+            targetId: 'guru-presensi-filter-target',
+            debounce: 500,
+            afterReplace: 'initGuruPresensiMap',
+        });
+    });
+</script>

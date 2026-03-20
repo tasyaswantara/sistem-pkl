@@ -20,64 +20,93 @@
         </div>
         @endif
 
-        <form method="GET" class="flex flex-wrap items-center gap-3 mb-6">
-            <select name="tahun_ajaran" onchange="this.form.submit()"
-                class="px-4 py-2 w-[190px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
-                <option value="">Semua Tahun Ajaran</option>
-                @foreach ($tahunAjaranOptions as $tahun)
-                <option value="{{ $tahun }}" {{ (string) $filters['tahun_ajaran'] === (string) $tahun ? 'selected' : '' }}>
-                    {{ $tahun }}
-                </option>
-                @endforeach
-            </select>
+        <form method="GET" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900">Filter E-Logbook</h3>
+            </div>
 
-            <select name="jurusan_id" onchange="this.form.submit()"
-                class="px-4 py-2 w-[200px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
-                <option value="">Semua Jurusan</option>
-                @foreach ($jurusanOptions as $jurusan)
-                <option value="{{ $jurusan->id }}" {{ (string) $filters['jurusan_id'] === (string) $jurusan->id ? 'selected' : '' }}>
-                    {{ $jurusan->nama }}
-                </option>
-                @endforeach
-            </select>
+            <div class="flex flex-wrap items-end gap-4 mb-4">
+                <div class="min-w-[180px]">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
+                    <select name="tahun_ajaran" onchange="this.form.submit()"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <option value="">Semua Tahun Ajaran</option>
+                    @foreach ($tahunAjaranOptions as $tahun)
+                    <option value="{{ $tahun }}" {{ (string) $filters['tahun_ajaran'] === (string) $tahun ? 'selected' : '' }}>
+                        {{ $tahun }}
+                    </option>
+                    @endforeach
+                    </select>
+                </div>
 
-            <select name="industri_id" onchange="this.form.submit()"
-                class="px-4 py-2 w-[220px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
-                <option value="">Semua Industri</option>
-                @foreach ($industriOptions as $industri)
-                <option value="{{ $industri->id }}" {{ (string) $filters['industri_id'] === (string) $industri->id ? 'selected' : '' }}>
-                    {{ $industri->nama_industri }}
-                </option>
-                @endforeach
-            </select>
+                <div class="min-w-[200px]">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                    <select name="jurusan_id" onchange="this.form.submit()"
+                    class="w-[200px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <option value="">Semua Jurusan</option>
+                    @foreach ($jurusanOptions as $jurusan)
+                    <option value="{{ $jurusan->id }}" {{ (string) $filters['jurusan_id'] === (string) $jurusan->id ? 'selected' : '' }}>
+                        {{ $jurusan->nama }}
+                    </option>
+                    @endforeach
+                    </select>
+                </div>
 
-            <select name="status" onchange="this.form.submit()"
-                class="px-4 py-2 w-[170px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
-                @foreach ($statusLabels as $value => $label)
-                <option value="{{ $value }}" {{ (string) $filters['status'] === (string) $value ? 'selected' : '' }}>
-                    {{ $label }}
-                </option>
-                @endforeach
-            </select>
+                <div class="min-w-[220px]">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Industri</label>
+                    <select name="industri_id" onchange="this.form.submit()"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <option value="">Semua Industri</option>
+                    @foreach ($industriOptions as $industri)
+                    <option value="{{ $industri->id }}" {{ (string) $filters['industri_id'] === (string) $industri->id ? 'selected' : '' }}>
+                        {{ $industri->nama_industri }}
+                    </option>
+                    @endforeach
+                    </select>
+                </div>
 
-            <input
-                type="date"
-                name="tanggal"
-                value="{{ $filters['tanggal'] }}"
-                class="px-4 py-2 w-[170px] bg-white border border-gray-300 rounded-lg text-sm"
-                onchange="this.form.submit()">
+                <div class="min-w-[160px]">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
+                    <select name="status" onchange="this.form.submit()"
+                    class="w-[200px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    @foreach ($statusLabels as $value => $label)
+                    <option value="{{ $value }}" {{ (string) $filters['status'] === (string) $value ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                    @endforeach
+                    </select>
+                </div>
 
-            <input
-                type="text"
-                name="q"
-                value="{{ $filters['q'] }}"
-                placeholder="Cari nama atau NIS"
-                class="w-[260px] px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm"
-                oninput="debouncedSubmit(this)">
+                <div class="min-w-[170px]">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal</label>
+                    <input
+                        type="date"
+                        name="tanggal"
+                        value="{{ $filters['tanggal'] }}"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                        onchange="this.form.submit()">
+                </div>
 
-            <a href="{{ route('guru.elogbook') }}" class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg bg-white hover:bg-gray-50">
-                Reset
-            </a>
+                <div class="min-w-[220px] flex-1">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ $filters['q'] }}"
+                            placeholder="Nama siswa"
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                            oninput="debouncedSubmit(this)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ route('guru.elogbook') }}" class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg bg-white hover:bg-gray-50">
+                    Reset
+                </a>
+            </div>
         </form>
 
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">

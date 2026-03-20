@@ -26,13 +26,14 @@ class AdminUserService
     }
 
     /**
-     * @param array{role?:string,search?:string,jurusan_id?:string,kelas?:string,grade?:string} $filters
+     * @param array{role?:string,search?:string,jurusan_id?:string,tahun_ajaran?:string,kelas?:string,grade?:string} $filters
      */
     public function getUsers(array $filters): LengthAwarePaginator
     {
         $role = $filters['role'] ?? null;
         $search = $filters['search'] ?? null;
         $jurusanId = $filters['jurusan_id'] ?? null;
+        $tahunAjaran = $filters['tahun_ajaran'] ?? null;
         $kelas = $filters['kelas'] ?? null;
         $grade = $filters['grade'] ?? null;
 
@@ -51,6 +52,11 @@ class AdminUserService
             ->when($jurusanId && $role === 'Siswa', function ($q) use ($jurusanId) {
                 $q->whereHas('siswa', function ($sq) use ($jurusanId) {
                     $sq->where('jurusan_id', $jurusanId);
+                });
+            })
+            ->when($tahunAjaran && $role === 'Siswa', function ($q) use ($tahunAjaran) {
+                $q->whereHas('siswa', function ($sq) use ($tahunAjaran) {
+                    $sq->where('tahun_ajaran', $tahunAjaran);
                 });
             })
             ->when($jurusanId && $role === 'Perwakilan Industri', function ($q) use ($jurusanId) {
@@ -86,6 +92,11 @@ class AdminUserService
     public function getKelasOptions(): Collection
     {
         return Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+    }
+
+    public function getTahunAjaranOptions(): Collection
+    {
+        return Siswa::select('tahun_ajaran')->distinct()->orderBy('tahun_ajaran', 'desc')->pluck('tahun_ajaran');
     }
 
     public function getPrefillRole(?string $rawRole): ?string

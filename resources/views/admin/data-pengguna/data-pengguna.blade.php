@@ -91,6 +91,16 @@
                         @endforeach
                     </select>
 
+                    <select name="tahun_ajaran" onchange="this.form.submit()"
+                        class="px-4 py-2 w-[180px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
+                        <option value="">Semua Tahun</option>
+                        @foreach ($tahunAjaranOptions as $tahun)
+                            <option value="{{ $tahun }}" {{ request('tahun_ajaran') == $tahun ? 'selected' : '' }}>
+                                {{ $tahun }}
+                            </option>
+                        @endforeach
+                    </select>
+
                     <select name="kelas" onchange="this.form.submit()"
                         class="px-4 py-2 w-[180px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
                         <option value="">Semua Kelas</option>

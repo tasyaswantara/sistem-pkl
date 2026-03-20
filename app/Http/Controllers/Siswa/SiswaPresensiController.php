@@ -5,22 +5,22 @@ namespace App\Http\Controllers\Siswa;
 use App\Enums\LogbookStatus;
 use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;
-use App\Services\SiswaAbsensiService;
+use App\Services\SiswaPresensiCheckInService;
 use App\Services\SiswaPresensiService;
 use Illuminate\Http\Request;
 
-class SiswaAbsensiController extends Controller
+class SiswaPresensiController extends Controller
 {
     public function index(Request $request, SiswaPresensiService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, __('absensi.errors.akun'));
+            abort(403, __('presensi.errors.akun'));
         }
 
         $data = $service->getPageData($siswa);
 
-        return view('siswa.absensi.siswa-absensi', [
+        return view('siswa.presensi.siswa-presensi', [
             'penempatan' => $data['penempatan'],
             'todayAbsensi' => $data['todayAbsensi'],
             'canCheckIn' => $data['canCheckIn'],
@@ -43,11 +43,11 @@ class SiswaAbsensiController extends Controller
         ]);
     }
 
-    public function store(Request $request, SiswaAbsensiService $service)
+    public function store(Request $request, SiswaPresensiCheckInService $service)
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
-            abort(403, __('absensi.errors.akun'));
+            abort(403, __('presensi.errors.akun'));
         }
 
         $validated = $request->validate([
@@ -60,12 +60,12 @@ class SiswaAbsensiController extends Controller
         $result = $service->createCheckIn($siswa, $validated);
         if (!$result['ok']) {
             return back()->withErrors([
-                'absensi' => __($result['error_key'] ?? 'absensi.errors.lokasi'),
+                'presensi' => __($result['error_key'] ?? 'presensi.errors.lokasi'),
             ])->withInput();
         }
 
         return back()
-            ->with('success', __('absensi.success.checkin'))
+            ->with('success', __('presensi.success.checkin'))
             ->with('checkin_at', $result['absensi']?->check_in_at?->format('H:i:s'));
     }
 }

@@ -117,7 +117,7 @@
                     [
                         'label' => 'Peringatan Dini Siswa',
                         'icon' => 'clipboard',
-                        'route' => 'admin.risk',
+                        'route' => 'admin.peringatan-dini',
                     ],
                 ];
             }
@@ -152,7 +152,7 @@
                     [
                         'label' => 'Peringatan Dini Siswa',
                         'icon' => 'clipboard',
-                        'route' => 'guru.risk',
+                        'route' => 'guru.peringatan-dini',
                     ],
                 ]);
             }

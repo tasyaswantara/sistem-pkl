@@ -13,18 +13,19 @@ use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
-class AdminRiskService
+class AdminPeringatanDiniService
 {
     public function __construct(private AppNotificationService $notificationService)
     {
     }
 
     /**
+     * @param array{q?:string,category?:string,jurusan_id?:string,tahun_ajaran?:string} $filters
      * @return array{riskScores:LengthAwarePaginator|Collection,weekStart:?Carbon,weekEnd:?Carbon,detailByRiskId:array}
      */
     public function getLatestRiskData(array $filters): array
     {
-        $latestWeekEnd = RiskScore::max('week_end');
+        $latestWeekEnd = $this->buildRiskBaseQuery($filters)->max('week_end');
         $riskScores = collect();
         $detailByRiskId = [];
         $weekStart = null;
@@ -32,7 +33,9 @@ class AdminRiskService
 
         if ($latestWeekEnd) {
             $weekEnd = Carbon::parse($latestWeekEnd);
-            $latestWeekStart = RiskScore::where('week_end', $latestWeekEnd)->max('week_start');
+            $latestWeekStart = $this->buildRiskBaseQuery($filters)
+                ->where('week_end', $latestWeekEnd)
+                ->max('week_start');
             $weekStart = $latestWeekStart ? Carbon::parse($latestWeekStart) : null;
 
             if (!$weekStart) {
@@ -44,7 +47,7 @@ class AdminRiskService
                 ];
             }
 
-            $riskQuery = RiskScore::with(['siswa.user', 'siswa.jurusan'])
+            $riskQuery = $this->buildRiskBaseQuery($filters)
                 ->where('week_start', $latestWeekStart)
                 ->where('week_end', $latestWeekEnd);
 
@@ -56,12 +59,6 @@ class AdminRiskService
 
             if (!empty($filters['category']) && $filters['category'] !== 'all') {
                 $riskQuery->where('category', $filters['category']);
-            }
-
-            if (!empty($filters['jurusan_id'])) {
-                $riskQuery->whereHas('siswa', function ($query) use ($filters) {
-                    $query->where('jurusan_id', $filters['jurusan_id']);
-                });
             }
 
             $riskScores = $riskQuery
@@ -84,10 +81,13 @@ class AdminRiskService
         ];
     }
 
-    public function runRisk(Carbon $weekStart, Carbon $weekEnd): int
+    public function runRisk(Carbon $weekStart, Carbon $weekEnd, ?string $tahunAjaran = null): int
     {
         $siswaList = Siswa::whereHas('penempatanPkl', function ($query) {
                 $query->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value);
+            })
+            ->when($tahunAjaran, function ($query, $selectedTahunAjaran) {
+                $query->where('tahun_ajaran', $selectedTahunAjaran);
             })
             ->select('id')
             ->get();
@@ -95,6 +95,21 @@ class AdminRiskService
         $rows = $this->calculateRiskScores($siswaList, $weekStart, $weekEnd);
 
         return $this->storeRiskScores($rows, $weekStart, $weekEnd);
+    }
+
+    public function getTahunAjaranOptions(?string $jurusanId = null): Collection
+    {
+        return Siswa::query()
+            ->whereHas('penempatanPkl', function ($query) {
+                $query->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value);
+            })
+            ->when($jurusanId, function ($query, $selectedJurusanId) {
+                $query->where('jurusan_id', $selectedJurusanId);
+            })
+            ->select('tahun_ajaran')
+            ->distinct()
+            ->orderBy('tahun_ajaran', 'desc')
+            ->pluck('tahun_ajaran');
     }
 
     /**
@@ -303,5 +318,24 @@ class AdminRiskService
         }
 
         return $detailByRiskId;
+    }
+
+    /**
+     * @param array{q?:string,category?:string,jurusan_id?:string,tahun_ajaran?:string} $filters
+     */
+    private function buildRiskBaseQuery(array $filters)
+    {
+        return RiskScore::with(['siswa.user', 'siswa.jurusan'])
+            ->when(!empty($filters['jurusan_id']) || !empty($filters['tahun_ajaran']), function ($query) use ($filters) {
+                $query->whereHas('siswa', function ($siswaQuery) use ($filters) {
+                    if (!empty($filters['jurusan_id'])) {
+                        $siswaQuery->where('jurusan_id', $filters['jurusan_id']);
+                    }
+
+                    if (!empty($filters['tahun_ajaran'])) {
+                        $siswaQuery->where('tahun_ajaran', $filters['tahun_ajaran']);
+                    }
+                });
+            });
     }
 }

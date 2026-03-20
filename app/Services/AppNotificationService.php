@@ -224,7 +224,7 @@ class AppNotificationService
                 User::role('admin')->get(),
                 $title,
                 $body,
-                route('admin.risk'),
+                route('admin.peringatan-dini'),
                 $payload
             );
         }
@@ -233,7 +233,7 @@ class AppNotificationService
             $penempatan?->guruPembimbing?->user,
             $title,
             $body,
-            route('guru.risk'),
+            route('guru.peringatan-dini'),
             $payload
         );
     }

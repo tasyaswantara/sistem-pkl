@@ -10,7 +10,7 @@ use App\Models\PenempatanPKL;
 use App\Models\Siswa;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class SiswaAbsensiService
+class SiswaPresensiCheckInService
 {
     /**
      * @return array{penempatan:?PenempatanPKL,todayAbsensi:?AbsensiPkl,absensiList:LengthAwarePaginator}
@@ -57,7 +57,7 @@ class SiswaAbsensiService
         if (!$penempatan || !$penempatan->industri) {
             return [
                 'ok' => false,
-                'error_key' => 'absensi.errors.terima',
+                'error_key' => 'presensi.errors.terima',
             ];
         }
 
@@ -65,7 +65,7 @@ class SiswaAbsensiService
         if ($industri->latitude === null || $industri->longitude === null) {
             return [
                 'ok' => false,
-                'error_key' => 'absensi.errors.geofence',
+                'error_key' => 'presensi.errors.geofence',
             ];
         }
 
@@ -78,7 +78,7 @@ class SiswaAbsensiService
         if ($alreadyCheckedIn) {
             return [
                 'ok' => false,
-                'error_key' => 'absensi.errors.duplikat',
+                'error_key' => 'presensi.errors.duplikat',
             ];
         }
 
@@ -95,7 +95,7 @@ class SiswaAbsensiService
         if (!$geofenceResult['is_within_geofence'] && !$catatan) {
             return [
                 'ok' => false,
-                'error_key' => 'absensi.errors.alasan_luar_area',
+                'error_key' => 'presensi.errors.alasan_luar_area',
             ];
         }
 

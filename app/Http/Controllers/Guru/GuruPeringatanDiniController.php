@@ -11,19 +11,20 @@ use App\Models\Siswa;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class GuruRiskController extends Controller
+class GuruPeringatanDiniController extends Controller
 {
     public function index(Request $request)
     {
         $guru = $request->user()->guruPembimbing;
         if (!$guru) {
-            abort(403, __('guru_risk.errors.akun'));
+            abort(403, __('guru_peringatan_dini.errors.akun'));
         }
 
         $filters = [
             'q' => $request->input('q'),
             'category' => $request->input('category', 'all'),
             'jurusan_id' => $request->input('jurusan_id'),
+            'tahun_ajaran' => $request->input('tahun_ajaran'),
         ];
 
         $siswaIds = PenempatanPKL::where('guru_pembimbing_id', $guru->id)->pluck('siswa_id');
@@ -31,8 +32,27 @@ class GuruRiskController extends Controller
             'id',
             Siswa::whereIn('id', $siswaIds)->pluck('jurusan_id')->unique()
         )->orderBy('nama')->get();
+        $tahunAjaranOptions = Siswa::whereIn('id', $siswaIds)
+            ->select('tahun_ajaran')
+            ->distinct()
+            ->orderBy('tahun_ajaran', 'desc')
+            ->pluck('tahun_ajaran');
 
-        $latestWeekEnd = RiskScore::whereIn('siswa_id', $siswaIds)->max('week_end');
+        $riskBaseQuery = RiskScore::with(['siswa.user', 'siswa.jurusan'])
+            ->whereIn('siswa_id', $siswaIds)
+            ->when(!empty($filters['jurusan_id']) || !empty($filters['tahun_ajaran']), function ($query) use ($filters) {
+                $query->whereHas('siswa', function ($siswaQuery) use ($filters) {
+                    if (!empty($filters['jurusan_id'])) {
+                        $siswaQuery->where('jurusan_id', $filters['jurusan_id']);
+                    }
+
+                    if (!empty($filters['tahun_ajaran'])) {
+                        $siswaQuery->where('tahun_ajaran', $filters['tahun_ajaran']);
+                    }
+                });
+            });
+
+        $latestWeekEnd = (clone $riskBaseQuery)->max('week_end');
         $riskScores = collect();
         $detailByRiskId = [];
         $weekStart = null;
@@ -40,26 +60,26 @@ class GuruRiskController extends Controller
 
         if ($latestWeekEnd) {
             $weekEnd = Carbon::parse($latestWeekEnd);
-            $latestWeekStart = RiskScore::whereIn('siswa_id', $siswaIds)
+            $latestWeekStart = (clone $riskBaseQuery)
                 ->where('week_end', $latestWeekEnd)
                 ->max('week_start');
             $weekStart = $latestWeekStart ? Carbon::parse($latestWeekStart) : null;
 
             if (!$weekStart) {
-                return view('guru.risk.guru-risk', [
+                return view('guru.peringatan-dini.guru-peringatan-dini', [
                     'riskScores' => $riskScores,
                     'weekStart' => $weekStart,
                     'weekEnd' => $weekEnd,
                     'detailByRiskId' => $detailByRiskId,
                     'filters' => $filters,
                     'jurusanOptions' => $jurusanOptions,
+                    'tahunAjaranOptions' => $tahunAjaranOptions,
                 ]);
             }
 
-            $riskQuery = RiskScore::with(['siswa.user', 'siswa.jurusan'])
+            $riskQuery = (clone $riskBaseQuery)
                 ->where('week_start', $latestWeekStart)
-                ->where('week_end', $latestWeekEnd)
-                ->whereIn('siswa_id', $siswaIds);
+                ->where('week_end', $latestWeekEnd);
 
             if (!empty($filters['q'])) {
                 $riskQuery->whereHas('siswa.user', function ($query) use ($filters) {
@@ -69,12 +89,6 @@ class GuruRiskController extends Controller
 
             if (!empty($filters['category']) && $filters['category'] !== 'all') {
                 $riskQuery->where('category', $filters['category']);
-            }
-
-            if (!empty($filters['jurusan_id'])) {
-                $riskQuery->whereHas('siswa', function ($query) use ($filters) {
-                    $query->where('jurusan_id', $filters['jurusan_id']);
-                });
             }
 
             $riskScores = $riskQuery
@@ -142,13 +156,14 @@ class GuruRiskController extends Controller
             }
         }
 
-        return view('guru.risk.guru-risk', [
+        return view('guru.peringatan-dini.guru-peringatan-dini', [
             'riskScores' => $riskScores,
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd ? Carbon::parse($weekEnd) : null,
             'detailByRiskId' => $detailByRiskId,
             'filters' => $filters,
             'jurusanOptions' => $jurusanOptions,
+            'tahunAjaranOptions' => $tahunAjaranOptions,
         ]);
     }
 }

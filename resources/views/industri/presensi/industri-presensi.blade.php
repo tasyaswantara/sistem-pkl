@@ -11,8 +11,8 @@
 @push('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const mapElement = document.getElementById('industri-absensi-map');
+        window.initIndustriPresensiMap = function initIndustriPresensiMap() {
+            const mapElement = document.getElementById('industri-presensi-map');
             const hasLeaflet = typeof L !== 'undefined';
             if (!mapElement) {
                 return;
@@ -24,7 +24,7 @@
 
             if (hasLeaflet) {
                 const points = @json($mapPoints);
-                const map = L.map('industri-absensi-map').setView([-6.200000, 106.816666], 11);
+                const map = L.map('industri-presensi-map').setView([-6.200000, 106.816666], 11);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
                     attribution: '&copy; OpenStreetMap'
@@ -70,6 +70,10 @@
 
                 setTimeout(() => map.invalidateSize(), 120);
             }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.initIndustriPresensiMap();
         });
     </script>
 @endpush
@@ -101,8 +105,10 @@
             </div>
         @endif
 
-        <form method="GET" action="{{ route('industri.presensi') }}" class="bg-white rounded-lg border border-gray-200 p-6">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div id="industri-presensi-filter-target">
+        <form id="industri-presensi-filter-form" method="GET" action="{{ route('industri.presensi') }}" class="bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal</label>
                     <input type="date" name="date" value="{{ $filters['date'] }}"
@@ -135,16 +141,15 @@
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-2">
-                <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
-                    Terapkan
-                </button>
+            <div class="flex items-center gap-2">
                 <a href="{{ route('industri.presensi') }}"
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
                     Reset
                 </a>
             </div>
+            </div>
         </form>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-white rounded-lg border border-gray-200 p-4">
@@ -169,7 +174,7 @@
                         <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Di Luar Area</span>
                     </div>
                 </div>
-                <div id="industri-absensi-map" class="w-full h-[420px] md:h-[520px] xl:h-[560px]"></div>
+                <div id="industri-presensi-map" class="w-full h-[420px] md:h-[520px] xl:h-[560px]"></div>
             </div>
         </div>
 
@@ -199,7 +204,7 @@
                                     AbsensiStatus::DI_LUAR_AREA->value => 'bg-rose-50 text-rose-700 border border-rose-200',
                                     default => 'bg-gray-50 text-gray-700 border border-gray-200',
                                 };
-                                $statusKey = 'absensi.status.' . $row->status;
+                                $statusKey = 'presensi.status.' . $row->status;
                                 $statusLabel = \Illuminate\Support\Facades\Lang::has($statusKey)
                                     ? __($statusKey)
                                     : ucfirst(str_replace('_', ' ', $row->status));
@@ -243,3 +248,14 @@
         </div>
     </div>
 </x-admin-layout>
+@include('partials.ajax-filter-script')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        window.setupAjaxFilter({
+            formId: 'industri-presensi-filter-form',
+            targetId: 'industri-presensi-filter-target',
+            debounce: 500,
+            afterReplace: 'initIndustriPresensiMap',
+        });
+    });
+</script>

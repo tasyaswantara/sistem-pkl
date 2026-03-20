@@ -27,7 +27,13 @@ class AdminPenempatanController extends Controller
     public function index(Request $request, AdminPenempatanService $service)
     {
         return view('admin.penempatan.admin-penempatan', $service->getIndexData(
-            $request->only(['tab', 'jurusan_id', 'tahun_ajaran', 'status', 'q'])
+            array_merge(
+                $request->only(['tab', 'jurusan_id', 'tahun_ajaran', 'status', 'q']),
+                [
+                    'has_jurusan_filter' => $request->has('jurusan_id'),
+                    'has_tahun_ajaran_filter' => $request->has('tahun_ajaran'),
+                ]
+            )
         ));
     }
 

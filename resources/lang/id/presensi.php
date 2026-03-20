@@ -3,7 +3,7 @@
 return [
     'errors' => [
         'akun' => 'Akun siswa belum terhubung.',
-        'terima' => 'Absensi hanya bisa dilakukan setelah penempatan diterima industri.',
+        'terima' => 'Presensi hanya bisa dilakukan setelah penempatan diterima industri.',
         'duplikat' => 'Anda sudah melakukan check-in hari ini.',
         'geofence' => 'Geofence industri belum diatur admin. Silakan hubungi admin.',
         'alamat_kosong' => 'Alamat industri kosong, geocoding tidak bisa dijalankan.',

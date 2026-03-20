@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\AdminAbsensiService;
+use App\Services\AdminPresensiService;
 use Illuminate\Http\Request;
 
-class AdminAbsensiController extends Controller
+class AdminPresensiController extends Controller
 {
-    public function index(Request $request, AdminAbsensiService $service)
+    public function index(Request $request, AdminPresensiService $service)
     {
         $filters = [
             'date' => $request->input('date', now()->toDateString()),
+            'tahun_ajaran' => $request->input('tahun_ajaran'),
             'jurusan_id' => $request->input('jurusan_id'),
             'industri_id' => $request->input('industri_id'),
             'status' => $request->input('status', 'all'),
@@ -21,8 +22,9 @@ class AdminAbsensiController extends Controller
         $options = $service->getOptions();
         $data = $service->getIndexData($filters);
 
-        return view('admin.absensi.admin-absensi', [
+        return view('admin.presensi.admin-presensi', [
             'filters' => $filters,
+            'tahunAjaranOptions' => $options['tahunAjaranOptions'],
             'jurusanOptions' => $options['jurusanOptions'],
             'industriOptions' => $options['industriOptions'],
             'absensiList' => $data['absensiList'],
@@ -31,11 +33,11 @@ class AdminAbsensiController extends Controller
             'geofenceList' => $data['geofenceList'],
             'globalRadiusM' => $data['globalRadiusM'],
             'radiusUniform' => $data['radiusUniform'],
-            'statusLabels' => __('absensi.status'),
+            'statusLabels' => __('presensi.status'),
         ]);
     }
 
-    public function updateGlobalRadius(Request $request, AdminAbsensiService $service)
+    public function updateGlobalRadius(Request $request, AdminPresensiService $service)
     {
         $validated = $request->validate([
             'geofence_radius_m' => 'required|integer|min:20|max:5000',
@@ -43,6 +45,6 @@ class AdminAbsensiController extends Controller
 
         $service->updateGlobalRadius((int) $validated['geofence_radius_m']);
 
-        return back()->with('success', __('absensi.success.global_radius'));
+        return back()->with('success', __('presensi.success.global_radius'));
     }
 }

@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Industri;
 
 use App\Http\Controllers\Controller;
-use App\Services\IndustriAbsensiService;
+use App\Services\IndustriPresensiService;
 use Illuminate\Http\Request;
 
-class IndustriAbsensiController extends Controller
+class IndustriPresensiController extends Controller
 {
-    public function index(Request $request, IndustriAbsensiService $service)
+    public function index(Request $request, IndustriPresensiService $service)
     {
         $industri = $request->user()->industri;
         if (!$industri) {
-            abort(403, __('industri_absensi.errors.akun'));
+            abort(403, __('industri_presensi.errors.akun'));
         }
 
         $filters = [
@@ -25,13 +25,13 @@ class IndustriAbsensiController extends Controller
         $options = $service->getOptions($industri);
         $data = $service->getIndexData($industri, $filters);
 
-        return view('industri.absensi.industri-absensi', [
+        return view('industri.presensi.industri-presensi', [
             'filters' => $filters,
             'jurusanOptions' => $options['jurusanOptions'],
             'absensiList' => $data['absensiList'],
             'statusCounts' => $data['statusCounts'],
             'mapPoints' => $data['mapPoints'],
-            'statusLabels' => __('absensi.status'),
+            'statusLabels' => __('presensi.status'),
         ]);
     }
 }

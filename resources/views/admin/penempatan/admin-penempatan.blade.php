@@ -20,6 +20,7 @@
             guruList: [],
             usulanOpen: false,
             usulanDetail: {},
+            directPlacementOpen: {{ ($errors->has('penempatan') || $errors->has('siswa_id') || $errors->has('industri_id') || $errors->has('mode') || $errors->has('alasan')) ? 'true' : 'false' }},
         }">
 
         {{-- Header --}}
@@ -356,114 +357,30 @@
 
         {{-- Penempatan Langsung --}}
         @if ($tab === 'langsung')
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-base font-semibold text-gray-900">Penempatan Langsung</h3>
-                <span class="text-xs text-gray-500">Ditetapkan oleh admin</span>
-            </div>
-            <p class="text-xs text-gray-500 mb-4">
-                Gunakan fitur ini untuk menempatkan siswa langsung ke industri atau magang di sekolah.
-            </p>
-            @php
-            $siswaSelectData = $siswaOptions->map(function ($siswa) {
-                return [
-                    'id' => $siswa->id,
-                    'label' => trim(($siswa->user?->name ?? '-') . ' · ' . ($siswa->nis ?? '-') . ' · ' . ($siswa->jurusan?->nama ?? '-')),
-                ];
-            })->values();
-            $industriSelectData = $industriOptions->map(function ($industri) {
-                return [
-                    'id' => $industri->id,
-                    'label' => $industri->nama_industri,
-                ];
-            })->values();
-            @endphp
-            <form method="POST" action="{{ route('admin.penempatan.langsung') }}"
-                x-data="penempatanLangsungForm({
-                    siswa: @js($siswaSelectData),
-                    industri: @js($industriSelectData),
-                    initialSiswaId: @js(old('siswa_id')),
-                    initialIndustriId: @js(old('industri_id'))
-                })"
-                x-init="init()"
-                class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Siswa</label>
-                    <input type="hidden" name="siswa_id" :value="siswaId">
-                    <div class="relative">
-                        <input
-                            type="text"
-                            x-model="siswaQuery"
-                            @focus="openSiswa = true"
-                            @input="openSiswa = true"
-                            placeholder="Cari nama/NIS siswa"
-                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
-                        <div x-show="openSiswa" x-cloak @click.outside="openSiswa = false"
-                            class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                            <template x-if="filteredSiswa.length === 0">
-                                <div class="px-3 py-2 text-xs text-gray-500">Tidak ditemukan.</div>
-                            </template>
-                            <template x-for="item in filteredSiswa" :key="item.id">
-                                <button type="button"
-                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-                                    @click="selectSiswa(item)">
-                                    <span x-text="item.label"></span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Industri</label>
-                    <input type="hidden" name="industri_id" :value="industriId">
-                    <div class="relative">
-                        <input
-                            type="text"
-                            x-model="industriQuery"
-                            @focus="openIndustri = true"
-                            @input="openIndustri = true"
-                            placeholder="Cari nama industri"
-                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
-                        <div x-show="openIndustri" x-cloak @click.outside="openIndustri = false"
-                            class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                            <template x-if="filteredIndustri.length === 0">
-                                <div class="px-3 py-2 text-xs text-gray-500">Tidak ditemukan.</div>
-                            </template>
-                            <template x-for="item in filteredIndustri" :key="item.id">
-                                <button type="button"
-                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-                                    @click="selectIndustri(item)">
-                                    <span x-text="item.label"></span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Mode Penempatan</label>
-                    <select name="mode" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
-                        <option value="industri">Penempatan ke Industri (Ikuti prosedur)</option>
-                        <option value="sekolah">Magang di Sekolah (Langsung diterima)</option>
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Alasan Penempatan Langsung</label>
-                    <textarea name="alasan" rows="3" required
-                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm"
-                        placeholder="Contoh: sudah berkali-kali melamar, ada keluhan industri, atau kebutuhan khusus."></textarea>
-                </div>
-                <div class="md:col-span-2 flex justify-end">
-                    <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
-                        Tetapkan Penempatan Langsung
-                    </button>
-                </div>
-            </form>
-        </div>
+        @php
+        $siswaSelectData = $siswaOptions->map(function ($siswa) {
+            return [
+                'id' => $siswa->id,
+                'label' => trim(($siswa->user?->name ?? '-') . ' · ' . ($siswa->nis ?? '-') . ' · ' . ($siswa->jurusan?->nama ?? '-')),
+            ];
+        })->values();
+        $industriSelectData = $industriOptions->map(function ($industri) {
+            return [
+                'id' => $industri->id,
+                'label' => $industri->nama_industri,
+            ];
+        })->values();
+        @endphp
 
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
                 <h4 class="text-sm font-semibold text-gray-900">Riwayat Penempatan Langsung</h4>
+                <button
+                    type="button"
+                    class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium"
+                    @click="directPlacementOpen = true">
+                    Tambah
+                </button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[900px]">
@@ -501,10 +418,108 @@
                 </table>
             </div>
         </div>
+
+        <div x-show="directPlacementOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-900">Tambah Penempatan Langsung</h3>
+                        <p class="text-xs text-gray-500 mt-1">Gunakan fitur ini untuk menempatkan siswa langsung ke industri atau magang di sekolah.</p>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="directPlacementOpen = false">✕</button>
+                </div>
+
+                <form method="POST" action="{{ route('admin.penempatan.langsung') }}"
+                    x-data="penempatanLangsungForm({
+                        siswa: @js($siswaSelectData),
+                        industri: @js($industriSelectData),
+                        initialSiswaId: @js(old('siswa_id')),
+                        initialIndustriId: @js(old('industri_id'))
+                    })"
+                    x-init="init()"
+                    class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Siswa</label>
+                        <input type="hidden" name="siswa_id" :value="siswaId">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                x-model="siswaQuery"
+                                @focus="openSiswa = true"
+                                @input="openSiswa = true"
+                                placeholder="Cari nama/NIS siswa"
+                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                            <div x-show="openSiswa" x-cloak @click.outside="openSiswa = false"
+                                class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                                <template x-if="filteredSiswa.length === 0">
+                                    <div class="px-3 py-2 text-xs text-gray-500">Tidak ditemukan.</div>
+                                </template>
+                                <template x-for="item in filteredSiswa" :key="item.id">
+                                    <button type="button"
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                        @click="selectSiswa(item)">
+                                        <span x-text="item.label"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Industri</label>
+                        <input type="hidden" name="industri_id" :value="industriId">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                x-model="industriQuery"
+                                @focus="openIndustri = true"
+                                @input="openIndustri = true"
+                                placeholder="Cari nama industri"
+                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                            <div x-show="openIndustri" x-cloak @click.outside="openIndustri = false"
+                                class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                                <template x-if="filteredIndustri.length === 0">
+                                    <div class="px-3 py-2 text-xs text-gray-500">Tidak ditemukan.</div>
+                                </template>
+                                <template x-for="item in filteredIndustri" :key="item.id">
+                                    <button type="button"
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                        @click="selectIndustri(item)">
+                                        <span x-text="item.label"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Mode Penempatan</label>
+                        <select name="mode" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                            <option value="industri" {{ old('mode') === 'industri' ? 'selected' : '' }}>Penempatan ke Industri (Ikuti prosedur)</option>
+                            <option value="sekolah" {{ old('mode') === 'sekolah' ? 'selected' : '' }}>Magang di Sekolah (Langsung diterima)</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Alasan Penempatan Langsung</label>
+                        <textarea name="alasan" rows="3" required
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm"
+                            placeholder="Contoh: sudah berkali-kali melamar, ada keluhan industri, atau kebutuhan khusus.">{{ old('alasan') }}</textarea>
+                    </div>
+                    <div class="md:col-span-2 flex justify-end gap-2">
+                        <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium" @click="directPlacementOpen = false">
+                            Batal
+                        </button>
+                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                            Tetapkan Penempatan Langsung
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
         @endif
 
         {{-- Filter --}}
         @if ($tab === 'hasil')
+        <div id="admin-penempatan-hasil-target">
         <form id="filter-penempatan" method="GET" action="{{ route('admin.penempatan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
             <input type="hidden" name="tab" value="hasil">
             <div class="flex items-center justify-between mb-4">
@@ -516,13 +531,32 @@
             <p class="text-xs text-gray-500 mb-4">
                 Filter ini hanya memengaruhi data tabel penempatan.
             </p>
-            <input type="hidden" name="jurusan_id" value="{{ $selectedJurusan }}">
-            <input type="hidden" name="tahun_ajaran" value="{{ $selectedTahun }}">
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                    <select name="jurusan_id" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        <option value="">Semua Jurusan</option>
+                        @foreach ($jurusanOptions as $jurusan)
+                        <option value="{{ $jurusan->id }}" {{ (string) $selectedJurusan === (string) $jurusan->id ? 'selected' : '' }}>
+                            {{ $jurusan->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
+                    <select name="tahun_ajaran" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                        @foreach ($tahunAjaranList as $tahun)
+                        <option value="{{ $tahun }}" {{ (string) $selectedTahun === (string) $tahun ? 'selected' : '' }}>
+                            {{ $tahun }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1.5">Status Penempatan</label>
-                    <select name="status" onchange="this.form.submit()" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <select name="status" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                         @foreach ($statusList as $value => $label)
                         <option value="{{ $value }}" {{ (string) $selectedStatus === (string) $value ? 'selected' : '' }}>
                             {{ $label }}
@@ -539,13 +573,12 @@
                             name="q"
                             value="{{ $search }}"
                             placeholder="Nama siswa"
-                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                            oninput="debouncedSubmit(this)">
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                     </div>
                 </div>
                 <div class="flex items-end">
                     <a href="{{ route('admin.penempatan', ['tab' => 'hasil', 'jurusan_id' => $selectedJurusan, 'tahun_ajaran' => $selectedTahun]) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
-                        Reset Filter
+                        Reset
                     </a>
                 </div>
             </div>
@@ -556,6 +589,10 @@
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base font-semibold text-gray-900">Hasil Penempatan Siswa</h3>
                 <div class="flex items-center gap-3 text-sm">
+                    <div class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+                        <span class="text-gray-500 mr-1">Tahun Ajaran</span>
+                        <span class="text-gray-900 font-semibold">{{ $selectedTahun ?? '-' }}</span>
+                    </div>
                     <div class="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
                         <span class="text-blue-600 font-semibold">{{ $statusCounts[PenempatanStatus::MENUNGGU_KONFIRMASI->value] ?? 0 }}</span>
                         <span class="text-blue-700 ml-1">Menunggu Konfirmasi</span>
@@ -814,6 +851,7 @@
             </div>
         </div>
         </div>
+        </div>
         @endif
 
         {{-- Modal Detail --}}
@@ -913,17 +951,8 @@
         </div>
     </div>
 </x-admin-layout>
+@include('partials.ajax-filter-script')
 <script>
-    let typingTimer;
-
-    function debouncedSubmit(input) {
-        clearTimeout(typingTimer);
-
-        typingTimer = setTimeout(() => {
-            input.form.submit();
-        }, 700);
-    }
-
     function penempatanLangsungForm({ siswa, industri, initialSiswaId, initialIndustriId }) {
         return {
             siswaList: siswa || [],
@@ -974,4 +1003,12 @@
             },
         };
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.setupAjaxFilter({
+            formId: 'filter-penempatan',
+            targetId: 'admin-penempatan-hasil-target',
+            debounce: 500,
+        });
+    });
 </script>

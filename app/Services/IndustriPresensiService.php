@@ -3,38 +3,37 @@
 namespace App\Services;
 
 use App\Enums\AbsensiStatus;
+use App\Enums\PenempatanStatus;
 use App\Models\AbsensiPkl;
-use App\Models\GuruPembimbing;
 use App\Models\Industri;
 use App\Models\Jurusan;
 use App\Models\PenempatanPKL;
 use App\Models\Siswa;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class GuruAbsensiService
+class IndustriPresensiService
 {
     /**
-     * @param array{date?:string,jurusan_id?:string,industri_id?:string,status?:string,q?:string} $filters
+     * @param array{date?:string,jurusan_id?:string,status?:string,q?:string} $filters
      * @return array{absensiList:LengthAwarePaginator,statusCounts:array<string,int>,mapPoints:array<int,array<string,mixed>>}
      */
-    public function getIndexData(GuruPembimbing $guru, array $filters): array
+    public function getIndexData(Industri $industri, array $filters): array
     {
         $date = $filters['date'] ?? now()->toDateString();
-        $siswaIds = PenempatanPKL::where('guru_pembimbing_id', $guru->id)->pluck('siswa_id');
+        $siswaIds = PenempatanPKL::where('industri_id', $industri->id)
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
+            ->pluck('siswa_id');
 
         $baseQuery = AbsensiPkl::query()
             ->with(['siswa.user', 'siswa.jurusan', 'industri'])
             ->whereIn('siswa_id', $siswaIds)
+            ->where('industri_id', $industri->id)
             ->whereDate('tanggal', $date);
 
         if (!empty($filters['jurusan_id'])) {
             $baseQuery->whereHas('siswa', function ($query) use ($filters) {
                 $query->where('jurusan_id', $filters['jurusan_id']);
             });
-        }
-
-        if (!empty($filters['industri_id'])) {
-            $baseQuery->where('industri_id', $filters['industri_id']);
         }
 
         if (!empty($filters['q'])) {
@@ -93,28 +92,21 @@ class GuruAbsensiService
     }
 
     /**
-     * @return array{jurusanOptions:\Illuminate\Support\Collection,industriOptions:\Illuminate\Support\Collection}
+     * @return array{jurusanOptions:\Illuminate\Support\Collection}
      */
-    public function getOptions(GuruPembimbing $guru): array
+    public function getOptions(Industri $industri): array
     {
-        $siswaIds = PenempatanPKL::where('guru_pembimbing_id', $guru->id)->pluck('siswa_id');
+        $siswaIds = PenempatanPKL::where('industri_id', $industri->id)
+            ->where('status', PenempatanStatus::DITERIMA_INDUSTRI->value)
+            ->pluck('siswa_id');
 
         $jurusanOptions = Jurusan::whereIn(
             'id',
             Siswa::whereIn('id', $siswaIds)->pluck('jurusan_id')->unique()
         )->orderBy('nama')->get();
 
-        $industriOptions = Industri::whereIn(
-            'id',
-            PenempatanPKL::where('guru_pembimbing_id', $guru->id)
-                ->whereNotNull('industri_id')
-                ->pluck('industri_id')
-                ->unique()
-        )->orderBy('nama_industri')->get();
-
         return [
             'jurusanOptions' => $jurusanOptions,
-            'industriOptions' => $industriOptions,
         ];
     }
 }

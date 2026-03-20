@@ -10,22 +10,22 @@ use App\Http\Controllers\Admin\AdminPenempatanController;
 use App\Http\Controllers\Admin\AdminLogbookController;
 use App\Http\Controllers\Admin\AdminPerizinanController;
 use App\Http\Controllers\Admin\AdminPenilaianController;
-use App\Http\Controllers\Admin\AdminRiskController;
-use App\Http\Controllers\Admin\AdminAbsensiController;
-use App\Http\Controllers\Guru\GuruAbsensiController;
+use App\Http\Controllers\Admin\AdminPeringatanDiniController;
+use App\Http\Controllers\Admin\AdminPresensiController;
+use App\Http\Controllers\Guru\GuruPresensiController;
 use App\Http\Controllers\Guru\GuruSiswaController;
 use App\Http\Controllers\Guru\GuruLogbookController;
 use App\Http\Controllers\Guru\GuruPerizinanController;
 use App\Http\Controllers\Guru\GuruPenilaianController;
-use App\Http\Controllers\Guru\GuruRiskController;
-use App\Http\Controllers\Siswa\SiswaAbsensiController;
+use App\Http\Controllers\Guru\GuruPeringatanDiniController;
+use App\Http\Controllers\Siswa\SiswaPresensiController;
 use App\Http\Controllers\Siswa\SiswaDashboardController;
 use App\Http\Controllers\Siswa\SiswaPenempatanController;
 use App\Http\Controllers\Siswa\SiswaLogbookController;
 use App\Http\Controllers\Siswa\SiswaPerizinanController;
 use App\Http\Controllers\Siswa\SiswaPenilaianController;
 use App\Http\Controllers\Siswa\SiswaBerkasController;
-use App\Http\Controllers\Industri\IndustriAbsensiController;
+use App\Http\Controllers\Industri\IndustriPresensiController;
 use App\Http\Controllers\Industri\IndustriPengajuanController;
 use App\Http\Controllers\Industri\IndustriDataSiswaController;
 use App\Http\Controllers\Industri\IndustriLogbookController;
@@ -104,10 +104,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/penilaian/rubrik', [AdminPenilaianController::class, 'updateRubrik'])->name('admin.penilaian.rubrik');
     Route::post('/penilaian/aspek', [AdminPenilaianController::class, 'storeAspek'])->name('admin.penilaian.aspek.store');
     Route::delete('/penilaian/aspek/{aspek}', [AdminPenilaianController::class, 'destroyAspek'])->name('admin.penilaian.aspek.destroy');
-    Route::get('/risk', [AdminRiskController::class, 'index'])->name('admin.risk');
-    Route::post('/risk/run', [AdminRiskController::class, 'runRisk'])->name('admin.risk.run');
-    Route::get('/presensi', [AdminAbsensiController::class, 'index'])->name('admin.presensi');
-    Route::put('/presensi/geofence/radius-global', [AdminAbsensiController::class, 'updateGlobalRadius'])->name('admin.presensi.geofence.radius-global');
+    Route::get('/peringatan-dini', [AdminPeringatanDiniController::class, 'index'])->name('admin.peringatan-dini');
+    Route::post('/peringatan-dini/run', [AdminPeringatanDiniController::class, 'runRisk'])->name('admin.peringatan-dini.run');
+    Route::get('/presensi', [AdminPresensiController::class, 'index'])->name('admin.presensi');
+    Route::put('/presensi/geofence/radius-global', [AdminPresensiController::class, 'updateGlobalRadius'])->name('admin.presensi.geofence.radius-global');
 
     Route::get('/forms', function () {
         return view('admin.forms');
@@ -124,12 +124,12 @@ Route::group(['middleware' => ['permission:publish articles']], function () {});
 
 Route::middleware(['auth', 'role:guru pembimbing'])->prefix('guru')->name('guru.')->group(function () {
     Route::get('/siswa', [GuruSiswaController::class, 'index'])->name('siswa');
-    Route::get('/presensi', [GuruAbsensiController::class, 'index'])->name('presensi');
+    Route::get('/presensi', [GuruPresensiController::class, 'index'])->name('presensi');
     Route::get('/elogbook', [GuruLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}/komentar', [GuruLogbookController::class, 'storeKomentar'])->name('elogbook.komentar');
     Route::get('/perizinan', [GuruPerizinanController::class, 'index'])->name('perizinan');
     Route::get('/penilaian', [GuruPenilaianController::class, 'index'])->name('penilaian');
-    Route::get('/risk', [GuruRiskController::class, 'index'])->name('risk');
+    Route::get('/peringatan-dini', [GuruPeringatanDiniController::class, 'index'])->name('peringatan-dini');
 });
 
 Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
@@ -139,8 +139,8 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::post('/elogbook', [SiswaLogbookController::class, 'store'])->name('elogbook.store');
     Route::put('/elogbook/{logbook}', [SiswaLogbookController::class, 'update'])->name('elogbook.update');
     Route::delete('/elogbook/{logbook}', [SiswaLogbookController::class, 'destroy'])->name('elogbook.destroy');
-    Route::get('/presensi', [SiswaAbsensiController::class, 'index'])->name('presensi');
-    Route::post('/presensi', [SiswaAbsensiController::class, 'store'])->name('presensi.store');
+    Route::get('/presensi', [SiswaPresensiController::class, 'index'])->name('presensi');
+    Route::post('/presensi', [SiswaPresensiController::class, 'store'])->name('presensi.store');
     Route::post('/perizinan', [SiswaPerizinanController::class, 'store'])->name('perizinan.store');
     Route::put('/berkas', [SiswaBerkasController::class, 'update'])->name('berkas.update');
 });
@@ -155,7 +155,7 @@ Route::middleware(['auth', 'role:perwakilan industri', 'industri.approved'])->pr
     Route::post('/siswa/{penempatan}/status', [IndustriDataSiswaController::class, 'setStatus'])->name('siswa.status');
     Route::post('/siswa/{penempatan}/jadwal', [IndustriDataSiswaController::class, 'storeJadwal'])->name('siswa.jadwal');
     Route::post('/siswa/{penempatan}/laporan', [IndustriDataSiswaController::class, 'storeLaporan'])->name('siswa.laporan');
-    Route::get('/presensi', [IndustriAbsensiController::class, 'index'])->name('presensi');
+    Route::get('/presensi', [IndustriPresensiController::class, 'index'])->name('presensi');
     Route::get('/elogbook', [IndustriLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}', [IndustriLogbookController::class, 'update'])->name('elogbook.update');
     Route::get('/perizinan', [IndustriPerizinanController::class, 'index'])->name('perizinan');

@@ -15,9 +15,10 @@
             </p>
         </div>
 
-        <form method="GET" action="{{ route('guru.risk') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6 animate-fade-up">
+        <div id="guru-peringatan-dini-filter-target">
+        <form id="guru-peringatan-dini-filter-form" method="GET" action="{{ route('guru.peringatan-dini') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6 animate-fade-up">
             <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
                         <div class="relative">
@@ -54,12 +55,22 @@
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
+                        <select
+                            name="tahun_ajaran"
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                            <option value="">Semua</option>
+                            @foreach ($tahunAjaranOptions as $tahun)
+                            <option value="{{ $tahun }}" {{ (string) ($filters['tahun_ajaran'] ?? '') === (string) $tahun ? 'selected' : '' }}>
+                                {{ $tahun }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="submit" class="px-4 py-2 bg-emerald-600  text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium">
-                        Terapkan
-                    </button>
-                    <a href="{{ route('guru.risk') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                    <a href="{{ route('guru.peringatan-dini') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
                         Reset
                     </a>
                 </div>
@@ -132,6 +143,7 @@
             </div>
         </div>
         @endif
+        </div>
 
         {{-- Modal Detail --}}
         <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -174,22 +186,22 @@
                             <div class="text-base font-semibold text-gray-900" x-text="detailData.late_score !== undefined ? Number(detailData.late_score).toFixed(3) : '-'"></div>
                         </div>
                         <div class="rounded-lg border border-gray-200 p-3">
-                            <div class="text-xs text-gray-500">Skor Absensi</div>
+                            <div class="text-xs text-gray-500">Skor Presensi</div>
                             <div class="text-base font-semibold text-gray-900" x-text="detailData.absensi_score !== undefined ? Number(detailData.absensi_score).toFixed(3) : '-'"></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-3">
                         <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Absensi</div>
+                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Presensi</div>
                             <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_absensi ?? '-'"></div>
                         </div>
                         <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Absensi Valid</div>
+                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Presensi Valid</div>
                             <div class="text-lg font-semibold text-gray-900" x-text="detailData.valid_absensi ?? '-'"></div>
                         </div>
                         <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Absensi</div>
+                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Presensi</div>
                             <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_absensi ?? '-'"></div>
                         </div>
                     </div>
@@ -206,3 +218,13 @@
         </div>
     </div>
 </x-admin-layout>
+@include('partials.ajax-filter-script')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        window.setupAjaxFilter({
+            formId: 'guru-peringatan-dini-filter-form',
+            targetId: 'guru-peringatan-dini-filter-target',
+            debounce: 500,
+        });
+    });
+</script>

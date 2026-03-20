@@ -4,27 +4,28 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Jurusan;
-use App\Services\AdminRiskService;
+use App\Services\AdminPeringatanDiniService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class AdminRiskController extends Controller
+class AdminPeringatanDiniController extends Controller
 {
-    public function runRisk(Request $request, AdminRiskService $service)
+    public function runRisk(Request $request, AdminPeringatanDiniService $service)
     {
         $weekStartInput = $request->input('week_start');
         $weekEndInput = $request->input('week_end');
+        $tahunAjaran = $request->input('tahun_ajaran');
         if ($weekStartInput && $weekEndInput) {
             $weekStartCheck = Carbon::parse($weekStartInput);
             $weekEndCheck = Carbon::parse($weekEndInput);
             if ($weekEndCheck->lt($weekStartCheck)) {
                 return back()
-                    ->withErrors(['week_end' => __('risk.akhir')])
+                    ->withErrors(['week_end' => __('peringatan_dini.akhir')])
                     ->withInput();
             }
             if ($weekEndCheck->gt(now()->endOfDay())) {
                 return back()
-                    ->withErrors(['week_end' => __('risk.batas')])
+                    ->withErrors(['week_end' => __('peringatan_dini.batas')])
                     ->withInput();
             }
         }
@@ -36,31 +37,34 @@ class AdminRiskController extends Controller
             ? Carbon::parse($weekEndInput)->endOfDay()
             : now()->endOfDay();
 
-        $updatedCount = $service->runRisk($weekStart, $weekEnd);
+        $updatedCount = $service->runRisk($weekStart, $weekEnd, $tahunAjaran);
 
         // return kembali dan menampilkan pesan sukses dalam bahasa indo
-        return back()->with('success', __('risk.update', ['count' => $updatedCount]));
+        return back()->with('success', __('peringatan_dini.update', ['count' => $updatedCount]));
     }
 
-    public function index(AdminRiskService $service)
+    public function index(AdminPeringatanDiniService $service)
     {
         $filters = [
             'q' => request()->input('q'),
             'category' => request()->input('category', 'all'),
             'jurusan_id' => request()->input('jurusan_id'),
+            'tahun_ajaran' => request()->input('tahun_ajaran'),
         ];
 
         $jurusanOptions = Jurusan::orderBy('nama')->get();
+        $tahunAjaranOptions = $service->getTahunAjaranOptions($filters['jurusan_id']);
 
         $data = $service->getLatestRiskData($filters);
 
-        return view('admin.risk.admin-risk', [
+        return view('admin.peringatan-dini.admin-peringatan-dini', [
             'riskScores' => $data['riskScores'],
             'weekStart' => $data['weekStart'],
             'weekEnd' => $data['weekEnd'],
             'detailByRiskId' => $data['detailByRiskId'],
             'filters' => $filters,
             'jurusanOptions' => $jurusanOptions,
+            'tahunAjaranOptions' => $tahunAjaranOptions,
         ]);
     }
 }

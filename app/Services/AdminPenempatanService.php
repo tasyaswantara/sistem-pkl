@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Lang;
 class AdminPenempatanService
 {
     /**
-     * @param array{tab?:string,jurusan_id?:string,tahun_ajaran?:string,status?:string,q?:string} $filters
+     * @param array{tab?:string,jurusan_id?:string,tahun_ajaran?:string,status?:string,q?:string,has_jurusan_filter?:bool,has_tahun_ajaran_filter?:bool} $filters
      * @return array<string,mixed>
      */
     public function getIndexData(array $filters): array
@@ -32,11 +32,16 @@ class AdminPenempatanService
             $state['tab'],
             $state['selectedJurusan'],
             $state['selectedTahun'],
-            $jurusanOptions
+            $jurusanOptions,
+            $state['hasJurusanFilter'],
+            $state['hasTahunFilter']
         );
 
         $tahunAjaranList = $this->getTahunAjaranList($state['selectedJurusan']);
-        if (!$state['selectedTahun'] && $tahunAjaranList->isNotEmpty() && $state['tab'] !== 'hasil') {
+        if ($tahunAjaranList->isNotEmpty() && (
+            !$state['selectedTahun']
+            || !$tahunAjaranList->contains((string) $state['selectedTahun'])
+        )) {
             $state['selectedTahun'] = $tahunAjaranList->first();
         }
 
@@ -110,8 +115,8 @@ class AdminPenempatanService
     }
 
     /**
-     * @param array{tab?:string,jurusan_id?:string,tahun_ajaran?:string,status?:string,q?:string} $filters
-     * @return array{tab:string,selectedJurusan:mixed,selectedTahun:mixed,selectedStatus:string,search:string}
+     * @param array{tab?:string,jurusan_id?:string,tahun_ajaran?:string,status?:string,q?:string,has_jurusan_filter?:bool,has_tahun_ajaran_filter?:bool} $filters
+     * @return array{tab:string,selectedJurusan:mixed,selectedTahun:mixed,selectedStatus:string,search:string,hasJurusanFilter:bool,hasTahunFilter:bool}
      */
     private function normalizeFilters(array $filters): array
     {
@@ -121,6 +126,8 @@ class AdminPenempatanService
             'selectedTahun' => $filters['tahun_ajaran'] ?? null,
             'selectedStatus' => $filters['status'] ?? 'all',
             'search' => $filters['q'] ?? '',
+            'hasJurusanFilter' => (bool) ($filters['has_jurusan_filter'] ?? false),
+            'hasTahunFilter' => (bool) ($filters['has_tahun_ajaran_filter'] ?? false),
         ];
     }
 
@@ -138,9 +145,11 @@ class AdminPenempatanService
         string $tab,
         $selectedJurusan,
         $selectedTahun,
-        Collection $jurusanOptions
+        Collection $jurusanOptions,
+        bool $hasJurusanFilter = false,
+        bool $hasTahunFilter = false
     ): array {
-        if ($tab === 'hasil' && (!$selectedJurusan || !$selectedTahun)) {
+        if ($tab === 'hasil' && !$hasJurusanFilter && !$hasTahunFilter) {
             $latestRunContext = SawRun::query()
                 ->latest('run_at')
                 ->first();
@@ -300,7 +309,7 @@ class AdminPenempatanService
      */
     private function buildHasilTabData(array $state, array $queryParams, array $defaultStatusCounts): array
     {
-        $latestRunIds = $this->getLatestRunIdsPerJurusan();
+        $latestRunIds = $this->resolveHasilRunIds($state['selectedJurusan'], $state['selectedTahun']);
         if ($latestRunIds->isEmpty()) {
             return [
                 'penempatanData' => $this->buildEmptyHasilPaginator($queryParams),
@@ -343,6 +352,22 @@ class AdminPenempatanService
             'penempatanBySiswa' => $penempatanBySiswa,
             'statusCounts' => $statusCounts,
         ];
+    }
+
+    private function resolveHasilRunIds($selectedJurusan, $selectedTahun): Collection
+    {
+        if ($selectedJurusan && $selectedTahun) {
+            $latestRun = SawRun::query()
+                ->where('jurusan_id', $selectedJurusan)
+                ->where('tahun_ajaran', $selectedTahun)
+                ->latest('run_at')
+                ->latest('id')
+                ->first();
+
+            return $latestRun ? collect([$latestRun->id]) : collect();
+        }
+
+        return $this->getLatestRunIdsPerJurusan($selectedTahun);
     }
 
     /**
@@ -390,9 +415,12 @@ class AdminPenempatanService
         ];
     }
 
-    private function getLatestRunIdsPerJurusan(): Collection
+    private function getLatestRunIdsPerJurusan($selectedTahun = null): Collection
     {
         return SawRun::query()
+            ->when($selectedTahun, function ($query) use ($selectedTahun) {
+                $query->where('tahun_ajaran', $selectedTahun);
+            })
             ->orderByDesc('run_at')
             ->orderByDesc('id')
             ->get()

@@ -18,6 +18,7 @@ class AdminUserController extends Controller
             'role' => $request->role,
             'search' => $request->search,
             'jurusan_id' => $request->jurusan_id,
+            'tahun_ajaran' => $request->tahun_ajaran,
             'kelas' => $request->kelas,
             'grade' => $request->grade,
         ];
@@ -25,8 +26,9 @@ class AdminUserController extends Controller
         $users = $service->getUsers($filters);
         $jurusanOptions = $service->getJurusanOptions();
         $kelasOptions = $service->getKelasOptions();
+        $tahunAjaranOptions = $service->getTahunAjaranOptions();
 
-        return view('admin.data-pengguna.data-pengguna', compact('users', 'jurusanOptions', 'kelasOptions'));
+        return view('admin.data-pengguna.data-pengguna', compact('users', 'jurusanOptions', 'kelasOptions', 'tahunAjaranOptions'));
     }
 
 
