@@ -23,6 +23,7 @@
 </head>
 
 <body class="font-sans antialiased">
+    @include('partials.global-page-loader')
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
         @include('layouts.navigation')
 
@@ -36,7 +37,7 @@
         @endisset
 
         <!-- Page Content -->
-        <main>
+        <main data-page-content>
             {{ $slot }}
         </main>
     </div>

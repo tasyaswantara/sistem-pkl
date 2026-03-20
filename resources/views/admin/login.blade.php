@@ -12,12 +12,41 @@
         <title>{{ $page->title }}</title>
         
         <link rel="stylesheet" href="{{ mix('css/main.css', 'assets/build') }}">
+        <style>
+            @keyframes globalFadeIn {
+                from { opacity: 0; transform: translateY(14px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            @keyframes pageLoaderSpin {
+                to { transform: rotate(360deg); }
+            }
+
+            [data-page-content] {
+                animation: globalFadeIn 0.45s ease both;
+            }
+
+            .page-loader-spinner {
+                animation: pageLoaderSpin 0.8s linear infinite;
+            }
+
+            body.page-loading {
+                overflow: hidden;
+            }
+
+            body.page-loading [data-page-loader] {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+        </style>
 
         <script src="{{ mix('js/main.js', 'assets/build') }}"></script>
     </head>
     <body>
+        @include('partials.global-page-loader')
         <div class="flex justify-center items-center h-screen bg-gray-200 px-6">
-            <div class="p-6 max-w-sm w-full bg-white shadow-md rounded-md">
+            <div data-page-content class="p-6 max-w-sm w-full bg-white shadow-md rounded-md">
                 <div class="flex justify-center items-center">
                     <svg class="h-10 w-10" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M364.61 390.213C304.625 450.196 207.37 450.196 147.386 390.213C117.394 360.22 102.398 320.911 102.398 281.6C102.398 242.291 117.394 202.981 147.386 172.989C147.386 230.4 153.6 281.6 230.4 307.2C230.4 256 256 102.4 294.4 76.7999C320 128 334.618 142.997 364.608 172.989C394.601 202.981 409.597 242.291 409.597 281.6C409.597 320.911 394.601 360.22 364.61 390.213Z" fill="#4C51BF" stroke="#4C51BF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -54,5 +83,68 @@
                 </form>
             </div>
         </div>
+        <script>
+            const LOADER_DELAY_MS = 500;
+            let loaderTimeoutId = null;
+            let loaderRequestCount = 0;
+
+            const setPageLoading = (loading) => {
+                document.body.classList.toggle('page-loading', loading);
+            };
+
+            const showPageLoader = () => {
+                loaderRequestCount += 1;
+
+                if (document.body.classList.contains('page-loading') || loaderTimeoutId !== null) {
+                    return;
+                }
+
+                loaderTimeoutId = window.setTimeout(() => {
+                    loaderTimeoutId = null;
+
+                    if (loaderRequestCount > 0) {
+                        setPageLoading(true);
+                    }
+                }, LOADER_DELAY_MS);
+            };
+
+            const hidePageLoader = () => {
+                loaderRequestCount = Math.max(0, loaderRequestCount - 1);
+
+                if (loaderRequestCount > 0) {
+                    return;
+                }
+
+                if (loaderTimeoutId !== null) {
+                    window.clearTimeout(loaderTimeoutId);
+                    loaderTimeoutId = null;
+                }
+
+                setPageLoading(false);
+            };
+
+            window.addEventListener('load', () => hidePageLoader());
+            window.addEventListener('pageshow', () => hidePageLoader());
+
+            document.addEventListener('submit', (event) => {
+                if (event.target instanceof HTMLFormElement) {
+                    showPageLoader();
+                }
+            });
+
+            document.addEventListener('click', (event) => {
+                const link = event.target.closest('a[href]');
+                if (!link) {
+                    return;
+                }
+
+                const href = link.getAttribute('href') || '';
+                if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+                    return;
+                }
+
+                showPageLoader();
+            });
+        </script>
     </body>
 </html>

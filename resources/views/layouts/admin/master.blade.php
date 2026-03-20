@@ -24,24 +24,10 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
-    <style>
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(14px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-fade-up {
-            animation: fadeUp 0.6s ease both;
-        }
-    </style>
 </head>
 
 <body>
+    @include('partials.global-page-loader')
     <div x-data="{ sidebarOpen: false }" class="flex h-screen bg-gray-200 font-roboto">
         @include('layouts.admin.sidebar')
 
@@ -63,7 +49,7 @@
                     bg-teal-200/20 rounded-full blur-3xl"></div>
                 </div>
 
-                <div class="relative z-10 container mx-auto px-6 py-8">
+                <div data-page-content class="relative z-10 container mx-auto px-6 py-8">
                     {{ $slot }}
                 </div>
 

@@ -23,6 +23,7 @@
 </head>
 
 <body class="font-sans text-gray-900 antialiased bg-slate-100">
+    @include('partials.global-page-loader')
     <div class="relative min-h-screen flex items-center justify-center px-4 py-10 overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-br from-emerald-50 via-slate-50 to-teal-100"></div>
         <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-emerald-200/40 blur-3xl"></div>
@@ -39,7 +40,7 @@
                 </a>
             </div>
 
-            <div class="bg-white/90 backdrop-blur rounded-2xl border border-white shadow-lg px-6 py-6">
+            <div data-page-content class="bg-white/90 backdrop-blur rounded-2xl border border-white shadow-lg px-6 py-6">
                 {{ $slot }}
             </div>
         </div>

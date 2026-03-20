@@ -20,6 +20,7 @@
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-emerald-100 via-slate-50 to-teal-100 text-gray-900 font-roboto">
+    @include('partials.global-page-loader')
     @php
         $menus = [
             ['label' => 'Beranda', 'route' => 'siswa.dashboard'],
@@ -78,7 +79,7 @@
         </div>
     </header>
 
-    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <main data-page-content class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {{ $slot }}
     </main>
 

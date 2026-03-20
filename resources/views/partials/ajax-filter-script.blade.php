@@ -35,6 +35,10 @@
                     currentTarget.classList.add('opacity-60', 'pointer-events-none');
                 }
 
+                if (typeof window.showPageLoader === 'function') {
+                    window.showPageLoader();
+                }
+
                 try {
                     const response = await fetch(requestUrl, {
                         headers: {
@@ -70,6 +74,10 @@
                     window.setupAjaxFilter(config);
                 } catch (error) {
                     window.location.assign(requestUrl);
+                } finally {
+                    if (typeof window.hidePageLoader === 'function') {
+                        window.hidePageLoader();
+                    }
                 }
             };
 
