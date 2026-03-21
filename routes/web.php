@@ -67,10 +67,6 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    // Route::get('/admin', function () {
-    //     return view('admin.dashboard');
-    // })->name('admin.dashboard');  
-
     //ROUTE ADMIN DATA PENGGUNA
     Route::get('/data-pengguna', [AdminUserController::class, 'index'])
         ->middleware(['auth', 'role:admin'])
