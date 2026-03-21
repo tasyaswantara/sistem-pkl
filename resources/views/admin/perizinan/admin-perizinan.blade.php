@@ -31,17 +31,18 @@
             </p>
         </div>
 
-        <div x-show="createOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                    <div>
-                        <h3 class="text-base font-semibold text-gray-900">Tambah Perizinan</h3>
-                        <p class="text-xs text-gray-500 mt-1">Dibuat oleh admin untuk siswa yang sudah ditempatkan.</p>
+        <template x-teleport="body">
+            <div x-show="createOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900">Tambah Perizinan</h3>
+                            <p class="text-xs text-gray-500 mt-1">Dibuat oleh admin untuk siswa yang sudah ditempatkan.</p>
+                        </div>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="createOpen = false">✕</button>
                     </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="createOpen = false">✕</button>
-                </div>
 
-                <form method="POST" action="{{ route('admin.perizinan.store') }}" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form method="POST" action="{{ route('admin.perizinan.store') }}" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     @csrf
 
                     @if ($createModalHasErrors)
@@ -108,9 +109,10 @@
                             Simpan Perizinan
                         </button>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
-        </div>
+        </template>
 
         <div id="admin-perizinan-filter-target">
             <form id="admin-perizinan-filter-form" method="GET" action="{{ route('admin.perizinan') }}" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">

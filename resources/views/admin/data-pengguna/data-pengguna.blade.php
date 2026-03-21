@@ -318,41 +318,43 @@
         </div>
 
         {{-- Modal Siswa Bimbingan --}}
-        <div x-show="siswaOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <div>
-                        <h4 class="text-base font-semibold text-gray-900">Daftar Siswa Bimbingan</h4>
-                        <p class="text-xs text-gray-500">
-                            Guru: <span x-text="siswaGuruName"></span>
-                        </p>
+        <template x-teleport="body">
+            <div x-show="siswaOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900">Daftar Siswa Bimbingan</h4>
+                            <p class="text-xs text-gray-500">
+                                Guru: <span x-text="siswaGuruName"></span>
+                            </p>
+                        </div>
+                        <button type="button" class="text-gray-400 hover:text-gray-600"
+                            @click="siswaOpen = false">✕</button>
                     </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600"
-                        @click="siswaOpen = false">✕</button>
-                </div>
-                <div class="p-4">
-                    <template x-if="siswaList.length === 0">
-                        <div class="text-sm text-gray-500 italic">Belum ada siswa bimbingan.</div>
-                    </template>
-                    <template x-if="siswaList.length > 0">
-                        <div class="space-y-2">
-                            <template x-for="siswa in siswaList" :key="siswa.nama + siswa.kelas">
-                                <div
-                                    class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                                    <div>
-                                        <div class="font-medium text-gray-900" x-text="siswa.nama"></div>
-                                        <div class="text-xs text-gray-500"
-                                            x-text="`${siswa.kelas} · ${siswa.jurusan}`"></div>
-                                        <div class="text-xs text-gray-400" x-text="`Industri: ${siswa.industri}`">
+                    <div class="p-4">
+                        <template x-if="siswaList.length === 0">
+                            <div class="text-sm text-gray-500 italic">Belum ada siswa bimbingan.</div>
+                        </template>
+                        <template x-if="siswaList.length > 0">
+                            <div class="space-y-2">
+                                <template x-for="siswa in siswaList" :key="siswa.nama + siswa.kelas">
+                                    <div
+                                        class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                                        <div>
+                                            <div class="font-medium text-gray-900" x-text="siswa.nama"></div>
+                                            <div class="text-xs text-gray-500"
+                                                x-text="`${siswa.kelas} · ${siswa.jurusan}`"></div>
+                                            <div class="text-xs text-gray-400" x-text="`Industri: ${siswa.industri}`">
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </template>
-                        </div>
-                    </template>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
 
     </div>
 </x-admin-layout>

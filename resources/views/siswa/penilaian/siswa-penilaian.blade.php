@@ -77,44 +77,46 @@
             {{ $penilaianList->links() }}
         </div>
 
-        <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <div>
-                        <h4 class="text-base font-semibold text-gray-900">Detail Penilaian</h4>
-                        <p class="text-xs text-gray-500">
-                            <span x-text="detailIndustri"></span>
-                        </p>
-                    </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
-                </div>
-                <div class="p-4">
-                    <template x-if="detailList.length === 0">
-                        <div class="text-sm text-gray-500 italic">Belum ada detail penilaian.</div>
-                    </template>
-                    <template x-if="detailList.length > 0">
-                        <div class="space-y-3">
-                            <template x-for="item in detailList" :key="item.aspek">
-                                <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900" x-text="item.aspek"></div>
-                                        <div class="text-xs text-gray-500" x-show="item.bobot !== null">
-                                            Bobot: <span x-text="(item.bobot * 100).toFixed(0) + '%'"></span>
-                                        </div>
-                                    </div>
-                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700">
-                                        Nilai <span x-text="Number(item.nilai).toFixed(2)"></span>
-                                    </span>
-                                </div>
-                            </template>
-                            <div class="flex items-center justify-between border border-emerald-200 rounded-lg px-3 py-2 bg-emerald-50">
-                                <span class="text-sm font-semibold text-emerald-700">Total Nilai</span>
-                                <span class="text-sm font-semibold text-emerald-700" x-text="detailTotal"></span>
-                            </div>
+        <template x-teleport="body">
+            <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900">Detail Penilaian</h4>
+                            <p class="text-xs text-gray-500">
+                                <span x-text="detailIndustri"></span>
+                            </p>
                         </div>
-                    </template>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
+                    </div>
+                    <div class="p-4">
+                        <template x-if="detailList.length === 0">
+                            <div class="text-sm text-gray-500 italic">Belum ada detail penilaian.</div>
+                        </template>
+                        <template x-if="detailList.length > 0">
+                            <div class="space-y-3">
+                                <template x-for="item in detailList" :key="item.aspek">
+                                    <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" x-text="item.aspek"></div>
+                                            <div class="text-xs text-gray-500" x-show="item.bobot !== null">
+                                                Bobot: <span x-text="(item.bobot * 100).toFixed(0) + '%'"></span>
+                                            </div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700">
+                                            Nilai <span x-text="Number(item.nilai).toFixed(2)"></span>
+                                        </span>
+                                    </div>
+                                </template>
+                                <div class="flex items-center justify-between border border-emerald-200 rounded-lg px-3 py-2 bg-emerald-50">
+                                    <span class="text-sm font-semibold text-emerald-700">Total Nilai</span>
+                                    <span class="text-sm font-semibold text-emerald-700" x-text="detailTotal"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
     </div>
 </x-admin-layout>

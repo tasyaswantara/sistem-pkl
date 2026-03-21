@@ -216,35 +216,37 @@
             {{ $logbooks->links() }}
         </div>
 
-        <div x-show="editOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-2xl shadow-xl max-w-xl w-full border border-slate-200">
-                <div class="flex items-center justify-between p-5 border-b border-slate-200">
-                    <h4 class="text-base font-semibold text-slate-900">Ubah Logbook</h4>
-                    <button type="button" class="text-slate-400 hover:text-slate-600" @click="editOpen = false">✕</button>
+        <template x-teleport="body">
+            <div x-show="editOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-2xl shadow-xl max-w-xl w-full border border-slate-200">
+                    <div class="flex items-center justify-between p-5 border-b border-slate-200">
+                        <h4 class="text-base font-semibold text-slate-900">Ubah Logbook</h4>
+                        <button type="button" class="text-slate-400 hover:text-slate-600" @click="editOpen = false">✕</button>
+                    </div>
+                    <form method="POST" :action="editAction" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Tanggal</label>
+                            <input type="date" name="tanggal" x-model="editTanggal"
+                                class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Aktivitas</label>
+                            <textarea name="aktivitas" rows="3" x-model="editAktivitas"
+                                class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"></textarea>
+                        </div>
+                        <div class="md:col-span-2 flex items-center justify-end gap-3">
+                            <button type="button" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 text-sm" @click="editOpen = false">
+                                Batal
+                            </button>
+                            <button class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 text-sm font-medium">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <form method="POST" :action="editAction" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @csrf
-                    @method('PUT')
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Tanggal</label>
-                        <input type="date" name="tanggal" x-model="editTanggal"
-                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Aktivitas</label>
-                        <textarea name="aktivitas" rows="3" x-model="editAktivitas"
-                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"></textarea>
-                    </div>
-                    <div class="md:col-span-2 flex items-center justify-end gap-3">
-                        <button type="button" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 text-sm" @click="editOpen = false">
-                            Batal
-                        </button>
-                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 text-sm font-medium">
-                            Simpan Perubahan
-                        </button>
-                    </div>
-                </form>
             </div>
-        </div>
+        </template>
     </div>
 </x-admin-layout>

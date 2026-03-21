@@ -73,42 +73,44 @@
             </div>
         </div>
 
-        <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <div>
-                        <h4 class="text-base font-semibold text-gray-900">Form Penilaian</h4>
-                        <p class="text-xs text-gray-500">Siswa: <span x-text="siswaName"></span></p>
-                    </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="open = false">✕</button>
-                </div>
-                <form method="POST" :action="action" class="p-4 space-y-3">
-                    @csrf
-                    <template x-for="aspek in aspekList" :key="aspek.id">
-                        <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
-                            <div>
-                                <div class="text-sm font-medium text-gray-900" x-text="aspek.nama"></div>
-                                <div class="text-xs text-gray-500">
-                                    Bobot: <span x-text="(aspek.bobot * 100).toFixed(0) + '%'"></span>
-                                </div>
-                            </div>
-                            <input type="number" min="0" max="100" step="1"
-                                :name="`nilai[${aspek.id}]`"
-                                class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm text-right"
-                                :value="nilai[aspek.id] ?? ''"
-                                placeholder="0-100">
+        <template x-teleport="body">
+            <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900">Form Penilaian</h4>
+                            <p class="text-xs text-gray-500">Siswa: <span x-text="siswaName"></span></p>
                         </div>
-                    </template>
-                    <div class="flex justify-end gap-3 pt-2">
-                        <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm" @click="open = false">
-                            Batal
-                        </button>
-                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
-                            Simpan Penilaian
-                        </button>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="open = false">✕</button>
                     </div>
-                </form>
+                    <form method="POST" :action="action" class="p-4 space-y-3">
+                        @csrf
+                        <template x-for="aspek in aspekList" :key="aspek.id">
+                            <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900" x-text="aspek.nama"></div>
+                                    <div class="text-xs text-gray-500">
+                                        Bobot: <span x-text="(aspek.bobot * 100).toFixed(0) + '%'"></span>
+                                    </div>
+                                </div>
+                                <input type="number" min="0" max="100" step="1"
+                                    :name="`nilai[${aspek.id}]`"
+                                    class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm text-right"
+                                    :value="nilai[aspek.id] ?? ''"
+                                    placeholder="0-100">
+                            </div>
+                        </template>
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm" @click="open = false">
+                                Batal
+                            </button>
+                            <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                                Simpan Penilaian
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+        </template>
     </div>
 </x-admin-layout>

@@ -146,76 +146,78 @@
         </div>
 
         {{-- Modal Detail --}}
-        <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                <div class="flex items-start justify-between p-6 border-b">
-                    <div>
-                        <h4 class="text-base font-semibold text-gray-900">Detail Perhitungan Peringatan Dini</h4>
-                        <p class="text-xs text-gray-500 mt-1">
-                            <span x-text="detailNama"></span>
-                            <span class="mx-1 text-gray-300">•</span>
-                            <span x-text="detailJurusan"></span>
-                        </p>
-                    </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
-                </div>
-
-                <div class="p-6 space-y-4">
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Logbook</div>
-                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_logs ?? '-'"></div>
+        <template x-teleport="body">
+            <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="flex items-start justify-between p-6 border-b">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900">Detail Perhitungan Peringatan Dini</h4>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <span x-text="detailNama"></span>
+                                <span class="mx-1 text-gray-300">•</span>
+                                <span x-text="detailJurusan"></span>
+                            </p>
                         </div>
-                        <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Logbook</div>
-                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_logs ?? '-'"></div>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Terlambat</div>
-                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.late_logs ?? '-'"></div>
-                        </div>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3 text-sm">
-                        <div class="rounded-lg border border-gray-200 p-3">
-                            <div class="text-xs text-gray-500">Skor Frekuensi</div>
-                            <div class="text-base font-semibold text-gray-900" x-text="detailData.freq_score !== undefined ? Number(detailData.freq_score).toFixed(3) : '-'"></div>
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Logbook</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_logs ?? '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Logbook</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_logs ?? '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Terlambat</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.late_logs ?? '-'"></div>
+                            </div>
                         </div>
-                        <div class="rounded-lg border border-gray-200 p-3">
-                            <div class="text-xs text-gray-500">Skor Ketepatan</div>
-                            <div class="text-base font-semibold text-gray-900" x-text="detailData.late_score !== undefined ? Number(detailData.late_score).toFixed(3) : '-'"></div>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 p-3">
-                            <div class="text-xs text-gray-500">Skor Presensi</div>
-                            <div class="text-base font-semibold text-gray-900" x-text="detailData.absensi_score !== undefined ? Number(detailData.absensi_score).toFixed(3) : '-'"></div>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Presensi</div>
-                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_absensi ?? '-'"></div>
+                        <div class="grid grid-cols-3 gap-3 text-sm">
+                            <div class="rounded-lg border border-gray-200 p-3">
+                                <div class="text-xs text-gray-500">Skor Frekuensi</div>
+                                <div class="text-base font-semibold text-gray-900" x-text="detailData.freq_score !== undefined ? Number(detailData.freq_score).toFixed(3) : '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 p-3">
+                                <div class="text-xs text-gray-500">Skor Ketepatan</div>
+                                <div class="text-base font-semibold text-gray-900" x-text="detailData.late_score !== undefined ? Number(detailData.late_score).toFixed(3) : '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 p-3">
+                                <div class="text-xs text-gray-500">Skor Presensi</div>
+                                <div class="text-base font-semibold text-gray-900" x-text="detailData.absensi_score !== undefined ? Number(detailData.absensi_score).toFixed(3) : '-'"></div>
+                            </div>
                         </div>
-                        <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Presensi Valid</div>
-                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.valid_absensi ?? '-'"></div>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 px-3 py-2">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Presensi</div>
-                            <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_absensi ?? '-'"></div>
-                        </div>
-                    </div>
 
-                    <div class="rounded-lg border border-gray-200 p-3 text-sm">
-                        <div class="text-xs text-gray-500">Laporan Industri (belum ada = aman)</div>
-                        <div class="flex items-center justify-between mt-1">
-                            <span class="font-semibold text-gray-900" x-text="detailData.laporan_status ?? '-'"></span>
-                            <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700" x-text="detailData.laporan_score !== undefined ? Number(detailData.laporan_score).toFixed(2) : '-'"></span>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Presensi</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_absensi ?? '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Presensi Valid</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.valid_absensi ?? '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Presensi</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_absensi ?? '-'"></div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-lg border border-gray-200 p-3 text-sm">
+                            <div class="text-xs text-gray-500">Laporan Industri (belum ada = aman)</div>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="font-semibold text-gray-900" x-text="detailData.laporan_status ?? '-'"></span>
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700" x-text="detailData.laporan_score !== undefined ? Number(detailData.laporan_score).toFixed(2) : '-'"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </template>
     </div>
 </x-admin-layout>
 @include('partials.ajax-filter-script')

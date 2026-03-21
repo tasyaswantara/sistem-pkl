@@ -188,37 +188,39 @@
         </form>
 
         {{-- Info Modal --}}
-        <div x-show="infoOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <h4 class="text-base font-semibold text-gray-900">Info Bobot SAW</h4>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="infoOpen = false">✕</button>
-                </div>
-                <div class="p-4 text-sm text-gray-700 space-y-3">
-                    <p>
-                        Bobot SAW adalah tingkat kepentingan tiap kriteria. Contoh: nilai akademik bobot 0,30 berarti kontribusinya
-                        30% terhadap skor total.
-                    </p>
-                    <p>Alur perhitungan sederhana:</p>
-                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
-                        <li>Ambil nilai siswa dan industri.</li>
-                        <li>Normalisasi tiap kriteria.</li>
-                        <li>Kalikan dengan bobot.</li>
-                        <li>Jumlahkan menjadi skor akhir.</li>
-                        <li>Urutkan industri berdasarkan skor tertinggi.</li>
-                    </ol>
-                    <p>
-                        Karena bobot diset per jurusan, tiap jurusan bisa punya prioritas yang berbeda.
-                    </p>
-                </div>
-                <div class="flex justify-end p-4 border-t bg-gray-50">
-                    <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                        @click="infoOpen = false">
-                        Mengerti
-                    </button>
+        <template x-teleport="body">
+            <div x-show="infoOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <h4 class="text-base font-semibold text-gray-900">Info Bobot SAW</h4>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="infoOpen = false">✕</button>
+                    </div>
+                    <div class="p-4 text-sm text-gray-700 space-y-3">
+                        <p>
+                            Bobot SAW adalah tingkat kepentingan tiap kriteria. Contoh: nilai akademik bobot 0,30 berarti kontribusinya
+                            30% terhadap skor total.
+                        </p>
+                        <p>Alur perhitungan sederhana:</p>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
+                            <li>Ambil nilai siswa dan industri.</li>
+                            <li>Normalisasi tiap kriteria.</li>
+                            <li>Kalikan dengan bobot.</li>
+                            <li>Jumlahkan menjadi skor akhir.</li>
+                            <li>Urutkan industri berdasarkan skor tertinggi.</li>
+                        </ol>
+                        <p>
+                            Karena bobot diset per jurusan, tiap jurusan bisa punya prioritas yang berbeda.
+                        </p>
+                    </div>
+                    <div class="flex justify-end p-4 border-t bg-gray-50">
+                        <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                            @click="infoOpen = false">
+                            Mengerti
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
 
         {{-- Jalankan SAW --}}
         <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6 mb-6">
@@ -419,25 +421,26 @@
             </div>
         </div>
 
-        <div x-show="directPlacementOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                    <div>
-                        <h3 class="text-base font-semibold text-gray-900">Tambah Penempatan Langsung</h3>
-                        <p class="text-xs text-gray-500 mt-1">Gunakan fitur ini untuk menempatkan siswa langsung ke industri atau magang di sekolah.</p>
+        <template x-teleport="body">
+            <div x-show="directPlacementOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900">Tambah Penempatan Langsung</h3>
+                            <p class="text-xs text-gray-500 mt-1">Gunakan fitur ini untuk menempatkan siswa langsung ke industri atau magang di sekolah.</p>
+                        </div>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="directPlacementOpen = false">✕</button>
                     </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="directPlacementOpen = false">✕</button>
-                </div>
 
-                <form method="POST" action="{{ route('admin.penempatan.langsung') }}"
-                    x-data="penempatanLangsungForm({
-                        siswa: @js($siswaSelectData),
-                        industri: @js($industriSelectData),
-                        initialSiswaId: @js(old('siswa_id')),
-                        initialIndustriId: @js(old('industri_id'))
-                    })"
-                    x-init="init()"
-                    class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form method="POST" action="{{ route('admin.penempatan.langsung') }}"
+                        x-data="penempatanLangsungForm({
+                            siswa: @js($siswaSelectData),
+                            industri: @js($industriSelectData),
+                            initialSiswaId: @js(old('siswa_id')),
+                            initialIndustriId: @js(old('industri_id'))
+                        })"
+                        x-init="init()"
+                        class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     @csrf
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">Siswa</label>
@@ -512,9 +515,10 @@
                             Tetapkan Penempatan Langsung
                         </button>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
-        </div>
+        </template>
         @endif
 
         {{-- Filter --}}
@@ -855,100 +859,106 @@
         @endif
 
         {{-- Modal Detail --}}
-        <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <div>
-                        <h4 class="text-base font-semibold text-gray-900">Detail Rekomendasi SAW</h4>
-                        <p class="text-xs text-gray-500">
-                            <span x-text="detailNama"></span> · <span x-text="detailJurusan"></span>
-                        </p>
-                    </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
-                </div>
-                <div class="p-4">
-                    <template x-if="detailList.length === 0">
-                        <div class="text-sm text-gray-500 italic">Belum ada hasil rekomendasi.</div>
-                    </template>
-                    <template x-if="detailList.length > 0">
-                        <div class="space-y-3">
-                            <template x-for="item in detailList" :key="item.rank">
-                                <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900" x-text="item.industri"></div>
-                                        <div class="text-xs text-gray-500">Skor: <span x-text="(item.skor * 100).toFixed(2) + '%'"></span></div>
-                                    </div>
-                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700">
-                                        Rank <span x-text="item.rank"></span>
-                                    </span>
-                                </div>
-                            </template>
+        <template x-teleport="body">
+            <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900">Detail Rekomendasi SAW</h4>
+                            <p class="text-xs text-gray-500">
+                                <span x-text="detailNama"></span> · <span x-text="detailJurusan"></span>
+                            </p>
                         </div>
-                    </template>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
+                    </div>
+                    <div class="p-4">
+                        <template x-if="detailList.length === 0">
+                            <div class="text-sm text-gray-500 italic">Belum ada hasil rekomendasi.</div>
+                        </template>
+                        <template x-if="detailList.length > 0">
+                            <div class="space-y-3">
+                                <template x-for="item in detailList" :key="item.rank">
+                                    <div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" x-text="item.industri"></div>
+                                            <div class="text-xs text-gray-500">Skor: <span x-text="(item.skor * 100).toFixed(2) + '%'"></span></div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700">
+                                            Rank <span x-text="item.rank"></span>
+                                        </span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
 
         {{-- Modal Usulan --}}
-        <div x-show="usulanOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <h4 class="text-base font-semibold text-gray-900">Detail Usulan Industri</h4>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="usulanOpen = false">✕</button>
-                </div>
-                <div class="p-4 text-sm text-gray-700 space-y-2">
-                    <div><span class="text-gray-500">Nama:</span> <span class="font-medium" x-text="usulanDetail.nama"></span></div>
-                    <div><span class="text-gray-500">Email:</span> <span class="font-medium" x-text="usulanDetail.email"></span></div>
-                    <div><span class="text-gray-500">Kapasitas:</span> <span class="font-medium" x-text="usulanDetail.kapasitas"></span></div>
-                    <div><span class="text-gray-500">Alamat:</span> <span class="font-medium" x-text="usulanDetail.alamat"></span></div>
-                    <div><span class="text-gray-500">Kontak:</span> <span class="font-medium" x-text="usulanDetail.kontak"></span></div>
-                    <div><span class="text-gray-500">Keterangan:</span> <span class="font-medium" x-text="usulanDetail.keterangan"></span></div>
-                </div>
-                <div class="flex justify-end p-4 border-t bg-gray-50">
-                    <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                        @click="usulanOpen = false">
-                        Tutup
-                    </button>
+        <template x-teleport="body">
+            <div x-show="usulanOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <h4 class="text-base font-semibold text-gray-900">Detail Usulan Industri</h4>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="usulanOpen = false">✕</button>
+                    </div>
+                    <div class="p-4 text-sm text-gray-700 space-y-2">
+                        <div><span class="text-gray-500">Nama:</span> <span class="font-medium" x-text="usulanDetail.nama"></span></div>
+                        <div><span class="text-gray-500">Email:</span> <span class="font-medium" x-text="usulanDetail.email"></span></div>
+                        <div><span class="text-gray-500">Kapasitas:</span> <span class="font-medium" x-text="usulanDetail.kapasitas"></span></div>
+                        <div><span class="text-gray-500">Alamat:</span> <span class="font-medium" x-text="usulanDetail.alamat"></span></div>
+                        <div><span class="text-gray-500">Kontak:</span> <span class="font-medium" x-text="usulanDetail.kontak"></span></div>
+                        <div><span class="text-gray-500">Keterangan:</span> <span class="font-medium" x-text="usulanDetail.keterangan"></span></div>
+                    </div>
+                    <div class="flex justify-end p-4 border-t bg-gray-50">
+                        <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                            @click="usulanOpen = false">
+                            Tutup
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
 
         {{-- Modal Guru Pembimbing --}}
-        <div x-show="guruOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <div>
-                        <h4 class="text-base font-semibold text-gray-900">Pilih Guru Pembimbing</h4>
-                        <p class="text-xs text-gray-500">
-                            Siswa: <span x-text="guruTargetName"></span>
-                        </p>
-                    </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600" @click="guruOpen = false">✕</button>
-                </div>
-                <div class="p-4">
-                    <template x-if="guruList.length === 0">
-                        <div class="text-sm text-gray-500 italic">Belum ada guru pembimbing untuk jurusan ini.</div>
-                    </template>
-                    <template x-if="guruList.length > 0">
-                        <div class="space-y-2">
-                            <template x-for="guru in guruList" :key="guru.id">
-                                <form method="POST" :action="`{{ url('/penempatan') }}/${guruTargetId}/guru`">
-                                    @csrf
-                                    <input type="hidden" name="guru_pembimbing_id" :value="guru.id">
-                                    <button type="submit" class="w-full flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm hover:bg-gray-50">
-                                        <div class="text-left">
-                                            <div class="font-medium text-gray-900" x-text="guru.name"></div>
-                                            <div class="text-xs text-gray-500" x-text="guru.jurusan"></div>
-                                        </div>
-                                        <span class="text-xs text-emerald-600 font-semibold">Pilih</span>
-                                    </button>
-                                </form>
-                            </template>
+        <template x-teleport="body">
+            <div x-show="guruOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900">Pilih Guru Pembimbing</h4>
+                            <p class="text-xs text-gray-500">
+                                Siswa: <span x-text="guruTargetName"></span>
+                            </p>
                         </div>
-                    </template>
+                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="guruOpen = false">✕</button>
+                    </div>
+                    <div class="p-4">
+                        <template x-if="guruList.length === 0">
+                            <div class="text-sm text-gray-500 italic">Belum ada guru pembimbing untuk jurusan ini.</div>
+                        </template>
+                        <template x-if="guruList.length > 0">
+                            <div class="space-y-2">
+                                <template x-for="guru in guruList" :key="guru.id">
+                                    <form method="POST" :action="`{{ url('/penempatan') }}/${guruTargetId}/guru`">
+                                        @csrf
+                                        <input type="hidden" name="guru_pembimbing_id" :value="guru.id">
+                                        <button type="submit" class="w-full flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm hover:bg-gray-50">
+                                            <div class="text-left">
+                                                <div class="font-medium text-gray-900" x-text="guru.name"></div>
+                                                <div class="text-xs text-gray-500" x-text="guru.jurusan"></div>
+                                            </div>
+                                            <span class="text-xs text-emerald-600 font-semibold">Pilih</span>
+                                        </button>
+                                    </form>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
     </div>
 </x-admin-layout>
 @include('partials.ajax-filter-script')
