@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Jurusan;
 use App\Services\AdminPeringatanDiniService;
+use App\Services\PeringatanDiniReadService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -43,18 +43,17 @@ class AdminPeringatanDiniController extends Controller
         return back()->with('success', __('peringatan_dini.update', ['count' => $updatedCount]));
     }
 
-    public function index(AdminPeringatanDiniService $service)
+    public function index(Request $request, PeringatanDiniReadService $service)
     {
         $filters = [
-            'q' => request()->input('q'),
-            'category' => request()->input('category', 'all'),
-            'jurusan_id' => request()->input('jurusan_id'),
-            'tahun_ajaran' => request()->input('tahun_ajaran'),
+            'q' => $request->input('q'),
+            'category' => $request->input('category', 'all'),
+            'jurusan_id' => $request->input('jurusan_id'),
+            'tahun_ajaran' => $request->input('tahun_ajaran'),
         ];
 
-        $jurusanOptions = Jurusan::orderBy('nama')->get();
+        $jurusanOptions = $service->getJurusanOptions();
         $tahunAjaranOptions = $service->getTahunAjaranOptions($filters['jurusan_id']);
-
         $data = $service->getLatestRiskData($filters);
 
         return view('admin.peringatan-dini.admin-peringatan-dini', [

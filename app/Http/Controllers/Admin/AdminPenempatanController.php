@@ -3,23 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\LaporanStatus;
-use App\Enums\PenempatanStatus;
-use App\Enums\PengajuanStatus;
-use App\Enums\PilihanSiswa;
-use App\Enums\UsulanStatus;
 use App\Http\Controllers\Controller;
 use App\Services\AdminPenempatanService;
-use App\Services\AdminUserService;
-use App\Models\BobotKriteria;
-use App\Models\Industri;
-use App\Models\Kriteria;
+use App\Services\AdminPenempatanWorkflowService;
 use App\Models\PenempatanPKL;
 use App\Models\UsulanIndustri;
-use App\Models\User;
 use App\Services\PenempatanLangsungService;
 use App\Services\SawRunService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class AdminPenempatanController extends Controller
@@ -55,7 +46,7 @@ class AdminPenempatanController extends Controller
         return back()->with('success', __('penempatan.success.langsung'));
     }
 
-    public function storeBobot(Request $request)
+    public function storeBobot(Request $request, AdminPenempatanWorkflowService $workflowService)
     {
         $validated = $request->validate([
             'jurusan_id' => 'required|exists:jurusan,id',
@@ -63,34 +54,10 @@ class AdminPenempatanController extends Controller
             'bobot.*' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $totalBobot = 0;
-        foreach ($validated['bobot'] as $value) {
-            $totalBobot += (float) ($value ?? 0);
+        $result = $workflowService->storeBobot($validated);
+        if (!$result['ok']) {
+            return back()->withErrors([$result['error_field'] => __($result['error_key'])])->withInput();
         }
-
-        if (abs($totalBobot - 100) > 0.01) {
-            return back()->withErrors(['bobot' => __('penempatan.errors.bobot')])->withInput();
-        }
-
-        $jurusanId = $validated['jurusan_id'];
-        $kriteriaIds = Kriteria::whereIn('id', array_keys($validated['bobot']))->pluck('id');
-
-        DB::transaction(function () use ($validated, $jurusanId, $kriteriaIds) {
-            foreach ($kriteriaIds as $kriteriaId) {
-                $persen = (float) ($validated['bobot'][$kriteriaId] ?? 0);
-                $bobot = round($persen / 100, 2);
-
-                BobotKriteria::updateOrCreate(
-                    [
-                        'jurusan_id' => $jurusanId,
-                        'kriteria_id' => $kriteriaId,
-                    ],
-                    [
-                        'bobot' => $bobot,
-                    ]
-                );
-            }
-        });
 
         return back()->with('success', __('penempatan.success.bobot'));
     }
@@ -117,180 +84,69 @@ class AdminPenempatanController extends Controller
         return back()->with('success', __('penempatan.success.saw', ['count' => $result['rows_count'] ?? 0]));
     }
 
-    public function approveUsulanIndustri(Request $request, UsulanIndustri $usulan, AdminUserService $userService)
+    public function approveUsulanIndustri(UsulanIndustri $usulan, AdminPenempatanWorkflowService $workflowService)
     {
-        if ($usulan->status !== UsulanStatus::MENUNGGU->value) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.usulan_proses')]);
+        $result = $workflowService->approveUsulanIndustri($usulan);
+        if (!$result['ok']) {
+            return back()->withErrors([$result['error_field'] => __($result['error_key'])]);
         }
 
-        if (User::where('email', $usulan->email)->exists()) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.email')]);
-        }
-
-        if (Industri::where('nama_industri', $usulan->nama_industri)->exists()) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.nama')]);
-        }
-
-        $industri = $userService->createIndustryRepresentativeFromUsulan($usulan);
-
-        $usulan->update([
-            'status' => UsulanStatus::DISETUJUI->value,
-        ]);
-
-        $existingPenempatan = PenempatanPKL::where('siswa_id', $usulan->siswa_id)->first();
-        $oldStatus = $existingPenempatan?->status;
-
-        $penempatan = PenempatanPKL::updateOrCreate(
-            ['siswa_id' => $usulan->siswa_id],
-            [
-                'industri_id' => $industri->id,
-                'usulan_industri_id' => $usulan->id,
-                'pilihan_siswa' => PilihanSiswa::USULAN_LAIN->value,
-                'status' => PenempatanStatus::PROSES_PENGAJUAN->value,
-            ]
-        );
-
-        if ($oldStatus !== null) {
-            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
-        }
-
-        return back()->with('success', __('penempatan.success.usul_ok'));
+        return back()->with('success', __($result['success_key']));
     }
 
-    public function rejectUsulanIndustri(Request $request, UsulanIndustri $usulan)
+    public function rejectUsulanIndustri(UsulanIndustri $usulan, AdminPenempatanWorkflowService $workflowService)
     {
-        if ($usulan->status !== UsulanStatus::MENUNGGU->value) {
-            return back()->withErrors(['usulan' => __('penempatan.errors.usulan_proses')]);
+        $result = $workflowService->rejectUsulanIndustri($usulan);
+        if (!$result['ok']) {
+            return back()->withErrors([$result['error_field'] => __($result['error_key'])]);
         }
 
-        $usulan->update([
-            'status' => UsulanStatus::DITOLAK->value,
-        ]);
-
-        $penempatan = PenempatanPKL::where('siswa_id', $usulan->siswa_id)
-            ->where('usulan_industri_id', $usulan->id)
-            ->first();
-
-        if ($penempatan) {
-            $oldStatus = $penempatan->status;
-            $penempatan->update([
-                'industri_id' => null,
-                'usulan_industri_id' => null,
-                'pilihan_siswa' => null,
-                'status' => PenempatanStatus::DITOLAK_SEKOLAH->value,
-            ]);
-            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
-        }
-
-        return back()->with('success', __('penempatan.success.usul_tolak'));
+        return back()->with('success', __($result['success_key']));
     }
 
-    public function confirmPilihan(PenempatanPKL $penempatan, AdminUserService $userService)
+    public function confirmPilihan(PenempatanPKL $penempatan, AdminPenempatanWorkflowService $workflowService)
     {
-        if ($penempatan->status !== PenempatanStatus::MENUNGGU_KONFIRMASI->value) {
-            return back()->withErrors(['penempatan' => __('penempatan.errors.tunggu')]);
+        $result = $workflowService->confirmPilihan($penempatan);
+        if (!$result['ok']) {
+            return back()->withErrors([$result['error_field'] => __($result['error_key'])]);
         }
 
-        if ($penempatan->pilihan_siswa === PilihanSiswa::REKOMENDASI->value) {
-            $industri = $penempatan->industri;
-            if (!$industri) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.rekom')]);
-            }
-
-            $industri->update([
-                'status_pengajuan' => PengajuanStatus::MENUNGGU->value,
-                'pengajuan_dikirim_at' => now(),
-                'pengajuan_dijawab_at' => null,
-            ]);
-
-            $oldStatus = $penempatan->status;
-            $penempatan->update([
-                'status' => PenempatanStatus::PROSES_PENGAJUAN->value,
-            ]);
-            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
-
-            return back()->with('success', __('penempatan.success.pilih_ok'));
-        }
-
-        if ($penempatan->pilihan_siswa === PilihanSiswa::USULAN_LAIN->value) {
-            $usulan = $penempatan->usulanIndustri;
-            if (!$usulan) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.usul_tidak')]);
-            }
-
-            if ($usulan->status !== UsulanStatus::MENUNGGU->value) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.usulan_proses')]);
-            }
-
-            if (User::where('email', $usulan->email)->exists()) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.email')]);
-            }
-
-            if (Industri::where('nama_industri', $usulan->nama_industri)->exists()) {
-                return back()->withErrors(['penempatan' => __('penempatan.errors.nama')]);
-            }
-
-            $industri = $userService->createIndustryRepresentativeFromUsulan($usulan);
-
-            $usulan->update([
-                'status' => UsulanStatus::DISETUJUI->value,
-            ]);
-
-            $oldStatus = $penempatan->status;
-            $penempatan->update([
-                'industri_id' => $industri->id,
-                'status' => PenempatanStatus::PROSES_PENGAJUAN->value,
-            ]);
-            $this->handlePenempatanStatusChange($penempatan, $oldStatus);
-
-            return back()->with('success', __('penempatan.success.usul_siswa'));
-        }
-
-        return back()->withErrors(['penempatan' => __('penempatan.errors.pilihan')]);
+        return back()->with('success', __($result['success_key']));
     }
 
-    public function rejectPilihan(PenempatanPKL $penempatan)
+    public function rejectPilihan(PenempatanPKL $penempatan, AdminPenempatanWorkflowService $workflowService)
     {
-        if ($penempatan->status !== PenempatanStatus::MENUNGGU_KONFIRMASI->value) {
-            return back()->withErrors(['penempatan' => __('penempatan.errors.tunggu')]);
+        $result = $workflowService->rejectPilihan($penempatan);
+        if (!$result['ok']) {
+            return back()->withErrors([$result['error_field'] => __($result['error_key'])]);
         }
 
-        if ($penempatan->pilihan_siswa === PilihanSiswa::USULAN_LAIN->value && $penempatan->usulanIndustri) {
-            $penempatan->usulanIndustri->update([
-                'status' => UsulanStatus::DITOLAK->value,
-            ]);
-        }
-
-        $oldStatus = $penempatan->status;
-        $penempatan->update([
-            'industri_id' => null,
-            'usulan_industri_id' => null,
-            'pilihan_siswa' => null,
-            'status' => PenempatanStatus::DITOLAK_SEKOLAH->value,
-        ]);
-        $this->handlePenempatanStatusChange($penempatan, $oldStatus);
-
-        return back()->with('success', __('penempatan.success.pilih_tolak'));
+        return back()->with('success', __($result['success_key']));
     }
 
-    public function setGuruPembimbing(Request $request, PenempatanPKL $penempatan)
+    public function setGuruPembimbing(
+        Request $request,
+        PenempatanPKL $penempatan,
+        AdminPenempatanWorkflowService $workflowService
+    )
     {
         $validated = $request->validate([
             'guru_pembimbing_id' => 'required|exists:guru_pembimbing,id',
         ]);
 
-        if ($penempatan->status !== PenempatanStatus::DITERIMA_INDUSTRI->value) {
-            return back()->withErrors(['guru_pembimbing_id' => __('penempatan.errors.guru')]);
+        $result = $workflowService->assignGuruPembimbing($penempatan, (int) $validated['guru_pembimbing_id']);
+        if (!$result['ok']) {
+            return back()->withErrors([$result['error_field'] => __($result['error_key'])]);
         }
 
-        $penempatan->update([
-            'guru_pembimbing_id' => $validated['guru_pembimbing_id'],
-        ]);
-
-        return back()->with('success', __('penempatan.success.guru'));
+        return back()->with('success', __($result['success_key']));
     }
 
-    public function updateLaporanStatus(Request $request, PenempatanPKL $penempatan)
+    public function updateLaporanStatus(
+        Request $request,
+        PenempatanPKL $penempatan,
+        AdminPenempatanWorkflowService $workflowService
+    )
     {
         $validated = $request->validate([
             'laporan_status' => [
@@ -299,9 +155,7 @@ class AdminPenempatanController extends Controller
             ],
         ]);
 
-        $penempatan->update([
-            'laporan_status' => $validated['laporan_status'],
-        ]);
+        $workflowService->updateLaporanStatus($penempatan, $validated['laporan_status']);
 
         return back()->with('success', __('penempatan.success.laporan'));
     }
