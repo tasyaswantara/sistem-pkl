@@ -191,15 +191,6 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
-                                @if ($row->siswa?->user?->email)
-                                <a
-                                    href="mailto:{{ $row->siswa->user->email }}"
-                                    class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium">
-                                    Hubungi
-                                </a>
-                                @else
-                                <span class="text-xs text-gray-400 italic">Email kosong</span>
-                                @endif
                                 <a
                                     href="{{ route('admin.penempatan', ['tab' => 'langsung']) }}"
                                     class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-xs font-medium">

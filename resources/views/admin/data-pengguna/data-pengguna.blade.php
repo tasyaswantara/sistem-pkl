@@ -5,6 +5,18 @@
         siswaOpen: false,
         siswaGuruName: '',
         siswaList: [],
+        copyToastOpen: false,
+        copyToastMessage: '',
+        copyEmail(email) {
+            if (!email || !navigator.clipboard) return;
+            navigator.clipboard.writeText(email).then(() => {
+                this.copyToastMessage = 'Berhasil menyalin email';
+                this.copyToastOpen = true;
+                window.setTimeout(() => {
+                    this.copyToastOpen = false;
+                }, 1800);
+            });
+        },
     }">
 
         {{-- Toast --}}
@@ -35,6 +47,28 @@
                 </div>
             </template>
         @endif
+
+        <template x-teleport="body">
+            <div x-show="copyToastOpen" x-cloak x-transition
+                class="fixed top-20 right-6 z-[9998] max-w-sm w-full bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="flex">
+                    <div class="flex justify-center items-center w-12 bg-emerald-500">
+                        <svg class="h-6 w-6 fill-current text-white" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 -mx-3 py-2 px-4">
+                        <div class="mx-3">
+                            <span class="text-emerald-600 font-semibold">Berhasil</span>
+                            <p class="text-gray-600 text-sm" x-text="copyToastMessage"></p>
+                        </div>
+                    </div>
+                    <button type="button" @click="copyToastOpen = false" class="px-4 text-gray-400 hover:text-gray-600">
+                        ✕
+                    </button>
+                </div>
+            </div>
+        </template>
 
         @php
             $roleFilter = request('role', 'Semua Pengguna');
@@ -200,7 +234,19 @@
                                         {{ $u->siswa->status_pkl ?? '-' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    <div class="inline-flex items-center gap-2">
+                                        <span>{{ $u->email }}</span>
+                                        <button type="button"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
+                                            @click="copyEmail(@js($u->email))"
+                                            title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
                             @elseif($roleFilter === 'Guru Pembimbing')
                                 <td class="px-6 py-4 text-sm">{{ $u->gurupembimbing->nip ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm">
@@ -230,7 +276,19 @@
                                         </button>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    <div class="inline-flex items-center gap-2">
+                                        <span>{{ $u->email }}</span>
+                                        <button type="button"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
+                                            @click="copyEmail(@js($u->email))"
+                                            title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
                             @elseif($roleFilter === 'Perwakilan Industri')
                                 <td class="px-6 py-4 text-sm">{{ $u->industri->kapasitas ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm">{{ $u->industri->grade ?? '-' }}</td>
@@ -253,9 +311,33 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm w-64">{{ $u->industri->alamat ?? '-' }}</td>
-                                <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    <div class="inline-flex items-center gap-2">
+                                        <span>{{ $u->email }}</span>
+                                        <button type="button"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
+                                            @click="copyEmail(@js($u->email))"
+                                            title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
                             @else
-                                <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    <div class="inline-flex items-center gap-2">
+                                        <span>{{ $u->email }}</span>
+                                        <button type="button"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
+                                            @click="copyEmail(@js($u->email))"
+                                            title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4">
                                     @foreach ($u->roles as $role)
                                         <span

@@ -15,10 +15,22 @@ class GuruPerizinanController extends Controller
             abort(403, __('guru_perizinan.errors.akun'));
         }
 
-        $perizinanList = $service->getPerizinanForGuru($guru);
+        $filters = [
+            'q' => trim((string) $request->input('q', '')),
+            'status' => (string) $request->input('status', ''),
+            'tanggal' => (string) $request->input('tanggal', ''),
+            'jurusan_id' => (string) $request->input('jurusan_id', ''),
+            'industri_id' => (string) $request->input('industri_id', ''),
+        ];
+
+        $perizinanList = $service->getPerizinanForGuru($guru, $filters);
+        $options = $service->getFilterOptionsForGuru($guru);
 
         return view('guru.perizinan.guru-perizinan', [
             'perizinanList' => $perizinanList,
+            'filters' => $filters,
+            'jurusanOptions' => $options['jurusanOptions'],
+            'industriOptions' => $options['industriOptions'],
         ]);
     }
 }

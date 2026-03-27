@@ -406,7 +406,7 @@ class SawRunService
             return 'A';
         }
 
-        if ($nilai >= 80) {
+        if ($nilai >= 76) {
             return 'B';
         }
 

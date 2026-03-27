@@ -16,14 +16,22 @@ class IndustriPenilaianController extends Controller
             abort(403, __('industri_penilaian.errors.akun'));
         }
 
-        $penempatanList = $service->getPenempatanList($industri);
+        $filters = [
+            'q' => trim((string) $request->input('q', '')),
+            'jurusan_id' => (string) $request->input('jurusan_id', ''),
+        ];
+
+        $penempatanList = $service->getPenempatanList($industri, $filters);
         $aspekList = $service->getAspekList();
         $penilaianMap = $service->getPenilaianMap($industri, $penempatanList);
+        $jurusanOptions = $service->getJurusanOptions($industri);
 
         return view('industri.penilaian.industri-penilaian', [
             'penempatanList' => $penempatanList,
             'aspekList' => $aspekList,
             'penilaianMap' => $penilaianMap,
+            'filters' => $filters,
+            'jurusanOptions' => $jurusanOptions,
         ]);
     }
 

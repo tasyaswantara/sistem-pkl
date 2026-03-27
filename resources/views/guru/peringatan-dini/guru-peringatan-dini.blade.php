@@ -87,6 +87,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Skor</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kategori</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Detail</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -120,10 +121,21 @@
                                     Lihat Detail
                                 </button>
                             </td>
+                            <td class="px-6 py-4">
+                                @if ($row->siswa?->user?->email)
+                                <a
+                                    href="mailto:{{ $row->siswa->user->email }}"
+                                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all text-xs font-medium">
+                                    Hubungi via Email
+                                </a>
+                                @else
+                                <span class="text-xs text-gray-400 italic">Email kosong</span>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
                                 Belum ada hasil peringatan dini untuk periode ini.
                             </td>
                         </tr>

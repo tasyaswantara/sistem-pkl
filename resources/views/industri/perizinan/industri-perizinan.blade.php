@@ -20,6 +20,51 @@
         </div>
         @endif
 
+        <form method="GET" class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cari Siswa</label>
+                    <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Nama atau NIS siswa"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Jurusan</label>
+                    <select name="jurusan_id" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                        <option value="">Semua Jurusan</option>
+                        @foreach ($jurusanOptions as $jurusan)
+                        <option value="{{ $jurusan->id }}" {{ (string) ($filters['jurusan_id'] ?? '') === (string) $jurusan->id ? 'selected' : '' }}>
+                            {{ $jurusan->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
+                    <select name="status" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                        <option value="">Semua Status</option>
+                        @foreach ([PerizinanStatus::MENUNGGU->value => 'Menunggu', PerizinanStatus::DISETUJUI->value => 'Disetujui', PerizinanStatus::DITOLAK->value => 'Ditolak'] as $value => $label)
+                        <option value="{{ $value }}" {{ (string) ($filters['status'] ?? '') === (string) $value ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Tanggal</label>
+                    <input type="date" name="tanggal" value="{{ $filters['tanggal'] ?? '' }}"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm">
+                </div>
+            </div>
+            <div class="mt-4 flex items-center gap-3">
+                <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+                    Terapkan Filter
+                </button>
+                <a href="{{ route('industri.perizinan') }}" class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg bg-white hover:bg-gray-50">
+                    Reset
+                </a>
+            </div>
+        </form>
+
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[1000px]">
