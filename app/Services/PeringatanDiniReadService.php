@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Enums\AbsensiStatus;
 use App\Enums\PenempatanStatus;
+use App\Enums\PerizinanStatus;
 use App\Models\AbsensiPkl;
 use App\Models\Jurusan;
 use App\Models\Logbook;
 use App\Models\PenempatanPKL;
+use App\Models\Perizinan;
 use App\Models\RiskScore;
 use App\Models\Siswa;
 use Carbon\Carbon;
@@ -175,7 +177,7 @@ class PeringatanDiniReadService
     }
 
     /**
-     * @return array<int, array{total_logs:int,late_logs:int,target_logs:int,freq_score:float,late_score:float,total_absensi:int,valid_absensi:int,target_absensi:int,absensi_score:float,laporan_status:string,laporan_score:float}>
+     * @return array<int, array{total_logs:int,late_logs:int,target_logs:int,freq_score:float,late_score:float,total_absensi:int,valid_absensi:int,target_absensi:int,absensi_score:float,alpha_days:int,alpha_score:float,izin_days:int,laporan_status:string,laporan_score:float}>
      */
     private function buildRiskDetails(Collection $riskItems, Carbon $weekStart, Carbon $weekEnd): array
     {
@@ -193,6 +195,12 @@ class PeringatanDiniReadService
             ->groupBy('siswa_id');
         $absensiList = AbsensiPkl::whereIn('siswa_id', $siswaIds)
             ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->get()
+            ->groupBy('siswa_id');
+        $perizinanList = Perizinan::whereIn('siswa_id', $siswaIds)
+            ->where('status', PerizinanStatus::DISETUJUI->value)
+            ->whereDate('tanggal_mulai', '<=', $weekEnd->toDateString())
+            ->whereDate('tanggal_selesai', '>=', $weekStart->toDateString())
             ->get()
             ->groupBy('siswa_id');
 
@@ -216,9 +224,15 @@ class PeringatanDiniReadService
 
             $absensiLogs = $absensiList->get($row->siswa_id, collect());
             $validAbsensi = $absensiLogs
-                ->where('status', AbsensiStatus::HADIR_VALID->value)
+                ->whereIn('status', AbsensiStatus::validStatuses())
                 ->count();
             $totalAbsensi = $absensiLogs->count();
+            $izinDays = $this->countApprovedIzinDays(
+                $perizinanList->get($row->siswa_id, collect()),
+                $weekStart,
+                $weekEnd
+            );
+            $alphaDays = max($targetLogbookPerWeek - $validAbsensi - $izinDays, 0);
 
             $freqScore = ($totalLogs > 0 && $targetLogbookPerWeek > 0)
                 ? min($totalLogs / $targetLogbookPerWeek, 1)
@@ -228,6 +242,9 @@ class PeringatanDiniReadService
                 : 0;
             $absensiScore = $targetLogbookPerWeek > 0
                 ? min($validAbsensi / $targetLogbookPerWeek, 1)
+                : 0;
+            $alphaScore = $targetLogbookPerWeek > 0
+                ? max(1 - min($alphaDays / $targetLogbookPerWeek, 1), 0)
                 : 0;
             $laporanStatus = $penempatanBySiswa->get($row->siswa_id)?->laporan_status ?? null;
             $laporanScore = $laporanScores[$laporanStatus] ?? 1;
@@ -242,11 +259,43 @@ class PeringatanDiniReadService
                 'valid_absensi' => $validAbsensi,
                 'target_absensi' => $targetLogbookPerWeek,
                 'absensi_score' => $absensiScore,
+                'alpha_days' => $alphaDays,
+                'alpha_score' => $alphaScore,
+                'izin_days' => $izinDays,
                 'laporan_status' => $laporanStatus ?? 'belum ada',
                 'laporan_score' => $laporanScore,
             ];
         }
 
         return $detailByRiskId;
+    }
+
+    private function countApprovedIzinDays(Collection $perizinanRows, Carbon $weekStart, Carbon $weekEnd): int
+    {
+        $days = [];
+
+        foreach ($perizinanRows as $row) {
+            $start = $row->tanggal_mulai?->copy()->startOfDay();
+            $end = $row->tanggal_selesai?->copy()->startOfDay();
+            if (!$start || !$end) {
+                continue;
+            }
+
+            if ($start->lt($weekStart)) {
+                $start = $weekStart->copy();
+            }
+
+            if ($end->gt($weekEnd)) {
+                $end = $weekEnd->copy();
+            }
+
+            for ($cursor = $start->copy(); $cursor->lte($end); $cursor->addDay()) {
+                if (!$cursor->isWeekend()) {
+                    $days[$cursor->toDateString()] = true;
+                }
+            }
+        }
+
+        return count($days);
     }
 }

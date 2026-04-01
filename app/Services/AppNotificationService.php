@@ -169,6 +169,49 @@ class AppNotificationService
         );
     }
 
+    public function notifyIndustryOfOutsideLocationPresensi(\App\Models\AbsensiPkl $absensi): void
+    {
+        $this->sendToUser(
+            $absensi->industri?->user,
+            'Presensi luar lokasi menunggu persetujuan',
+            sprintf(
+                '%s mengajukan presensi di luar lokasi pada %s dan menunggu persetujuan.',
+                $absensi->siswa?->user?->name ?? 'Siswa',
+                $absensi->check_in_at?->format('d/m/Y H:i') ?? '-'
+            ),
+            route('industri.presensi'),
+            [
+                'type' => 'presensi_luar_lokasi_menunggu',
+                'absensi_id' => $absensi->id,
+            ]
+        );
+    }
+
+    public function notifyStudentOfPresensiDecision(\App\Models\AbsensiPkl $absensi): void
+    {
+        if (!in_array((string) $absensi->approval_status, ['disetujui', 'ditolak'], true)) {
+            return;
+        }
+
+        $isApproved = $absensi->approval_status === 'disetujui';
+        $this->sendToUser(
+            $absensi->siswa?->user,
+            'Status presensi luar lokasi diperbarui',
+            sprintf(
+                'Presensi luar lokasi Anda pada %s telah %s oleh industri.',
+                $absensi->check_in_at?->format('d/m/Y H:i') ?? '-',
+                $isApproved ? 'disetujui' : 'ditolak'
+            ),
+            route('siswa.presensi'),
+            [
+                'type' => 'presensi_luar_lokasi_diputuskan',
+                'absensi_id' => $absensi->id,
+                'approval_status' => $absensi->approval_status,
+                'status' => $absensi->status,
+            ]
+        );
+    }
+
     public function notifyGuruOfLaporan(PenempatanPKL $penempatan): void
     {
         $this->sendToUser(

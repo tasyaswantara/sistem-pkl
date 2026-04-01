@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\PenempatanStatus;
 use App\Enums\PerizinanStatus;
+use App\Enums\AbsensiStatus;
 use App\Models\AbsensiPkl;
 use App\Models\Logbook;
 use App\Models\PenempatanPKL;
@@ -22,7 +23,7 @@ class SiswaPresensiService
      *   canCheckIn:bool,
      *   canRequestIzin:bool,
      *   weekDays:array<int,array<string,mixed>>,
-     *   weekCounts:array{hadir:int,izin:int,tidak_absen:int},
+     *   weekCounts:array{hadir:int,izin:int,alpha:int},
      *   logbooks:LengthAwarePaginator,
      *   logbookTotal:int,
      *   perizinanLatest:Collection<int,Perizinan>
@@ -64,16 +65,17 @@ class SiswaPresensiService
         $weekCounts = [
             'hadir' => 0,
             'izin' => 0,
-            'tidak_absen' => 0,
+            'alpha' => 0,
         ];
 
         for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
             $date = $weekStart->copy()->addDays($dayOffset);
             $dateKey = $date->toDateString();
-            $hasAbsensi = $absensiThisWeek->has($dateKey);
+            $absensiRow = $absensiThisWeek->get($dateKey);
+            $hasAbsensi = $absensiRow && in_array((string) $absensiRow->status, AbsensiStatus::validStatuses(), true);
             $hasIzin = $this->hasIzinOnDate($perizinanThisWeek, $date);
 
-            $state = 'tidak_absen';
+            $state = 'alpha';
             if ($hasAbsensi) {
                 $state = 'hadir';
             } elseif ($hasIzin) {

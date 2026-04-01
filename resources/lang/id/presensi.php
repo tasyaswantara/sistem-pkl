@@ -13,13 +13,16 @@ return [
     ],
     'success' => [
         'checkin' => 'Check-in berhasil direkam.',
+        'checkin_pending' => 'Check-in luar lokasi berhasil direkam dan menunggu persetujuan industri.',
         'geofence' => 'Pengaturan geofence industri berhasil diperbarui.',
         'geocode_ok' => 'Geocoding berhasil untuk :industri (:lat, :lng).',
         'global_radius' => 'Radius geofence global berhasil diterapkan untuk semua industri.',
     ],
     'status' => [
         'all' => 'Semua Status',
-        'hadir_valid' => 'Hadir Valid',
-        'di_luar_area' => 'Di Luar Area',
+        'hadir_valid_lokasi' => 'Hadir Valid di Lokasi',
+        'menunggu_persetujuan_luar_lokasi' => 'Menunggu Persetujuan Luar Lokasi',
+        'hadir_valid_luar_lokasi' => 'Hadir Valid di Luar Lokasi',
+        'alpha' => 'Alpha',
     ],
 ];

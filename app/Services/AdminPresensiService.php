@@ -56,14 +56,7 @@ class AdminPresensiService
             });
         }
 
-        $statusCounts = [
-            AbsensiStatus::HADIR_VALID->value => (clone $baseQuery)
-                ->where('status', AbsensiStatus::HADIR_VALID->value)
-                ->count(),
-            AbsensiStatus::DI_LUAR_AREA->value => (clone $baseQuery)
-                ->where('status', AbsensiStatus::DI_LUAR_AREA->value)
-                ->count(),
-        ];
+        $statusCounts = $this->buildStatusCounts($baseQuery);
 
         $absensiQuery = clone $baseQuery;
         if (!empty($filters['status']) && $filters['status'] !== 'all') {
@@ -85,6 +78,8 @@ class AdminPresensiService
                     'industri' => $row->industri?->nama_industri ?? '-',
                     'status' => $row->status,
                     'catatan' => $row->catatan,
+                    'approval_status' => $row->approval_status,
+                    'approval_note' => $row->approval_note,
                     'latitude' => (float) $row->latitude,
                     'longitude' => (float) $row->longitude,
                     'distance' => $row->distance_to_industri_m,
@@ -152,5 +147,23 @@ class AdminPresensiService
         Industri::query()->update([
             'geofence_radius_m' => $radiusMeter,
         ]);
+    }
+
+    private function buildStatusCounts($baseQuery): array
+    {
+        return [
+            AbsensiStatus::HADIR_VALID_LOKASI->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::HADIR_VALID_LOKASI->value)
+                ->count(),
+            AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value)
+                ->count(),
+            AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value)
+                ->count(),
+            AbsensiStatus::ALPHA->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::ALPHA->value)
+                ->count(),
+        ];
     }
 }

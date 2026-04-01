@@ -19,6 +19,10 @@ class AbsensiPkl extends Model
         'distance_to_industri_m',
         'is_within_geofence',
         'status',
+        'approval_status',
+        'approved_by_industri_user_id',
+        'approved_at',
+        'approval_note',
         'catatan',
     ];
 
@@ -30,6 +34,7 @@ class AbsensiPkl extends Model
         'accuracy_m' => 'float',
         'distance_to_industri_m' => 'float',
         'is_within_geofence' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function siswa()
@@ -40,5 +45,10 @@ class AbsensiPkl extends Model
     public function industri()
     {
         return $this->belongsTo(Industri::class);
+    }
+
+    public function approvedByIndustriUser()
+    {
+        return $this->belongsTo(User::class, 'approved_by_industri_user_id');
     }
 }

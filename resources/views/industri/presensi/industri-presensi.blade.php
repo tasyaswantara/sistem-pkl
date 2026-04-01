@@ -14,6 +14,12 @@
         window.initIndustriPresensiMap = function initIndustriPresensiMap() {
             const mapElement = document.getElementById('industri-presensi-map');
             const hasLeaflet = typeof L !== 'undefined';
+            const statusLabels = @json($statusLabels);
+            const approvalLabels = {
+                menunggu: 'Menunggu',
+                disetujui: 'Disetujui',
+                ditolak: 'Ditolak',
+            };
             if (!mapElement) {
                 return;
             }
@@ -38,9 +44,11 @@
                         return;
                     }
 
-                    const color = point.status === '{{ AbsensiStatus::HADIR_VALID->value }}'
+                    const color = point.status === '{{ AbsensiStatus::HADIR_VALID_LOKASI->value }}'
                         ? '#16a34a'
-                        : (point.status === '{{ AbsensiStatus::DI_LUAR_AREA->value }}' ? '#e11d48' : '#6b7280');
+                        : (point.status === '{{ AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value }}'
+                            ? '#2563eb'
+                            : (point.status === '{{ AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value }}' ? '#d97706' : '#dc2626'));
 
                     const marker = L.circleMarker([lat, lng], {
                         radius: 8,
@@ -53,8 +61,10 @@
                         <div style="min-width:220px">
                             <strong>${point.siswa}</strong><br>
                             NIS: ${point.nis}<br>
-                            Status: ${point.status}<br>
+                            Status: ${statusLabels[point.status] ?? point.status}<br>
+                            Approval: ${approvalLabels[point.approval_status] ?? '-'}<br>
                             Catatan: ${point.catatan ?? '-'}<br>
+                            Catatan Industri: ${point.approval_note ?? '-'}<br>
                             Waktu: ${point.check_in_at ?? '-'}<br>
                             Jarak: ${point.distance ? Number(point.distance).toFixed(2) + ' m' : '-'}
                         </div>
@@ -151,14 +161,22 @@
         </form>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Hadir Valid</div>
-                <div class="text-2xl font-semibold text-emerald-700">{{ $statusCounts[AbsensiStatus::HADIR_VALID->value] ?? 0 }}</div>
+                <div class="text-xs text-gray-500 mb-1">Valid di Lokasi</div>
+                <div class="text-2xl font-semibold text-emerald-700">{{ $statusCounts[AbsensiStatus::HADIR_VALID_LOKASI->value] ?? 0 }}</div>
             </div>
             <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Di Luar Area</div>
-                <div class="text-2xl font-semibold text-rose-700">{{ $statusCounts[AbsensiStatus::DI_LUAR_AREA->value] ?? 0 }}</div>
+                <div class="text-xs text-gray-500 mb-1">Menunggu Persetujuan</div>
+                <div class="text-2xl font-semibold text-amber-700">{{ $statusCounts[AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value] ?? 0 }}</div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="text-xs text-gray-500 mb-1">Valid di Luar Lokasi</div>
+                <div class="text-2xl font-semibold text-sky-700">{{ $statusCounts[AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value] ?? 0 }}</div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="text-xs text-gray-500 mb-1">Alpha</div>
+                <div class="text-2xl font-semibold text-rose-700">{{ $statusCounts[AbsensiStatus::ALPHA->value] ?? 0 }}</div>
             </div>
         </div>
 
@@ -170,8 +188,10 @@
                         <div class="text-xs text-gray-500">{{ count($mapPoints) }} titik pada halaman ini</div>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-600">
-                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Hadir Valid</span>
-                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Di Luar Area</span>
+                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Valid di Lokasi</span>
+                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>Menunggu</span>
+                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-sky-600"></span>Valid di Luar Lokasi</span>
+                        <span class="inline-flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Alpha</span>
                     </div>
                 </div>
                 <div id="industri-presensi-map" class="w-full h-[420px] md:h-[520px] xl:h-[560px]"></div>
@@ -184,7 +204,7 @@
                 <div class="text-xs text-gray-500">{{ $absensiList->total() }} data</div>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[1120px]">
+                <table class="w-full min-w-[1360px]">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Siswa</th>
@@ -193,15 +213,19 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Koordinat</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Jarak</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Approval</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Catatan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @forelse ($absensiList as $row)
                             @php
                                 $statusClass = match ($row->status) {
-                                    AbsensiStatus::HADIR_VALID->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                                    AbsensiStatus::DI_LUAR_AREA->value => 'bg-rose-50 text-rose-700 border border-rose-200',
+                                    AbsensiStatus::HADIR_VALID_LOKASI->value => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                                    AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value => 'bg-amber-50 text-amber-700 border border-amber-200',
+                                    AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value => 'bg-sky-50 text-sky-700 border border-sky-200',
+                                    AbsensiStatus::ALPHA->value => 'bg-rose-50 text-rose-700 border border-rose-200',
                                     default => 'bg-gray-50 text-gray-700 border border-gray-200',
                                 };
                                 $statusKey = 'presensi.status.' . $row->status;
@@ -229,12 +253,44 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-700">
-                                    {{ $row->catatan ? $row->catatan : '-' }}
+                                    @if ($row->approval_status)
+                                        <div class="font-medium text-gray-900">{{ ucfirst($row->approval_status) }}</div>
+                                        <div class="text-xs text-gray-500">{{ $row->approved_at?->format('d/m/Y H:i') ?? '-' }}</div>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-700">
+                                    <div>{{ $row->catatan ?: '-' }}</div>
+                                    @if ($row->approval_note)
+                                        <div class="mt-1 text-xs text-gray-500">Catatan industri: {{ $row->approval_note }}</div>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-700">
+                                    @if ($row->status === AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value)
+                                        <form method="POST" action="{{ route('industri.presensi.review', $row) }}" class="space-y-2">
+                                            @csrf
+                                            <input type="text" name="approval_note" maxlength="500" placeholder="Catatan industri (opsional)"
+                                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs">
+                                            <div class="flex gap-2">
+                                                <button type="submit" name="approval_status" value="disetujui"
+                                                    class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700">
+                                                    Setujui
+                                                </button>
+                                                <button type="submit" name="approval_status" value="ditolak"
+                                                    class="rounded-lg bg-rose-600 px-3 py-2 text-xs font-medium text-white hover:bg-rose-700">
+                                                    Tolak
+                                                </button>
+                                            </div>
+                                        </form>
+                                    @else
+                                        <span class="text-xs text-gray-500">Tidak ada aksi</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
+                                <td colspan="9" class="px-4 py-6 text-center text-sm text-gray-500">
                                     Belum ada data presensi pada filter ini.
                                 </td>
                             </tr>

@@ -43,7 +43,7 @@ class SiswaPresensiCheckInService
 
     /**
      * @param array{latitude:float,longitude:float,accuracy_m?:float,catatan?:string|null} $data
-     * @return array{ok:bool,error_key?:string,absensi?:AbsensiPkl}
+     * @return array{ok:bool,error_key?:string,success_key?:string,absensi?:AbsensiPkl}
      */
     public function createCheckIn(Siswa $siswa, array $data): array
     {
@@ -110,19 +110,22 @@ class SiswaPresensiCheckInService
             'distance_to_industri_m' => $geofenceResult['distance'],
             'is_within_geofence' => $geofenceResult['is_within_geofence'],
             'status' => $geofenceResult['status'],
+            'approval_status' => $geofenceResult['approval_status'],
             'catatan' => $catatan,
         ]);
 
         return [
             'ok' => true,
             'absensi' => $absensi,
+            'success_key' => $geofenceResult['is_within_geofence']
+                ? 'presensi.success.checkin'
+                : 'presensi.success.checkin_pending',
         ];
     }
 
     /**
-     * @return array{distance:?float,is_within_geofence:bool,status:string}
+     * @return array{distance:?float,is_within_geofence:bool,status:string,approval_status:?string}
      */
-    // jika jarak lebih dari radius maka akan jadi diluar area
     private function resolveGeofenceStatus(Industri $industri, float $latitude, float $longitude): array
     {
         $distance = $this->calculateDistanceMeters(
@@ -139,11 +142,12 @@ class SiswaPresensiCheckInService
             'distance' => round($distance, 2),
             'is_within_geofence' => $isWithin,
             'status' => $isWithin
-                ? AbsensiStatus::HADIR_VALID->value
-                : AbsensiStatus::DI_LUAR_AREA->value,
+                ? AbsensiStatus::HADIR_VALID_LOKASI->value
+                : AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value,
+            'approval_status' => $isWithin ? null : 'menunggu',
         ];
     }
-    // rumus haversine untuk geofence menentukan jarak 2 titik secara lingkaran
+
     private function calculateDistanceMeters(
         float $lat1,
         float $lng1,

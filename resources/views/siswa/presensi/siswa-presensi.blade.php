@@ -20,10 +20,10 @@
             'dot' => 'bg-amber-500',
             'label' => 'Izin',
         ],
-        'tidak_absen' => [
+        'alpha' => [
             'box' => 'bg-rose-100 border-rose-200 text-rose-800',
             'dot' => 'bg-rose-500',
-            'label' => 'Tidak Absen',
+            'label' => 'Alpha',
         ],
     ];
 
@@ -174,8 +174,8 @@
                         info += ` | Dalam area (${distanceText} m)`;
                         statusBox.className = 'rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700';
                     } else {
-                        info += ` | Di luar area (${distanceText} m, radius ${radius} m)`;
-                        statusBox.className = 'rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700';
+                        info += ` | Di luar area (${distanceText} m, radius ${radius} m). Presensi akan menunggu persetujuan industri.`;
+                        statusBox.className = 'rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700';
                     }
                 } else {
                     statusBox.className = 'rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700';
@@ -221,7 +221,7 @@
                             presensiButton.disabled = false;
                             presensiButton.textContent = 'Presensi Sekarang';
                             statusBox.textContent = catatanInput?.required
-                                ? 'Lengkapi catatan jika presensi di luar area.'
+                                ? 'Lengkapi catatan. Presensi luar lokasi akan menunggu persetujuan industri.'
                                 : 'Lengkapi data presensi yang diperlukan.';
                             statusBox.className = 'rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700';
                             return;
@@ -341,7 +341,7 @@
                 <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-600">
                     <div class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full {{ $weekMeta['hadir']['dot'] }}"></span>Hadir</div>
                     <div class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full {{ $weekMeta['izin']['dot'] }}"></span>Izin</div>
-                    <div class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full {{ $weekMeta['tidak_absen']['dot'] }}"></span>Tidak Absen</div>
+                    <div class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full {{ $weekMeta['alpha']['dot'] }}"></span>Alpha</div>
                 </div>
 
                 <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
@@ -354,8 +354,8 @@
                         <div>Izin</div>
                     </div>
                     <div class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-2 text-rose-700">
-                        <div class="font-semibold text-sm">{{ $weekCounts['tidak_absen'] ?? 0 }}</div>
-                        <div>Tidak</div>
+                        <div class="font-semibold text-sm">{{ $weekCounts['alpha'] ?? 0 }}</div>
+                        <div>Alpha</div>
                     </div>
                 </div>
 

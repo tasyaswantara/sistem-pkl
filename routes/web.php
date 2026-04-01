@@ -152,6 +152,7 @@ Route::middleware(['auth', 'role:perwakilan industri', 'industri.approved'])->pr
     Route::post('/siswa/{penempatan}/jadwal', [IndustriDataSiswaController::class, 'storeJadwal'])->name('siswa.jadwal');
     Route::post('/siswa/{penempatan}/laporan', [IndustriDataSiswaController::class, 'storeLaporan'])->name('siswa.laporan');
     Route::get('/presensi', [IndustriPresensiController::class, 'index'])->name('presensi');
+    Route::post('/presensi/{absensi}/review', [IndustriPresensiController::class, 'review'])->name('presensi.review');
     Route::get('/elogbook', [IndustriLogbookController::class, 'index'])->name('elogbook');
     Route::post('/elogbook/{logbook}', [IndustriLogbookController::class, 'update'])->name('elogbook.update');
     Route::get('/perizinan', [IndustriPerizinanController::class, 'index'])->name('perizinan');

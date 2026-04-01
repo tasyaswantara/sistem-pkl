@@ -189,7 +189,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-3 text-sm">
+                        <div class="grid grid-cols-4 gap-3 text-sm">
                             <div class="rounded-lg border border-gray-200 p-3">
                                 <div class="text-xs text-gray-500">Skor Frekuensi</div>
                                 <div class="text-base font-semibold text-gray-900" x-text="detailData.freq_score !== undefined ? Number(detailData.freq_score).toFixed(3) : '-'"></div>
@@ -202,9 +202,13 @@
                                 <div class="text-xs text-gray-500">Skor Presensi</div>
                                 <div class="text-base font-semibold text-gray-900" x-text="detailData.absensi_score !== undefined ? Number(detailData.absensi_score).toFixed(3) : '-'"></div>
                             </div>
+                            <div class="rounded-lg border border-gray-200 p-3">
+                                <div class="text-xs text-gray-500">Skor Alpha</div>
+                                <div class="text-base font-semibold text-gray-900" x-text="detailData.alpha_score !== undefined ? Number(detailData.alpha_score).toFixed(3) : '-'"></div>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-5 gap-3">
                             <div class="rounded-lg border border-gray-200 px-3 py-2">
                                 <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Presensi</div>
                                 <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_absensi ?? '-'"></div>
@@ -216,6 +220,14 @@
                             <div class="rounded-lg border border-gray-200 px-3 py-2">
                                 <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Presensi</div>
                                 <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_absensi ?? '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Hari Izin</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.izin_days ?? '-'"></div>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Hari Alpha</div>
+                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.alpha_days ?? '-'"></div>
                             </div>
                         </div>
 

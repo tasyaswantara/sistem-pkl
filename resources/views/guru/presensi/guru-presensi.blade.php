@@ -14,6 +14,7 @@
         window.initGuruPresensiMap = function initGuruPresensiMap() {
             const mapElement = document.getElementById('guru-presensi-map');
             const hasLeaflet = typeof L !== 'undefined';
+            const statusLabels = @json($statusLabels);
             if (!mapElement) {
                 return;
             }
@@ -39,9 +40,10 @@
                         return;
                     }
 
-                    const color = point.status === '{{ AbsensiStatus::HADIR_VALID->value }}' ?
+                    const color = point.status === '{{ AbsensiStatus::HADIR_VALID_LOKASI->value }}' ?
                         '#16a34a' :
-                        (point.status === '{{ AbsensiStatus::DI_LUAR_AREA->value }}' ? '#e11d48' : '#6b7280');
+                        (point.status === '{{ AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value }}' ? '#2563eb' :
+                            (point.status === '{{ AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value }}' ? '#d97706' : '#dc2626'));
 
                     const marker = L.circleMarker([lat, lng], {
                         radius: 8,
@@ -55,8 +57,9 @@
                             <strong>${point.siswa}</strong><br>
                             NIS: ${point.nis}<br>
                             Industri: ${point.industri}<br>
-                            Status: ${point.status}<br>
+                            Status: ${statusLabels[point.status] ?? point.status}<br>
                             Catatan: ${point.catatan ?? '-'}<br>
+                            Approval: ${point.approval_status ?? '-'}<br>
                             Waktu: ${point.check_in_at ?? '-'}<br>
                             Jarak: ${point.distance ? Number(point.distance).toFixed(2) + ' m' : '-'}
                         </div>
@@ -183,16 +186,26 @@
                 </div>
             </form>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Hadir Valid</div>
+                <div class="text-xs text-gray-500 mb-1">Valid di Lokasi</div>
                 <div class="text-2xl font-semibold text-emerald-700">
-                    {{ $statusCounts[AbsensiStatus::HADIR_VALID->value] ?? 0 }}</div>
+                    {{ $statusCounts[AbsensiStatus::HADIR_VALID_LOKASI->value] ?? 0 }}</div>
             </div>
             <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="text-xs text-gray-500 mb-1">Di Luar Area</div>
+                <div class="text-xs text-gray-500 mb-1">Menunggu Persetujuan</div>
+                <div class="text-2xl font-semibold text-amber-700">
+                    {{ $statusCounts[AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value] ?? 0 }}</div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="text-xs text-gray-500 mb-1">Valid di Luar Lokasi</div>
+                <div class="text-2xl font-semibold text-sky-700">
+                    {{ $statusCounts[AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value] ?? 0 }}</div>
+            </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="text-xs text-gray-500 mb-1">Alpha</div>
                 <div class="text-2xl font-semibold text-rose-700">
-                    {{ $statusCounts[AbsensiStatus::DI_LUAR_AREA->value] ?? 0 }}</div>
+                    {{ $statusCounts[AbsensiStatus::ALPHA->value] ?? 0 }}</div>
             </div>
         </div>
 
@@ -205,9 +218,13 @@
                     </div>
                     <div class="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-600">
                         <span class="inline-flex items-center gap-2"><span
-                                class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Hadir Valid</span>
+                                class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>Valid di Lokasi</span>
                         <span class="inline-flex items-center gap-2"><span
-                                class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Di Luar Area</span>
+                                class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>Menunggu</span>
+                        <span class="inline-flex items-center gap-2"><span
+                                class="w-2.5 h-2.5 rounded-full bg-sky-600"></span>Valid di Luar Lokasi</span>
+                        <span class="inline-flex items-center gap-2"><span
+                                class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>Alpha</span>
                     </div>
                 </div>
                 <div id="guru-presensi-map" class="w-full h-[420px] md:h-[520px] xl:h-[560px]"></div>
@@ -237,9 +254,13 @@
                         @forelse ($absensiList as $row)
                             @php
                                 $statusClass = match ($row->status) {
-                                    AbsensiStatus::HADIR_VALID->value
+                                    AbsensiStatus::HADIR_VALID_LOKASI->value
                                         => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                                    AbsensiStatus::DI_LUAR_AREA->value
+                                    AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value
+                                        => 'bg-amber-50 text-amber-700 border border-amber-200',
+                                    AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value
+                                        => 'bg-sky-50 text-sky-700 border border-sky-200',
+                                    AbsensiStatus::ALPHA->value
                                         => 'bg-rose-50 text-rose-700 border border-rose-200',
                                     default => 'bg-gray-50 text-gray-700 border border-gray-200',
                                 };

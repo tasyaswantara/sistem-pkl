@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Siswa;
 use App\Enums\LogbookStatus;
 use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;
+use App\Services\AppNotificationService;
 use App\Services\SiswaPresensiCheckInService;
 use App\Services\SiswaPresensiService;
 use Illuminate\Http\Request;
@@ -43,7 +44,11 @@ class SiswaPresensiController extends Controller
         ]);
     }
 
-    public function store(Request $request, SiswaPresensiCheckInService $service)
+    public function store(
+        Request $request,
+        SiswaPresensiCheckInService $service,
+        AppNotificationService $notificationService
+    )
     {
         $siswa = $request->user()->siswa;
         if (!$siswa) {
@@ -64,8 +69,14 @@ class SiswaPresensiController extends Controller
             ])->withInput();
         }
 
+        $absensi = $result['absensi'];
+        if ($absensi && $absensi->status === \App\Enums\AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value) {
+            $absensi->loadMissing(['siswa.user', 'industri.user']);
+            $notificationService->notifyIndustryOfOutsideLocationPresensi($absensi);
+        }
+
         return back()
-            ->with('success', __('presensi.success.checkin'))
-            ->with('checkin_at', $result['absensi']?->check_in_at?->format('H:i:s'));
+            ->with('success', __($result['success_key'] ?? 'presensi.success.checkin'))
+            ->with('checkin_at', $absensi?->check_in_at?->format('H:i:s'));
     }
 }

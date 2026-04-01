@@ -46,14 +46,7 @@ class IndustriPresensiService
             });
         }
 
-        $statusCounts = [
-            AbsensiStatus::HADIR_VALID->value => (clone $baseQuery)
-                ->where('status', AbsensiStatus::HADIR_VALID->value)
-                ->count(),
-            AbsensiStatus::DI_LUAR_AREA->value => (clone $baseQuery)
-                ->where('status', AbsensiStatus::DI_LUAR_AREA->value)
-                ->count(),
-        ];
+        $statusCounts = $this->buildStatusCounts($baseQuery);
 
         $absensiQuery = clone $baseQuery;
         if (!empty($filters['status']) && $filters['status'] !== 'all') {
@@ -75,6 +68,8 @@ class IndustriPresensiService
                     'industri' => $row->industri?->nama_industri ?? '-',
                     'status' => $row->status,
                     'catatan' => $row->catatan,
+                    'approval_status' => $row->approval_status,
+                    'approval_note' => $row->approval_note,
                     'latitude' => (float) $row->latitude,
                     'longitude' => (float) $row->longitude,
                     'distance' => $row->distance_to_industri_m,
@@ -107,6 +102,53 @@ class IndustriPresensiService
 
         return [
             'jurusanOptions' => $jurusanOptions,
+        ];
+    }
+
+    public function reviewOutsideLocationPresensi(
+        Industri $industri,
+        AbsensiPkl $absensi,
+        string $approvalStatus,
+        ?string $approvalNote,
+        int $approvedByUserId
+    ): AbsensiPkl {
+        if ($absensi->industri_id !== $industri->id) {
+            abort(403, __('industri_presensi.errors.akses'));
+        }
+
+        if ($absensi->status !== AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value) {
+            abort(422, __('industri_presensi.errors.status'));
+        }
+
+        $isApproved = $approvalStatus === 'disetujui';
+        $absensi->update([
+            'status' => $isApproved
+                ? AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value
+                : AbsensiStatus::ALPHA->value,
+            'approval_status' => $approvalStatus,
+            'approval_note' => $approvalNote,
+            'approved_by_industri_user_id' => $approvedByUserId,
+            'approved_at' => now(),
+        ]);
+
+        return $absensi->fresh(['siswa.user', 'industri.user']);
+    }
+
+    private function buildStatusCounts($baseQuery): array
+    {
+        return [
+            AbsensiStatus::HADIR_VALID_LOKASI->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::HADIR_VALID_LOKASI->value)
+                ->count(),
+            AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::MENUNGGU_PERSETUJUAN_LUAR_LOKASI->value)
+                ->count(),
+            AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::HADIR_VALID_LUAR_LOKASI->value)
+                ->count(),
+            AbsensiStatus::ALPHA->value => (clone $baseQuery)
+                ->where('status', AbsensiStatus::ALPHA->value)
+                ->count(),
         ];
     }
 }
