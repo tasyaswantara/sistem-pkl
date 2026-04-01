@@ -177,7 +177,7 @@ class PeringatanDiniReadService
     }
 
     /**
-     * @return array<int, array{total_logs:int,late_logs:int,target_logs:int,freq_score:float,late_score:float,total_absensi:int,valid_absensi:int,target_absensi:int,absensi_score:float,alpha_days:int,alpha_score:float,izin_days:int,laporan_status:string,laporan_score:float}>
+     * @return array<int, array{total_logs:int,target_logs:int,valid_absensi:int,alpha_days:int,izin_days:int,laporan_status:string,laporan_score:float}>
      */
     private function buildRiskDetails(Collection $riskItems, Carbon $weekStart, Carbon $weekEnd): array
     {
@@ -214,53 +214,25 @@ class PeringatanDiniReadService
         foreach ($riskItems as $row) {
             $logs = $logbooks->get($row->siswa_id, collect());
             $totalLogs = $logs->count();
-            $lateLogs = $logs->filter(function ($log) {
-                if (!$log->tanggal || !$log->created_at) {
-                    return false;
-                }
-
-                return $log->created_at->toDateString() > $log->tanggal->toDateString();
-            })->count();
 
             $absensiLogs = $absensiList->get($row->siswa_id, collect());
             $validAbsensi = $absensiLogs
                 ->whereIn('status', AbsensiStatus::validStatuses())
                 ->count();
-            $totalAbsensi = $absensiLogs->count();
             $izinDays = $this->countApprovedIzinDays(
                 $perizinanList->get($row->siswa_id, collect()),
                 $weekStart,
                 $weekEnd
             );
             $alphaDays = max($targetLogbookPerWeek - $validAbsensi - $izinDays, 0);
-
-            $freqScore = ($totalLogs > 0 && $targetLogbookPerWeek > 0)
-                ? min($totalLogs / $targetLogbookPerWeek, 1)
-                : 0;
-            $lateScore = $totalLogs > 0
-                ? 1 - min($lateLogs / $totalLogs, 1)
-                : 0;
-            $absensiScore = $targetLogbookPerWeek > 0
-                ? min($validAbsensi / $targetLogbookPerWeek, 1)
-                : 0;
-            $alphaScore = $targetLogbookPerWeek > 0
-                ? max(1 - min($alphaDays / $targetLogbookPerWeek, 1), 0)
-                : 0;
             $laporanStatus = $penempatanBySiswa->get($row->siswa_id)?->laporan_status ?? null;
             $laporanScore = $laporanScores[$laporanStatus] ?? 1;
 
             $detailByRiskId[$row->id] = [
                 'total_logs' => $totalLogs,
-                'late_logs' => $lateLogs,
                 'target_logs' => $targetLogbookPerWeek,
-                'freq_score' => $freqScore,
-                'late_score' => $lateScore,
-                'total_absensi' => $totalAbsensi,
                 'valid_absensi' => $validAbsensi,
-                'target_absensi' => $targetLogbookPerWeek,
-                'absensi_score' => $absensiScore,
                 'alpha_days' => $alphaDays,
-                'alpha_score' => $alphaScore,
                 'izin_days' => $izinDays,
                 'laporan_status' => $laporanStatus ?? 'belum ada',
                 'laporan_score' => $laporanScore,

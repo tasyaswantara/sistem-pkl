@@ -160,84 +160,82 @@
         {{-- Modal Detail --}}
         <template x-teleport="body">
             <div x-show="detailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
-                    <div class="flex items-start justify-between p-6 border-b">
-                        <div>
-                            <h4 class="text-base font-semibold text-gray-900">Detail Perhitungan Peringatan Dini</h4>
-                            <p class="text-xs text-gray-500 mt-1">
-                                <span x-text="detailNama"></span>
-                                <span class="mx-1 text-gray-300">•</span>
-                                <span x-text="detailJurusan"></span>
-                            </p>
+                <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                    <div class="border-b border-gray-200 bg-gray-50 px-6 py-5">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-teal-600">Detail Risiko</p>
+                                <h4 class="mt-1 text-lg font-semibold text-gray-900">Perhitungan Peringatan Dini</h4>
+                                <p class="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                                    <span class="font-medium text-gray-700" x-text="detailNama"></span>
+                                    <span class="text-gray-300">•</span>
+                                    <span x-text="detailJurusan"></span>
+                                </p>
+                            </div>
+                            <button type="button" class="rounded-full border border-gray-200 p-2 text-gray-400 transition hover:bg-white hover:text-gray-600" @click="detailOpen = false">✕</button>
                         </div>
-                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="detailOpen = false">✕</button>
                     </div>
 
-                    <div class="p-6 space-y-4">
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Logbook</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_logs ?? '-'"></div>
-                            </div>
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Logbook</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_logs ?? '-'"></div>
-                            </div>
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Terlambat</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.late_logs ?? '-'"></div>
-                            </div>
+                    <div class="space-y-6 px-6 py-6">
+                        <div class="rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm text-teal-900">
+                            Detail ini menampilkan indikator utama yang dipakai sistem untuk membaca potensi risiko siswa selama periode penilaian.
                         </div>
 
-                        <div class="grid grid-cols-4 gap-3 text-sm">
-                            <div class="rounded-lg border border-gray-200 p-3">
-                                <div class="text-xs text-gray-500">Skor Frekuensi</div>
-                                <div class="text-base font-semibold text-gray-900" x-text="detailData.freq_score !== undefined ? Number(detailData.freq_score).toFixed(3) : '-'"></div>
+                        <section class="space-y-3">
+                            <div>
+                                <h5 class="text-sm font-semibold text-gray-900">Aktivitas Mingguan</h5>
+                                <p class="mt-1 text-xs text-gray-500">Ringkasan target kegiatan dan realisasi logbook selama periode berjalan.</p>
                             </div>
-                            <div class="rounded-lg border border-gray-200 p-3">
-                                <div class="text-xs text-gray-500">Skor Ketepatan</div>
-                                <div class="text-base font-semibold text-gray-900" x-text="detailData.late_score !== undefined ? Number(detailData.late_score).toFixed(3) : '-'"></div>
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                                    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Target Mingguan</div>
+                                    <div class="mt-2 text-2xl font-semibold text-gray-900" x-text="detailData.target_logs ?? '-'"></div>
+                                </div>
+                                <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                                    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Total Logbook</div>
+                                    <div class="mt-2 text-2xl font-semibold text-gray-900" x-text="detailData.total_logs ?? '-'"></div>
+                                </div>
+                                <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                                    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Presensi Valid</div>
+                                    <div class="mt-2 text-2xl font-semibold text-gray-900" x-text="detailData.valid_absensi ?? '-'"></div>
+                                </div>
                             </div>
-                            <div class="rounded-lg border border-gray-200 p-3">
-                                <div class="text-xs text-gray-500">Skor Presensi</div>
-                                <div class="text-base font-semibold text-gray-900" x-text="detailData.absensi_score !== undefined ? Number(detailData.absensi_score).toFixed(3) : '-'"></div>
-                            </div>
-                            <div class="rounded-lg border border-gray-200 p-3">
-                                <div class="text-xs text-gray-500">Skor Alpha</div>
-                                <div class="text-base font-semibold text-gray-900" x-text="detailData.alpha_score !== undefined ? Number(detailData.alpha_score).toFixed(3) : '-'"></div>
-                            </div>
-                        </div>
+                        </section>
 
-                        <div class="grid grid-cols-5 gap-3">
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Target Presensi</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.target_absensi ?? '-'"></div>
+                        <section class="space-y-3">
+                            <div>
+                                <h5 class="text-sm font-semibold text-gray-900">Status Kehadiran</h5>
+                                <p class="mt-1 text-xs text-gray-500">Hari izin dan alpha digunakan untuk membaca konsistensi kehadiran siswa.</p>
                             </div>
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Presensi Valid</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.valid_absensi ?? '-'"></div>
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                    <div class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Hari Izin</div>
+                                    <div class="mt-2 text-2xl font-semibold text-amber-900" x-text="detailData.izin_days ?? '-'"></div>
+                                </div>
+                                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                                    <div class="text-[11px] font-semibold uppercase tracking-wide text-rose-700">Hari Alpha</div>
+                                    <div class="mt-2 text-2xl font-semibold text-rose-900" x-text="detailData.alpha_days ?? '-'"></div>
+                                </div>
                             </div>
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Total Presensi</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.total_absensi ?? '-'"></div>
-                            </div>
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Hari Izin</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.izin_days ?? '-'"></div>
-                            </div>
-                            <div class="rounded-lg border border-gray-200 px-3 py-2">
-                                <div class="text-[11px] uppercase tracking-wide text-gray-500">Hari Alpha</div>
-                                <div class="text-lg font-semibold text-gray-900" x-text="detailData.alpha_days ?? '-'"></div>
-                            </div>
-                        </div>
+                        </section>
 
-                        <div class="rounded-lg border border-gray-200 p-3 text-sm">
-                            <div class="text-xs text-gray-500">Laporan Industri (belum ada = aman)</div>
-                            <div class="flex items-center justify-between mt-1">
-                                <span class="font-semibold text-gray-900" x-text="detailData.laporan_status ?? '-'"></span>
-                                <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700" x-text="detailData.laporan_score !== undefined ? Number(detailData.laporan_score).toFixed(2) : '-'"></span>
+                        <section class="space-y-3">
+                            <div>
+                                <h5 class="text-sm font-semibold text-gray-900">Status Laporan Industri</h5>
+                                <p class="mt-1 text-xs text-gray-500">Status laporan industri tetap menjadi salah satu indikator pendukung risiko.</p>
                             </div>
-                        </div>
+                            <div class="rounded-2xl border border-gray-200 bg-white px-4 py-4 shadow-sm">
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Laporan Industri</div>
+                                        <div class="mt-1 text-base font-semibold text-gray-900" x-text="detailData.laporan_status ?? '-'"></div>
+                                    </div>
+                                    <div class="inline-flex w-fit items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
+                                        Skor <span class="ml-1 font-semibold" x-text="detailData.laporan_score !== undefined ? Number(detailData.laporan_score).toFixed(2) : '-'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>

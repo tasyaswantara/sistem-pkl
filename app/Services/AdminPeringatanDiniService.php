@@ -43,8 +43,7 @@ class AdminPeringatanDiniService
     {
         $targetLogbookPerWeek = $this->countWeekdays($weekStart, $weekEnd);
         $weights = [
-            'logbook' => 0.3,
-            'late' => 0.2,
+            'logbook' => 0.5,
             'laporan' => 0.15,
             'absensi' => 0.2,
             'alpha' => 0.15,
@@ -81,13 +80,6 @@ class AdminPeringatanDiniService
         foreach ($siswaList as $siswa) {
             $logs = $logbooks->get($siswa->id, collect());
             $totalLogs = $logs->count();
-            $lateLogs = $logs->filter(function ($log) {
-                if (!$log->tanggal || !$log->created_at) {
-                    return false;
-                }
-
-                return $log->created_at->toDateString() > $log->tanggal->toDateString();
-            })->count();
 
             $absensiLogs = $absensiList->get($siswa->id, collect());
             $validAbsensi = $absensiLogs
@@ -103,9 +95,6 @@ class AdminPeringatanDiniService
             $freqScore = ($totalLogs > 0 && $targetLogbookPerWeek > 0)
                 ? min($totalLogs / $targetLogbookPerWeek, 1)
                 : 0;
-            $lateScore = $totalLogs > 0
-                ? 1 - min($lateLogs / $totalLogs, 1)
-                : 0;
             $absensiScore = $targetLogbookPerWeek > 0
                 ? min($validAbsensi / $targetLogbookPerWeek, 1)
                 : 0;
@@ -116,7 +105,6 @@ class AdminPeringatanDiniService
             $laporanScore = $laporanScores[$laporanStatus] ?? 1;
 
             $score = ($weights['logbook'] * $freqScore)
-                + ($weights['late'] * $lateScore)
                 + ($weights['laporan'] * $laporanScore)
                 + ($weights['absensi'] * $absensiScore)
                 + ($weights['alpha'] * $alphaScore);
