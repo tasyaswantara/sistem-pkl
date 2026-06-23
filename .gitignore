@@ -6,6 +6,7 @@
 /storage/*.key
 /vendor
 .env
+.env.testing
 .env.backup
 .env.production
 .phpactor.json
@@ -18,3 +19,11 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
