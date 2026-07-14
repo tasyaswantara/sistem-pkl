@@ -1,3 +1,4 @@
+{{-- ini buat halaman admin yakk --}}
 <!DOCTYPE html>
 <html lang="{{ $page->language ?? 'en' }}">
 
@@ -11,9 +12,9 @@
 
     <title>
         @hasSection('title')
-        @yield('title') | Sistem PKL
+            @yield('title') | Sistem PKL
         @else
-        Sistem PKL
+            Sistem PKL
         @endif
     </title>
 
@@ -29,12 +30,14 @@
 <body>
     @include('partials.global-page-loader')
     <div x-data="{ sidebarOpen: false }" class="flex h-screen bg-gray-200 font-roboto">
+        {{-- manggil sidebar admin --}}
         @include('layouts.admin.sidebar')
 
         <div class="flex-1 flex flex-col overflow-hidden">
             @include('layouts.admin.header')
 
-            <main class="flex-1 min-h-screen pb-[10vh] relative overflow-x-hidden overflow-y-auto
+            <main
+                class="flex-1 min-h-screen pb-[10vh] relative overflow-x-hidden overflow-y-auto
              bg-gradient-to-br
              from-gray-50
              via-emerald-50/30
@@ -42,11 +45,15 @@
 
                 <!-- Decorative background elements -->
                 <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                    <div class="absolute top-0 right-0 w-[500px] h-[500px]
-                    bg-emerald-200/20 rounded-full blur-3xl"></div>
+                    <div
+                        class="absolute top-0 right-0 w-[500px] h-[500px]
+                    bg-emerald-200/20 rounded-full blur-3xl">
+                    </div>
 
-                    <div class="absolute bottom-0 left-[240px] w-[400px] h-[400px]
-                    bg-teal-200/20 rounded-full blur-3xl"></div>
+                    <div
+                        class="absolute bottom-0 left-[240px] w-[400px] h-[400px]
+                    bg-teal-200/20 rounded-full blur-3xl">
+                    </div>
                 </div>
 
                 <div data-page-content class="relative z-10 container mx-auto px-6 py-8">

@@ -1,3 +1,4 @@
+{{-- sidebar buat admin, siswa, guru, perwakilan industri beda --}}
 <!-- Overlay -->
 <div x-cloak :class="sidebarOpen ? 'block' : 'hidden'" @click="sidebarOpen = false"
     class="fixed inset-0 z-20 transition-opacity bg-[#0f2e24] opacity-50 lg:hidden">
@@ -284,6 +285,7 @@
                                 if ($childHash) {
                                     $childUrl .= '#' . $childHash;
                                 }
+                                // buat child
                                 $isActiveChild =
                                     $child['route'] === 'admin.data-pengguna'
                                         ? request()->routeIs('admin.data-pengguna') &&

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services;
-
+// kirim notifikasi internal admin, guru, siswa, perwakilan industri
 use App\Enums\PenempatanStatus;
 use App\Enums\PerizinanStatus;
 use App\Models\Industri;

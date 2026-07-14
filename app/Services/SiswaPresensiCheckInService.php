@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services;
-
+// cek lokasi, hitung jarak, penentuan status
 use App\Enums\AbsensiStatus;
 use App\Enums\PenempatanStatus;
 use App\Models\AbsensiPkl;

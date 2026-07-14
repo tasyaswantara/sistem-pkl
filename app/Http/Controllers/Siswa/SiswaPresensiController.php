@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Siswa;
-
+// validasi longtitude, latitude, simpan presensi
 use App\Enums\LogbookStatus;
 use App\Enums\PerizinanStatus;
 use App\Http\Controllers\Controller;

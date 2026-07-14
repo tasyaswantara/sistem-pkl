@@ -1,5 +1,5 @@
 <?php
-
+// normalisasi, bobot, ranking industri 
 namespace App\Services;
 
 use App\Enums\PenempatanStatus;

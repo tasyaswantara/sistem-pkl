@@ -1,3 +1,4 @@
+{{-- daftar pengguna --}}
 @section('title', 'Data Pengguna')
 
 <x-admin-layout>
@@ -53,8 +54,10 @@
                 class="fixed top-20 right-6 z-[9998] max-w-sm w-full bg-white shadow-md rounded-lg overflow-hidden">
                 <div class="flex">
                     <div class="flex justify-center items-center w-12 bg-emerald-500">
-                        <svg class="h-6 w-6 fill-current text-white" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z" />
+                        <svg class="h-6 w-6 fill-current text-white" viewBox="0 0 40 40"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z" />
                         </svg>
                     </div>
                     <div class="flex-1 -mx-3 py-2 px-4">
@@ -63,7 +66,8 @@
                             <p class="text-gray-600 text-sm" x-text="copyToastMessage"></p>
                         </div>
                     </div>
-                    <button type="button" @click="copyToastOpen = false" class="px-4 text-gray-400 hover:text-gray-600">
+                    <button type="button" @click="copyToastOpen = false"
+                        class="px-4 text-gray-400 hover:text-gray-600">
                         ✕
                     </button>
                 </div>
@@ -129,7 +133,8 @@
                         class="px-4 py-2 w-[180px] bg-white border border-gray-300 rounded-lg text-sm focus:ring-emerald-500">
                         <option value="">Semua Tahun</option>
                         @foreach ($tahunAjaranOptions as $tahun)
-                            <option value="{{ $tahun }}" {{ request('tahun_ajaran') == $tahun ? 'selected' : '' }}>
+                            <option value="{{ $tahun }}"
+                                {{ request('tahun_ajaran') == $tahun ? 'selected' : '' }}>
                                 {{ $tahun }}
                             </option>
                         @endforeach
@@ -239,10 +244,12 @@
                                         <span>{{ $u->email }}</span>
                                         <button type="button"
                                             class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
-                                            @click="copyEmail(@js($u->email))"
-                                            title="Salin email">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            @click="copyEmail(@js($u->email))" title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </button>
                                     </div>
@@ -281,10 +288,12 @@
                                         <span>{{ $u->email }}</span>
                                         <button type="button"
                                             class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
-                                            @click="copyEmail(@js($u->email))"
-                                            title="Salin email">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            @click="copyEmail(@js($u->email))" title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </button>
                                     </div>
@@ -316,10 +325,12 @@
                                         <span>{{ $u->email }}</span>
                                         <button type="button"
                                             class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
-                                            @click="copyEmail(@js($u->email))"
-                                            title="Salin email">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            @click="copyEmail(@js($u->email))" title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </button>
                                     </div>
@@ -330,10 +341,12 @@
                                         <span>{{ $u->email }}</span>
                                         <button type="button"
                                             class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
-                                            @click="copyEmail(@js($u->email))"
-                                            title="Salin email">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            @click="copyEmail(@js($u->email))" title="Salin email">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M10 20h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </button>
                                     </div>
@@ -401,7 +414,8 @@
 
         {{-- Modal Siswa Bimbingan --}}
         <template x-teleport="body">
-            <div x-show="siswaOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div x-show="siswaOpen" x-cloak
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                 <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
                     <div class="flex items-center justify-between p-4 border-b">
                         <div>

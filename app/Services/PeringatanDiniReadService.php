@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services;
-
+// ambil data riskscore untuk tampilan
 use App\Enums\AbsensiStatus;
 use App\Enums\PenempatanStatus;
 use App\Enums\PerizinanStatus;

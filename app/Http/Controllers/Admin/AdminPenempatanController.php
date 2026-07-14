@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-
+// validasi input/request lalu memanggil sawrunservice
 use App\Enums\LaporanStatus;
 use App\Http\Controllers\Controller;
 use App\Services\AdminPenempatanService;
