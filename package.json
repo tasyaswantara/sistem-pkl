@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "build:infinityfree": "APP_PUBLIC_PATH=public_html vite build"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
